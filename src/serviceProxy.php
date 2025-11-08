@@ -1,6 +1,6 @@
 <?php
 // Подключаем загрузчик .env
-require_once __DIR__ . '/loader.php';
+require_once __DIR__ . '/envLoader.php';
 
 header('Content-Type: application/json');
 

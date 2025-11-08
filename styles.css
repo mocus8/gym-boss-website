@@ -2135,10 +2135,11 @@ button {
 }
 
 .order_success_title {
+    margin-bottom: 1vw;
+    margin-left: 2vw;
     font-size: 2.5vw;
     font-family: "Jost", Arial;
     text-align: center;
-    margin-bottom: 1vw;
 }
 
 .order_success_row {

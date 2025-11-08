@@ -45,8 +45,17 @@ try {
         $paymentStatus = checkYooKassaStatus($orderId);
         switch ($paymentStatus) {
             case 'succeeded':
-                // Деньги списались, но вебхук не сработал
-                updateOrderStatus($orderId, 'paid');
+                // Деньги списались, но вебхук не сработал - обновляем статус в БД
+                $updateStmt = $connect->prepare("UPDATE orders SET status = 'paid' WHERE order_id = ?");
+                if (!$updateStmt) {
+                    throw new Exception('DATABASE_OPERATIONS_FAILED');
+                }
+                $updateStmt->bind_param("i", $orderId);
+                if (!$updateStmt->execute()) {
+                    $updateStmt->close();
+                    throw new Exception('DATABASE_OPERATIONS_FAILED');
+                }
+                $updateStmt->close();
                 $order['status'] = 'paid'; // Обновляем локально
                 break;
                 

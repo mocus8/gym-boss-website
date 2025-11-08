@@ -2,7 +2,7 @@
 //проверить потом, правильные ли методы и функции из девкида 
 function checkYooKassaStatus($orderId) {
     try {
-        require_once __DIR__ . '/vendor/autoload.php';
+        require_once __DIR__ . '/../vendor/autoload.php';
         require_once __DIR__ . '/envLoader.php';
         
         $yookassa = new \YooKassa\Client();
