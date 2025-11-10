@@ -6,6 +6,7 @@ require_once __DIR__ . '/src/checkYooKassaStatus.php';
 
 $userId = $_SESSION['user']['id'] ?? null;
 $orderId = $_GET['orderId'] ?? '';
+$paidAt = null;
 
 if (!$userId) {
     header('Location: index.php');
@@ -23,8 +24,8 @@ try {
         throw new Exception('DATABASE_CONNECT_FAILED');
     }
 
-    // получаем из бд данные о заказах (id заказа и статус)
-    $stmt = $connect->prepare("SELECT order_id, status FROM orders WHERE order_id = ? AND user_id = ?");
+    // получаем из бд данные о заказе (id заказа, статус и время оплаты)
+    $stmt = $connect->prepare("SELECT order_id, status, paid_at FROM orders WHERE order_id = ? AND user_id = ?");
     if (!$stmt) {
         throw new Exception('DATABASE_OPERATIONS_FAILED');
     }
@@ -34,6 +35,7 @@ try {
     $stmt->execute();
     $result = $stmt->get_result();
     $order = $result->fetch_assoc();
+    $paidAt = $order['paid_at'];
 
     // Заказ вообще не существует
     if (!$order) {
@@ -46,7 +48,8 @@ try {
         switch ($paymentStatus) {
             case 'succeeded':
                 // Деньги списались, но вебхук не сработал - обновляем статус в БД
-                $updateStmt = $connect->prepare("UPDATE orders SET status = 'paid' WHERE order_id = ?");
+                $updateStmt = $connect->prepare("UPDATE orders SET paid_at = NOW(), status = 'paid' WHERE order_id = ?");
+                $paidAt = date('Y-m-d H:i:s');
                 if (!$updateStmt) {
                     throw new Exception('DATABASE_OPERATIONS_FAILED');
                 }
@@ -146,9 +149,18 @@ require_once __DIR__ . '/src/getOrderData.php';
                     <div class="order_success_row">
                         Пункт выдачи: <?= htmlspecialchars($orderDetails['store_name']) ?>, <?= htmlspecialchars($orderDetails['store_address']) ?>
                     </div>
+                    <div class="order_success_row">
+                        Заказ может быть готов к получению с <?= date('H:i', strtotime($paidAt . ' +1 hour')) ?> до <?= date('H:i', strtotime($paidAt . ' +3 hour')) ?>, для уточнения звоните менеджеру 
+                        <a href='tel: <?= htmlspecialchars($orderDetails['phone']) ?>' class="colour_href">
+                            <?= htmlspecialchars($orderDetails['phone']) ?>
+                        </a>
+                    </div>
                     <?php } else if ($orderDetails['delivery_type'] === 'delivery' && $orderDetails['delivery_address']) { ?>
                     <div class="order_success_row">
                         Адрес доставки: <?= htmlspecialchars($orderDetails['delivery_address']) ?>
+                    </div>
+                    <div class="order_success_row">
+                        Заказ будет доставлен с <?= date('d.m.Y', strtotime($paidAt . ' +1 day')) ?> до <?= date('d.m.Y', strtotime($paidAt . ' +2 days')) ?>
                     </div>
                     <div class="order_success_row">
                         Курьер свяжеться с вами по телефону
