@@ -42,7 +42,7 @@ function getOrderData($orderId) {
         }
 
         $itemsStmt = $connect->prepare("
-            SELECT p.product_id, p.slug, p.name, p.price, po.amount, 
+            SELECT p.product_id, p.slug, p.name, p.price, p.vat_code, po.amount, 
             (SELECT pi.image_path 
             FROM product_images pi 
             WHERE pi.product_id = p.product_id 
@@ -68,6 +68,7 @@ function getOrderData($orderId) {
                 'slug' => $item['slug'],
                 'name' => $item['name'],
                 'price' => $item['price'],
+                'vat_code' => $item['vat_code'],
                 'amount' => $item['amount'],
                 'image_path' => !empty($item['image_path']) ? '/'.$item['image_path'] : '/img/default.png'
             ];

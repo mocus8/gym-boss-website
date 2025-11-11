@@ -75,6 +75,7 @@ if (!isset($_SESSION['user']['id'])) {
             //     'cart' => 'корзина',
             //     'paid' => 'оплачен',
             //     'pending_payment' => 'ожидает оплаты',
+            //     'refund' => 'возврат',
             // };
             ?>
             <main class="main">
@@ -92,45 +93,47 @@ if (!isset($_SESSION['user']['id'])) {
                     Ваши заказы:
                 </div>
                 <div class="orders_list">
-                <?php
-                if (empty($ordersInfo)) {
-                ?>
-                    У вас еще нет заказов
-                <?php
-                } else {
-                    foreach ($ordersInfo as $order) {
-                ?>
-                    <h3>Заказ #<?= $order['order_id'] ?></h3>
-
-                    <!-- тут показывать соответствующие кнопки действий -->
-                    <?php 
-                    // Проверяем наличие КОНКРЕТНОГО кода ошибки оплаты
-                    if (isset($_SESSION['flash_payment_error'])) { 
-                        // Преобразуем код в текст прямо на месте
-                        $errorText = match($_SESSION['flash_payment_error']) {
-                            'PAYMENT_CANCELED' => 'Оплата отменена. Попробуйте еще раз',
-                            'PAYMENT_FAILED' => 'Оплата не прошла. Попробуйте еще раз или выберите другой способ',
-                            'ORDER_NOT_FOUND' => 'Заказ не найден. Попробуйте создать заказ заново',
-                            'PAYMENT_PENDING' => 'Оплата обрабатывается. Подождите несколько минут',
-                            'PAYMENT_STATUS_UNKNOWN' => 'Статус оплаты неизвестен. Подождите или проверьте позже',
-                            'DATABASE_CONNECT_FAILED' => 'Временные технические неполадки. Попробуйте позже',
-                            'DATABASE_OPERATIONS_FAILED ' => 'Ошибка обработки заказа. Попробуйте позже',
-                            default => 'Произошла ошибка при оплате. Пожалуйста, попробуйте оплатить еще раз.'
-                        };
+                    <?php
+                    if (empty($ordersInfo)) {
                     ?>
-                        <div class="error_pay_no_address open" id="flash-payment-error">
-                            <img class="error_modal_icon" src="img/error_modal_icon.png">
-                            <?= htmlspecialchars($errorText) ?>
-                        </div>
-                    <?php 
-                        // Удаляем ошибку после показа
-                        unset($_SESSION['flash_payment_error']);
-                    } 
+                        У вас еще нет заказов
+                    <?php
+                    } else {
+                        foreach ($ordersInfo as $order) {
                     ?>
-                <?php
+                            <div class="order">
+                                Заказ <?= '#' . str_pad($order['order_id'], 6, '0', STR_PAD_LEFT) ?>
+                                <!-- тут показывать соответствующие кнопки действий -->
+                                <?php 
+                                // Проверяем наличие КОНКРЕТНОГО кода ошибки оплаты
+                                if (isset($_SESSION['flash_payment_error'])) { 
+                                    // Преобразуем код в текст прямо на месте
+                                    $errorText = match($_SESSION['flash_payment_error']) {
+                                        'PAYMENT_CANCELED' => 'Оплата отменена. Попробуйте еще раз',
+                                        'PAYMENT_FAILED' => 'Оплата не прошла. Попробуйте еще раз или выберите другой способ',
+                                        'ORDER_NOT_FOUND' => 'Заказ не найден. Попробуйте создать заказ заново',
+                                        'PAYMENT_PENDING' => 'Оплата обрабатывается. Подождите несколько минут',
+                                        'EMPTY_USER_PHONE' => 'Заказ не найден. Попробуйте создать заказ заново',
+                                        'PAYMENT_STATUS_UNKNOWN' => 'Статус оплаты неизвестен. Подождите или проверьте позже',
+                                        'DATABASE_CONNECT_FAILED' => 'Временные технические неполадки. Попробуйте позже',
+                                        'DATABASE_OPERATIONS_FAILED ' => 'Ошибка обработки заказа. Попробуйте позже',
+                                        default => 'Произошла ошибка при оплате. Пожалуйста, попробуйте оплатить еще раз.'
+                                    };
+                                ?>
+                                    <div class="error_pay_no_address open" id="flash-payment-error">
+                                        <img class="error_modal_icon" src="img/error_modal_icon.png">
+                                        <?= htmlspecialchars($errorText) ?>
+                                    </div>
+                                <?php 
+                                    // Удаляем ошибку после показа
+                                    unset($_SESSION['flash_payment_error']);
+                                } 
+                                ?>
+                            </div>
+                    <?php
+                        }
                     }
-                }
-                ?>
+                    ?>
                 </div>
             </main>
             <?php require_once __DIR__ . '/footer.php';?>

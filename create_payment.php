@@ -13,6 +13,8 @@ if (!$userId || !$orderId) {
     exit();
 }
 
+require_once __DIR__ . '/src/getOrderData.php';
+
 try {
     $connect = getDB();
     if (!$connect) {
@@ -22,17 +24,19 @@ try {
     $connect->begin_transaction();
 
     $stmt = $connect->prepare("
-        SELECT o.order_id, o.total_price, o.status,
-        o.created_at,
+        SELECT o.order_id, o.total_price, o.status, o.created_at,
+        u.phone,
         (SELECT COUNT(*) 
         FROM orders o2 
         WHERE o2.user_id = o.user_id 
         AND o2.status = 'pending_payment'
         AND o2.created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
         ) as user_recent_orders
-    FROM orders o 
+    FROM orders o
+    INNER JOIN users u ON o.user_id = u.id
     WHERE o.order_id = ? AND o.user_id = ? 
     AND o.status IN ('cart', 'pending_payment')
+    AND u.phone IS NOT NULL
     AND EXISTS (SELECT 1 FROM product_order po WHERE po.order_id = o.order_id)
     HAVING user_recent_orders < 10
     FOR UPDATE
@@ -50,11 +54,33 @@ try {
         throw new Exception('ORDER_NOT_FOUND');
     }
 
+    if (empty($order['phone'])) {
+        throw new Exception('EMPTY_USER_PHONE');
+    }
+
     if ($order['status'] === 'cart') {
         $updateStmt = $connect->prepare("UPDATE orders SET status = 'pending_payment' WHERE order_id = ?");
         $updateStmt->bind_param("i", $orderId);
         $updateStmt->execute();
         $updateStmt->close();
+    }
+
+    //создаём массив товаров в нужном для чека формате
+    $items = [];
+    foreach ($orderItems as $item) {
+        $price = number_format($item['price'], 2, '.', '');
+
+        $items[] = [
+            'description' => $item['name'],
+            'quantity' => (string)$item['amount'],
+            'amount' => [
+                'value' => $price,
+                'currency' => 'RUB'
+            ],
+            'vat_code' => $item['vat_code'],
+            'payment_mode' => 'full_payment',
+            'payment_subject' => 'commodity'
+        ];
     }
 
     $yookassa = new \YooKassa\Client();
@@ -63,7 +89,7 @@ try {
     $idempotenceKey = 'order_' . $orderId . '_' . time();
     $payment = $yookassa->createPayment([
         'amount' => [
-            'value' => $order['total_price'],
+            'value' => number_format($order['total_price'], 2, '.', ''),
             'currency' => 'RUB'
         ],
         'confirmation' => [
@@ -72,7 +98,17 @@ try {
         ],
         'capture' => true,
         'description' => 'Заказ №' . $orderId,
-        'metadata' => ['orderId' => $orderId]
+        'metadata' => ['orderId' => $orderId],
+
+        // тут поменять на правильную инфу
+        'receipt' => [
+            'customer' => [
+                'phone' => $order['phone']
+            ],
+            'items' => $items
+        ]
+
+
     ], $idempotenceKey);
 
     $connect->commit();
