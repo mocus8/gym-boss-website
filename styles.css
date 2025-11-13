@@ -2060,6 +2060,26 @@ button {
     transition: transform 0.05s ease
 }
 
+.order_rigth_notification {
+    position: absolute;
+    top: 82%;
+    left: 51%;
+    width: min-content;
+    height: 2.5vw;
+    background-color: white;
+    border-radius: 0.25vw;
+    border: 0.025vw solid black;
+    padding-right: 0.75vw;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5vw;
+    white-space: nowrap;
+    font-family: "Kolibri Light", "Kolibri-Light", "Kolibri", sans-serif;
+    font-size: 0.9vw;
+    font-weight: 100;
+}
+
 .payment_errors {
     position: relative;
     margin-top: -7.25vw;
