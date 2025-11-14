@@ -37,7 +37,7 @@ function send_sms($phones, $message, $translit = 0, $time = 0, $id = 0, $format 
 {
     static $formats = [1 => "flash=1", "push=1", "hlr=1", "bin=1", "bin=2", "ping=1", "mms=1", "mail=1", "call=1", "viber=1", "soc=1", "", "tg=1"];
 
-    $m = _smsc_send_cmd("send", "cost=3&phones=".urlencode($phones)."&mes=".urlencode($message).
+    $m = _smsc_send_cmd("send", "phones=".urlencode($phones)."&mes=".urlencode($message).
                     "&translit=$translit&id=$id".($format > 0 ? "&".$formats[$format] : "").
                     ($sender === false ? "" : ($format == 12 ? "bot=" : "&sender=").urlencode($sender)).
                     ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : ""), $files);
