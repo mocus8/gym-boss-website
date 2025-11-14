@@ -114,52 +114,63 @@ document.querySelector('.authorization_modal_form').addEventListener('submit', f
     });
 });
 
-document.getElementById('sms-send-code').addEventListener('click', async function(e) {
-    const phoneNumberInput = document.querySelector('.registration_modal_form input[name="login"]');
-    const smsCodeInput = document.querySelector('.registration_modal_form input[name="sms_code"]');
+document.getElementById('sms-code').addEventListener('click', async function(e) {
+    const phoneNumberInput = document.querySelector('.registration_modal_form').querySelector('input[name="login"]');
+    const smsCodeInput = document.querySelector('.registration_modal_form').querySelector('input[name="sms_code"]').value;
     const phoneValidation = validatePhoneNumber(phoneNumberInput.value);
     const incorrectSmsCodeModal = document.getElementById('incorrect-sms-code-modal');
-
-    this.disabled = true;
     const originalText = this.textContent;
 
     try {
-        // Если кнопка в режиме "Отправить код"
-        if (this.textContent.includes('Отправить') || this.id === 'sms-send-code') {
+        if (this.textContent.includes('Отправить')) {
+            this.disabled = true;
             this.textContent = 'Обработка...';
 
+            // передаем телефон В POST для отправки смс
             const response = await fetch('/src/smscSend.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: phoneValidation.formatted })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    phone: phoneValidation
+                })
             });
-            
-            if (!response.ok) throw new Error(`Ошибка ${response.status}`);
-            
-            this.textContent = 'Подтвердить код';
-            this.id = 'sms-verify-code';
-            
-        } 
-        // Если кнопка в режиме "Подтвердить код"  
-        else if (this.textContent.includes('Подтвердить') || this.id === 'sms-verify-code') {
-            this.textContent = 'Проверка...';
-            
+        
+        if (!response.ok) {
+            throw new Error(`Ошибка ${response.status}! Попробуйте еще раз`);
+        }
+
+        this.disabled = false;
+        this.textContent = 'Подтвердить код';
+        } else if (this.textContent.includes('Подтвердить')) {
+            this.disabled = true;
+            this.textContent = 'Обработка...';
+
+            // передаем код В POST для проверки
             const response = await fetch('/src/smscVerify.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: smsCodeInput.value })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: smsCodeInput
+                })
             });
-            
-            if (!response.ok) throw new Error(`Ошибка ${response.status}`);
-            
-            this.textContent = 'Успешно';
+        
+        if (!response.ok) {
+            throw new Error(`Ошибка ${response.status}! Попробуйте еще раз`);
         }
+
+        this.textContent = 'Успешно';
+        }
+
         
     } catch (error) {
-        incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
         incorrectSmsCodeModal.classList.add('open');
+        incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
+
         this.textContent = originalText;
-    } finally {
         this.disabled = false;
     }
 });
@@ -194,26 +205,27 @@ document.querySelector('.registration_modal_form').addEventListener('submit', fu
         body: formData
     })
     .then(data => {
-    if (data.success) {
-        window.location.reload();
-    } else {
-        const phoneErrors = {
-            'phone_not_verified': 'Телефон не подтвержден',
-            'phone_changed': 'Телефон был изменен после отправки кода', 
-            'code_expired': 'Код подтверждения устарел (более 1 часа)'
-        };
-        
-        if (data.message === 'user_already_exists') {
-            userAlreadyExistsModal.classList.add('open');
-        } else if (phoneErrors[data.message]) {
-            incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = phoneErrors[data.message];
-            incorrectSmsCodeModal.classList.add('open');
-        } else if (data.message) {
-            incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = data.message;
-            incorrectSmsCodeModal.classList.add('open');
+        if (data.success) {
+            window.location.reload();
+        } else {
+            const errorMessages = {
+                'user_already_exists': 'Пользователь уже зарегистрирован',
+                'phone_not_verified': 'Телефон не подтвержден',
+                'phone_changed': 'Телефон был изменен после отправки кода',
+                'code_expired': 'Код подтверждения устарел'
+            };
+            
+            if (data.message === 'user_already_exists') {
+                userAlreadyExistsModal.classList.add('open');
+            } else if (errorMessages[data.message]) {
+                incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = errorMessages[data.message];
+                incorrectSmsCodeModal.classList.add('open');
+            } else if (data.message) {
+                incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = data.message;
+                incorrectSmsCodeModal.classList.add('open');
+            }
         }
-    }
-})
+    })
     .catch(error => {
         console.error('Ошибка:', error);
     });
