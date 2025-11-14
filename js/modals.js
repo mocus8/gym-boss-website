@@ -126,6 +126,11 @@ document.getElementById('sms-code').addEventListener('click', async function(e) 
             this.disabled = true;
             this.textContent = 'Обработка...';
 
+            if (!phoneValidation.isValid) {
+                incorrectPhoneModal.classList.add('open');
+                return;
+            }
+
             // передаем телефон В POST для отправки смс
             const response = await fetch('/src/smscSend.php', {
                 method: 'POST',
@@ -164,10 +169,8 @@ document.getElementById('sms-code').addEventListener('click', async function(e) 
                 throw new Error(result.error || result.message || `Ошибка ${response.status}!`);
             }
 
-        this.textContent = 'Успешно';
+            this.textContent = 'Успешно';
         }
-
-        
     } catch (error) {
         incorrectSmsCodeModal.classList.add('open');
         incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
