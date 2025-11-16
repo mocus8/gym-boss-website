@@ -2,14 +2,14 @@
 session_start();
 
 require_once DIR . '/helpers.php';
-require_once DIR . '/secure/captchaVerification.php';
+// require_once DIR . '/secure/captchaVerification.php';
 
 // Получаем данные ИЗ POST
 $login = $_POST["login"];
 $password = $_POST["password"]; 
 $name = $_POST["name"];
 
-requireCaptcha();
+// requireCaptcha();
 
 $cartSessionId = getCartSessionId();
 
