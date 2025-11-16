@@ -8,7 +8,7 @@ RewriteEngine On
 # SECURITY HEADERS
 Header always set Content-Security-Policy "\
 default-src 'self'; \
-script-src 'self' https://gtmpx.com https://api-maps.yandex.ru https://yastatic.net https://core-renderer-tiles.maps.yandex.net https://cdn.jsdelivr.net https://code.jquery.com 'unsafe-eval' 'unsafe-inline'; \
+script-src 'self' https://www.google.com https://www.gstatic.com https://gtmpx.com https://api-maps.yandex.ru https://yastatic.net https://core-renderer-tiles.maps.yandex.net https://cdn.jsdelivr.net https://code.jquery.com 'unsafe-eval' 'unsafe-inline'; \
 style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; \
 img-src 'self' data: https: https://*.maps.yandex.net; \
 font-src 'self' data: https:; \
