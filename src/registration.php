@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-require_once DIR . '/helpers.php';
-// require_once DIR . '/secure/captchaVerification.php';
+require_once __DIR__ . '/helpers.php';
+// require_once __DIR__ . '/secure/captchaVerification.php';
 
 // Получаем данные ИЗ POST
 $login = $_POST["login"];
@@ -42,7 +42,7 @@ if (!isset($_SESSION['verified_phone'])) {
 }
 
 // b. Проверка совпадения телефона
-if ($_SESSION['verified_phone'] !== normalize_phone($_POST['login'])) {
+if ($_SESSION['verified_phone'] !== $_POST['login']) {
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
