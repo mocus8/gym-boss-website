@@ -121,10 +121,38 @@ document.querySelector('.authorization_modal_form').addEventListener('submit', f
     });
 });
 
+async function confirmSmsCode() {
+    const smsCodeInput = document.querySelector('.registration_modal_form').querySelector('input[name="sms_code"]');
+
+    try {
+        const response = await fetch('/src/smscVerify.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                code: smsCodeInput.value
+            })
+        });
+    
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || result.message || `Ошибка ${response.status}!`);
+        }
+
+        return { success: true };
+    } catch (error) {
+        return { 
+            success: false, 
+            error: error.message 
+        };
+    }
+}
+
 document.getElementById('sms-code').addEventListener('click', async function(e) {
     const phoneNumberInput = document.querySelector('.registration_modal_form').querySelector('input[name="login"]');
     const phoneValidation = validatePhoneNumber(phoneNumberInput.value);
-    const smsCodeInput = document.querySelector('.registration_modal_form').querySelector('input[name="sms_code"]').value;
     const incorrectPhoneModal = document.getElementById('incorrect-phone-number-modal');
     const incorrectSmsCodeModal = document.getElementById('incorrect-sms-code-modal');
     const originalText = this.textContent;
@@ -163,24 +191,15 @@ document.getElementById('sms-code').addEventListener('click', async function(e) 
             this.disabled = false;
             this.textContent = 'Подтвердить код';
         } else if (this.textContent.includes('Подтвердить')) {
+
+            //эту логику потом отсюда убрать, подтверждение с кнопки потом надо удалить
+
             this.disabled = true;
             this.textContent = 'Обработка...';
 
-            // передаем код В POST для проверки
-            const response = await fetch('/src/smscVerify.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    code: smsCodeInput
-                })
-            });
-        
-            const result = await response.json();
-    
-            if (!response.ok || !result.success) {
-                throw new Error(result.error || result.message || `Ошибка ${response.status}!`);
+            const confirmationResult = await confirmSmsCode();
+            if (!confirmationResult.success) {
+                throw new Error(`Ошибка ${confirmationResult.error}! Попробуйте еще раз`);
             }
 
             this.textContent = 'Успешно';
@@ -193,6 +212,8 @@ document.getElementById('sms-code').addEventListener('click', async function(e) 
         this.disabled = false;
     }
 });
+
+
 
 document.querySelector('.registration_modal_form').addEventListener('submit', async function(e) {
     e.preventDefault();
