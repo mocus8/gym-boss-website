@@ -123,6 +123,12 @@ document.querySelector('.authorization_modal_form').addEventListener('submit', f
 
 async function confirmSmsCode() {
     const smsCodeInput = document.querySelector('.registration_modal_form').querySelector('input[name="sms_code"]');
+    const incorrectSmsCodeModal = document.getElementById('incorrect-sms-code-modal');
+    const smsCodeButton = document.getElementById('sms-code');
+    const originalText = smsCodeButton.textContent;
+
+    smsCodeButton.disabled = true;
+    smsCodeButton.textContent = 'Обработка...';
 
     try {
         const response = await fetch('/src/smscVerify.php', {
@@ -138,18 +144,69 @@ async function confirmSmsCode() {
         const result = await response.json();
 
         if (!response.ok || !result.success) {
-            throw new Error(result.error || result.message || `Ошибка ${response.status}!`);
+            throw new Error(result.error || result.message || `Ошибка ${response.status}! Попробуйте еще раз`);
         }
 
-        return { success: true };
+        clearResendTimer();
+        smsCodeButton.textContent = 'Успешно';
     } catch (error) {
-        return { 
-            success: false, 
-            error: error.message 
-        };
+        incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
+        incorrectSmsCodeModal.classList.add('open');
+
+        smsCodeButton.textContent = originalText;
+        smsCodeButton.disabled = false;
     }
 }
 
+let resendTimer = null;
+let resendTimeLeft = 0;
+
+function startResendTimer(seconds = 60) {
+    const smsButton = document.getElementById('sms-code');
+    resendTimeLeft = seconds;
+    
+    // Блокируем кнопку сразу
+    smsButton.disabled = true;
+    
+    resendTimer = setInterval(() => {
+        resendTimeLeft--;
+        
+        if (resendTimeLeft <= 0) {
+            // Таймер завершен
+            clearInterval(resendTimer);
+            smsButton.disabled = false;
+            smsButton.textContent = 'Отправить снова';
+        } else {
+            // Обновляем текст кнопки
+            smsButton.textContent = `Отправить снова\n (${resendTimeLeft}с)`;
+        }
+    }, 1000);
+}
+
+//запуск таймера повторной отправки
+function toggleSmsCodeState() {
+    const phoneChangeButton = document.getElementById('phone-change');
+    const SmsCodeSection = document.querySelector('.registration_modal_form').querySelector('input[name="sms_code"]').closest('.registration_modal_input_back');
+    const phoneNumberSection = document.querySelector('.registration_modal_form').querySelector('input[name="login"]').closest('.registration_modal_input_back');
+
+    phoneChangeButton.classList.toggle('hidden');
+    SmsCodeSection.classList.toggle('hidden');
+    phoneNumberSection.classList.toggle('hidden');
+}
+
+//остановка таймера повторной отправки
+function clearResendTimer() {
+    if (resendTimer) {
+        clearInterval(resendTimer);
+        resendTimer = null;
+    }
+    
+    const smsButton = document.getElementById('sms-code');
+    smsButton.disabled = false;
+    smsButton.textContent = 'Получить код';
+}
+
+// отправка кода
 document.getElementById('sms-code').addEventListener('click', async function(e) {
     const phoneNumberInput = document.querySelector('.registration_modal_form').querySelector('input[name="login"]');
     const phoneValidation = validatePhoneNumber(phoneNumberInput.value);
@@ -158,52 +215,40 @@ document.getElementById('sms-code').addEventListener('click', async function(e) 
     const originalText = this.textContent;
 
     try {
-        if (this.textContent.includes('Отправить')) {
-            this.disabled = true;
-            this.textContent = 'Обработка...';
+        this.disabled = true;
+        this.textContent = 'Обработка...';
 
-            if (!phoneValidation.isValid) {
-                incorrectPhoneModal.classList.add('open');
-                this.textContent = originalText;
-                this.disabled = false;
-                return;
-            }
-
-            // передаем телефон В POST для отправки смс
-            const response = await fetch('/src/smscSend.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    phone: phoneValidation.formatted
-                })
-            });
-
-            //это для теста без реальных sms, потом убрать!!!
-            const result = await response.json();
-            alert(`смски дорогие, пока так (но функционал для реальных смс уже есть) ) Код подтверждения: ${result.debug_code}`);
-
-            if (!response.ok) {
-                throw new Error(`Ошибка ${response.status}! Попробуйте еще раз`);
-            }
-
+        if (!phoneValidation.isValid) {
+            incorrectPhoneModal.classList.add('open');
+            this.textContent = originalText;
             this.disabled = false;
-            this.textContent = 'Подтвердить код';
-        } else if (this.textContent.includes('Подтвердить')) {
-
-            //эту логику потом отсюда убрать, подтверждение с кнопки потом надо удалить
-
-            this.disabled = true;
-            this.textContent = 'Обработка...';
-
-            const confirmationResult = await confirmSmsCode();
-            if (!confirmationResult.success) {
-                throw new Error(`Ошибка ${confirmationResult.error}! Попробуйте еще раз`);
-            }
-
-            this.textContent = 'Успешно';
+            return;
         }
+
+        if (originalText.includes('Получить')) {
+            toggleSmsCodeState();
+        }
+
+        // передаем телефон В POST для отправки смс
+        const response = await fetch('/src/smscSend.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                phone: phoneValidation.formatted
+            })
+        });
+
+        //это для теста без реальных sms, потом убрать!!!
+        const result = await response.json();
+        alert(`смски дорогие, пока так (но функционал для реальных смс уже есть) ) Код подтверждения: ${result.debug_code}`);
+
+        if (!response.ok) {
+            throw new Error(`Ошибка ${response.status}! Попробуйте еще раз`);
+        }
+
+        startResendTimer(20);
     } catch (error) {
         incorrectSmsCodeModal.classList.add('open');
         incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
@@ -213,7 +258,21 @@ document.getElementById('sms-code').addEventListener('click', async function(e) 
     }
 });
 
+// Обработчик изменения ввода
+document.querySelector('input[name="sms_code"]').addEventListener('input', function(e) {
+    this.value = this.value.replace(/\D/g, '');
+    if (this.value.length === 5) {
+        confirmSmsCode();
+    }
+});
 
+// Обработчик нажатия клавиш  
+document.querySelector('input[name="sms_code"]').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmSmsCode();
+    }
+});
 
 document.querySelector('.registration_modal_form').addEventListener('submit', async function(e) {
     e.preventDefault();

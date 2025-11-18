@@ -7,6 +7,10 @@
 }
 */
 
+.hidden {
+    display: none !important;
+}
+
 ::-webkit-scrollbar {
     width: 0.75vw;  
 }
@@ -584,7 +588,7 @@ button {
 }
 
 .registration_modal_input_back.short {
-    width: 25vw;
+    width: 22.5vw;
     background-image: none;
     background-color: #4B4B4B;
     border: 0.1vw solid black;

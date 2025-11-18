@@ -188,21 +188,24 @@ if ($idUser != '') {
                     </span>
                     <input required class="registration_modal_input" type="text" name="name" autocomplete="name">
                 </div>
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Ваш телефон:
-                    </span>
-                    <input required class="registration_modal_input" type="tel" placeholder="(+7 XXX XXX XX XX)" name="login" autocomplete="tel">
-                </div>
                 <div class="registration_modal_sms_code_section">
                     <div class="registration_modal_input_back short">
+                        <span class="registration_modal_input_text">
+                            Ваш телефон:
+                        </span>
+                        <input required class="registration_modal_input" type="tel" placeholder="(+7 XXX XXX XX XX)" name="login" autocomplete="tel">
+                    </div>
+                    <div class="registration_modal_input_back short hidden">
                         <span class="registration_modal_input_text">
                             Код подтверждения:
                         </span>
                         <input required class="registration_modal_input" type="text" placeholder="12345" name="sms_code" maxlength="5">
                     </div>
                     <button class="registration_modal_sms_code_button" type="button" id="sms-code">
-                        Отправить код
+                        Получить код
+                    </button>
+                    <button class="registration_modal_sms_code_button hidden" type="button" id="phone-change">
+                        Изменить номер
                     </button>
                 </div>
                 <div class="registration_modal_input_back">
