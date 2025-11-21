@@ -202,10 +202,10 @@ if ($idUser != '') {
                         <input required class="registration_modal_input" type="text" placeholder="12345" name="sms_code" maxlength="5">
                     </div>
                     <button class="registration_modal_sms_code_button" type="button" id="first-sms-code">
-                        Получить код <span data-action="retry-sms-code-timer"></span> 
+                        <span class="first_sms_code_btn_text">Получить код</span> <span data-action="retry-sms-code-timer"></span> 
                     </button>
                     <button class="registration_modal_sms_code_button hidden" type="button" id="retry-sms-code">
-                        Отправить снова <span data-action="retry-sms-code-timer"></span> 
+                    <span class="retry_sms_code_btn_text">Отправить снова</span> <span data-action="retry-sms-code-timer"></span> 
                     </button>
                     <button class="registration_modal_sms_code_button hidden" type="button" id="phone-change">
                         Ред. номер

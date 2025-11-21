@@ -172,17 +172,6 @@ function clearResendTimer() {
 //запуск таймера блокировки 
 function startUnlockTimer(blockedUntilTimestamp) {
     clearResendTimer();
-
-    const smsFirstCodeButton = document.getElementById('first-sms-code');
-    const smsRetryCodeButton = document.getElementById('retry-sms-code');
-    const phoneChangeButton = document.getElementById('phone-change');
-    const smsCodeInput = document.querySelector('input[name="sms_code"]');
-    
-    // Блокируем все элементы формы
-    smsFirstCodeButton.disabled = true;
-    smsRetryCodeButton.disabled = true;
-    phoneChangeButton.disabled = true;
-    smsCodeInput.disabled = true;
     
     const interval = setInterval(() => {
         const now = Math.floor(Date.now() / 1000);
@@ -190,12 +179,40 @@ function startUnlockTimer(blockedUntilTimestamp) {
         
         if (timeLeft <= 0) {
             clearInterval(interval);
-            smsFirstCodeButton.disabled = false;
-            smsRetryCodeButton.disabled = false;
-            phoneChangeButton.disabled = false;
-            smsCodeInput.disabled = false;
         }
     }, 1000);
+}
+
+// проверка на блок по попыткам
+async function isAttemptsBlocked() {
+    const incorrectSmsCodeModal = document.getElementById('incorrect-sms-code-modal');
+
+    try {
+        const response = await fetch('/src/isAttemptsBlocked.php');
+        const result = await response.json();
+
+        if (result.success) {
+            return false;
+        }
+
+        if (result.error === 'blocked') {
+            clearResendTimer();
+            startUnlockTimer(result.blocked_until);
+
+            incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`;
+            incorrectSmsCodeModal.classList.add('open');
+
+            // дебаг 
+            console.log("вызвана функция блокировки");
+
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = `Ошибка проверки блокировки`;
+        return false;
+    }
 }
 
 // переключение состояния формы
@@ -215,28 +232,39 @@ function toggleSmsCodeState() {
 
 // отправка кода
 async function sendSmsCode() {
+    if (await isAttemptsBlocked()) {
+        return;
+    }
+
     const phoneNumberInput = document.querySelector('.registration_modal_form').querySelector('input[name="login"]');
     const phoneValidation = validatePhoneNumber(phoneNumberInput.value);
+
     const incorrectPhoneModal = document.getElementById('incorrect-phone-number-modal');
     const incorrectSmsCodeModal = document.getElementById('incorrect-sms-code-modal');
+
     const smsFirstCodeButton = document.getElementById('first-sms-code');
-    const smsFirstCodeButtonInnerHTML = smsFirstCodeButton.innerHTML;
     const smsRetryCodeButton = document.getElementById('retry-sms-code');
-    const smsRetryCodeButtonInnerHTML = smsRetryCodeButton.innerHTML;
+
+    const smsFirstCodeButtonText = smsFirstCodeButton.querySelector('.first_sms_code_btn_text');
+    const smsRetryCodeButtonText = smsRetryCodeButton.querySelector('.retry_sms_code_btn_text');
+
+    const smsFirstCodeButtonTextOrgnl = smsFirstCodeButtonText.textContent;
+    const smsRetryCodeButtonTextOrgnl = smsRetryCodeButtonText.textContent;
 
     if (!smsFirstCodeButton.classList.contains('hidden')) {
         smsFirstCodeButton.disabled = true;
-        smsFirstCodeButton.innerHTML = 'Обработка...';
+        smsFirstCodeButtonText.textContent = 'Обработка...';
     } else {
         smsRetryCodeButton.disabled = true;
-        smsRetryCodeButton.innerHTML = 'Обработка...';
+        smsRetryCodeButtonText.textContent = 'Обработка...';
     }
 
     try {
+
         if (!phoneValidation.isValid) {
             incorrectPhoneModal.classList.add('open');
-            smsFirstCodeButton.innerHTML = smsFirstCodeButtonInnerHTML;
-            smsRetryCodeButton.innerHTML = smsRetryCodeButtonInnerHTML;
+            smsFirstCodeButtonText.textContent = smsFirstCodeButtonTextOrgnl;
+            smsRetryCodeButtonText.textContent = smsRetryCodeButtonTextOrgnl;
             smsFirstCodeButton.disabled = false;
             smsRetryCodeButton.disabled = false;
             return;
@@ -254,12 +282,6 @@ async function sendSmsCode() {
         });
     
         const result = await response.json();
-
-        // ОБРАБОТКА БЛОКИРОВКИ
-        if (result.error === 'blocked') {
-            startUnlockTimer(result.blocked_until);
-            throw new Error(`Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`);
-        }
 
         if (!response.ok || !result.success) {
             throw new Error(result.error || result.message || `Ошибка ${response.status}! Попробуйте еще раз`);
@@ -281,24 +303,29 @@ async function sendSmsCode() {
         incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
         incorrectSmsCodeModal.classList.add('open');
     } finally {
-        smsFirstCodeButton.innerHTML = smsFirstCodeButtonInnerHTML;
-        smsRetryCodeButton.innerHTML = smsRetryCodeButtonInnerHTML;
+        smsFirstCodeButtonText.textContent = smsFirstCodeButtonTextOrgnl;
+        smsRetryCodeButtonText.textContent = smsRetryCodeButtonTextOrgnl;
     }
 }
 
 // подтверждение кода
 async function confirmSmsCode() {
+    if (await isAttemptsBlocked()) {
+        return;
+    }
+
     const smsCodeInput = document.querySelector('.registration_modal_form').querySelector('input[name="sms_code"]');
     const incorrectSmsCodeModal = document.getElementById('incorrect-sms-code-modal');
-    const smsFirstCodeButton = document.getElementById('first-sms-code');
-    const smsRetryCodeButton = document.getElementById('retry-sms-code');
-    // const smsRetryCodeButtonInnerHTML = smsRetryCodeButton.innerHTML;
 
-    const smsRetryCodeButtonInnerHTML = 'Отправить снова <span data-action="retry-sms-code-timer"></span>';
+    const smsFirstCodeButton = document.getElementById('first-sms-code');
+
+    const smsRetryCodeButton = document.getElementById('retry-sms-code');
+    const smsRetryCodeButtonText = smsRetryCodeButton.querySelector('.retry_sms_code_btn_text');
+    const smsRetryCodeButtonTextOrgnl = smsRetryCodeButtonText.textContent;
 
     smsFirstCodeButton.disabled = true;
     smsRetryCodeButton.disabled = true;
-    smsRetryCodeButton.textContent = 'Обработка...';
+    smsRetryCodeButtonText.textContent = 'Обработка...';
 
     try {
         const response = await fetch('/src/smscVerify.php', {
@@ -313,9 +340,10 @@ async function confirmSmsCode() {
     
         const result = await response.json();
 
-        // ОБРАБОТКА БЛОКИРОВКИ
         if (result.error === 'blocked') {
             startUnlockTimer(result.blocked_until);
+            smsFirstCodeButton.disabled = false;
+            smsRetryCodeButton.disabled = false;
             throw new Error(`Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`);
         }
 
@@ -327,13 +355,12 @@ async function confirmSmsCode() {
 
         toggleSmsCodeState();
 
-        smsRetryCodeButton.innerHTML = smsRetryCodeButtonInnerHTML;
         smsFirstCodeButton.textContent = 'Успешно';
     } catch (error) {
         incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
         incorrectSmsCodeModal.classList.add('open');
-
-        smsRetryCodeButton.innerHTML = smsRetryCodeButtonInnerHTML;
+    } finally {
+        smsRetryCodeButtonText.textContent = smsRetryCodeButtonTextOrgnl;
     }
 }
 
@@ -343,7 +370,7 @@ document.getElementById('first-sms-code').addEventListener('click', sendSmsCode)
 // отправить код снова
 document.getElementById('retry-sms-code').addEventListener('click', sendSmsCode);
 
-// измеить телефон
+// изменить телефон
 document.getElementById('phone-change').addEventListener('click', async function(e) {
     toggleSmsCodeState();
     // isPhoneVerified = false; // Сбрасываем подтверждение
