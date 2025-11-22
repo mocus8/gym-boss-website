@@ -6,13 +6,16 @@ require_once __DIR__ . '/helpers.php';
 header('Content-Type: application/json');
 
 try {
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+
     $connect = getDB();
 
     if (!$connect) {
         throw new Exception('db connection error');
     }
 
-    if (!isset($_POST["login"]) || empty(trim($_POST["login"]))) {
+    if (!isset($data["login"]) || empty(trim($data["login"]))) {
         echo json_encode([
             'success' => false,
             'message' => 'login_required'
@@ -20,7 +23,7 @@ try {
         exit;
     }
 
-    $login = trim($_POST["login"]);
+    $login = trim($data["login"]);
 
     $check = $connect->prepare("SELECT id FROM users WHERE login = ?");
 
