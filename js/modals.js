@@ -359,7 +359,7 @@ async function confirmSmsCode() {
         clearResendTimer();
 
         phoneNumberInput.value = validatePhoneNumber(phoneNumberInput.value).formatted;
-        phoneNumberInput.disabled = true;
+        phoneNumberInput.readOnly = true;
 
         toggleSmsCodeState();
         
