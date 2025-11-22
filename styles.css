@@ -771,8 +771,8 @@ button {
     position: absolute;
     margin-top: 7.25vw;;
     margin-left: 18vw;
-    width: 11.5vw;
-    height: 3vw;
+    width: min-content;
+    height: min-content;
     background-color: white;
     border-radius: 0.25vw;
     border: 0.025vw solid black;
