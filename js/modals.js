@@ -502,6 +502,14 @@ document.getElementById('phone-change').addEventListener('click', async function
     toggleSmsCodeState();
 });
 
+// Обработчик нажатия enter
+document.querySelector('input[name="sms_code"]').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmSmsCode();
+    }
+});
+
 // Обработчик ввода (по 5 символам)
 document.querySelector('input[name="sms_code"]').addEventListener('input', function(e) {
     this.value = this.value.replace(/\D/g, '');
@@ -510,13 +518,18 @@ document.querySelector('input[name="sms_code"]').addEventListener('input', funct
     }
 });
 
-// Обработчик нажатия enter
-document.querySelector('input[name="sms_code"]').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        confirmSmsCode();
-    }
+// обработчик ввода телефона
+document.querySelectorAll('input[name="login"]').forEach(input => {
+    input.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^\d+]/g, '');
+        let value = this.value;
+        
+        if (value.startsWith('7')) {
+            console.log(value);
+        }
+    });
 });
+
 
 // потдтерждение формы регистрации
 document.querySelector('.registration_modal_form').addEventListener('submit', async function(e) {
