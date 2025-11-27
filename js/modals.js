@@ -57,7 +57,7 @@ setupModal("account-exit-modal", "open-account-exit-modal", "close-account-exit-
 function validatePhoneNumber(phone) {
     let cleaned = phone.replace(/[^\d+]/g, '');
 
-    const regex = /^\+7\d{10}$/;
+    const regex = /^\+79\d{9}$/;
 
     return {
         isValid: regex.test(cleaned),
