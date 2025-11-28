@@ -1,10 +1,33 @@
-//пробные отправки запросов на сервак
+// универсальная функция для распознавания ответа
+async function parseResponse(response) {
+    const contentType = response.headers.get('content-type');
+    const text = await response.text();
+    
+    // Если это JSON - парсим как JSON
+    if (contentType && contentType.includes('application/json')) {
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('JSON parse error:', e);
+            throw new Error('Ошибка, некорректный JSON от сервера, попробуйте позже');
+        }
+    }
+    
+    // Если не JSON - обрабатываем как текст
+    throw new Error('Ошибка, сервер вернул некорректный ответ, попробуйте позже');
+}
+
+// повторные отправки запросов на сервак
 async function fetchWithRetry(url, options, retries = 2) {
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
             const response = await fetch(url, options);
-            if (response.ok) return await response.json();
-            throw new Error(`HTTP ${response.status}`);
+            if (response.ok) {
+                const result = await parseResponse(response);
+                return result;
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
         } catch (error) {
             if (attempt === retries) throw error;
             await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
@@ -218,7 +241,7 @@ async function isAttemptsBlocked() {
 
     try {
         const response = await fetch('/src/isAttemptsBlocked.php');
-        const result = await response.json();
+        const result = await parseResponse(response);
 
         if (result.success) {
             return false;
@@ -262,7 +285,7 @@ async function isUserAlreadyExist() {
             })
         });
 
-        const result = await response.json();
+        const result = await parseResponse(response);
 
         if (result.success) {
             userAlreadyExistsModal.classList.add('open');
@@ -348,9 +371,9 @@ async function sendSmsCode() {
             })
         });
     
-        const result = await response.json();
+        const result = await parseResponse(response);
 
-        if (!response.ok || !result.success) {
+        if (!result.success) {
             throw new Error(result.error || result.message || `Ошибка ${response.status}! Попробуйте еще раз`);
         }
 
@@ -373,6 +396,9 @@ async function sendSmsCode() {
 
         incorrectSmsCodeModal.querySelector('.error_modal_text').textContent = error.message;
         incorrectSmsCodeModal.classList.add('open');
+
+        smsFirstCodeButton.disabled = false;
+        smsRetryCodeButton.disabled = false;
     } finally {
         smsFirstCodeButtonText.textContent = smsFirstCodeButtonTextOrgnl;
         smsRetryCodeButtonText.textContent = smsRetryCodeButtonTextOrgnl;
@@ -411,7 +437,7 @@ async function confirmSmsCode() {
             })
         });
     
-        const result = await response.json();
+        const result = await parseResponse(response);
 
         if (result.error === 'blocked') {
             SmsTimerManager.startUnlockTimer(result.blocked_until);
@@ -420,7 +446,7 @@ async function confirmSmsCode() {
             throw new Error(`Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`);
         }
 
-        if (!response.ok || !result.success) {
+        if (!result.success) {
             throw new Error(result.error || result.message || `Ошибка ${response.status}! Попробуйте еще раз`);
         }
 
