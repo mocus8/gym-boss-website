@@ -79,9 +79,10 @@ $sql = "
             WHERE img2.product_id = prdct.product_id
         )
     WHERE " . implode(' OR ', $conditions) . "
-    HAVING relevance > 0
+    
     ORDER BY relevance DESC, prdct.name
 ";
+// HAVING relevance > 0
 
 // оформляем параметры
 array_unshift($params, $exactMatch, $searchTermStart, $searchTerm, $searchTerm);
