@@ -51,7 +51,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows == 0) {
     http_response_code(200);
-    echo json_encode(['queryProducts' => []]);
+    echo json_encode([]);
     exit;
 }
 
