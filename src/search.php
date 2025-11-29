@@ -42,7 +42,6 @@ if (empty($conditions)) {
 }
 
 $connect = getDB();
-$connect->set_charset("utf8mb4");
 
 if (!$connect) {
     http_response_code(500);
