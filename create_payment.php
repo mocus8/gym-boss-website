@@ -28,6 +28,46 @@ try {
 
     $connect->begin_transaction();
 
+    // Проверяем есть ли активный платеж
+    $checkStmt = $connect->prepare("SELECT yookassa_payment_id, payment_expires_at 
+        FROM orders WHERE order_id = ? 
+        AND status = 'pending_payment'
+        ");
+    $checkStmt->bind_param("i", $orderId);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    $existing = $result->fetch_assoc();
+    $checkStmt->close();
+
+    if (!empty($existing['yookassa_payment_id'])) {
+        // Проверяем не истек ли платеж
+        if (strtotime($existing['payment_expires_at']) > time()) {
+            // Проверяем статус в ЮКассе
+            require_once __DIR__ . '/checkYooKassaStatus.php';
+            $status = checkYooKassaStatus($existing['yookassa_payment_id']);
+            
+            if ($status === 'pending') {
+                // Возвращаем существующую ссылку
+                $paymentInfo = $yookassa->getPaymentInfo($existing['yookassa_payment_id']);
+                echo json_encode([
+                    'confirmation_url' => $paymentInfo->getConfirmation()->getConfirmationUrl()
+                ]);
+                $connect->close();
+                exit;
+            } else if ($status === 'succeeded') {
+                // Платеж уже оплачен (вебхук мог не дойти)
+                $updateStmt = $connect->prepare("UPDATE orders SET status = 'paid', paid_at = NOW() WHERE order_id = ?");
+                $updateStmt->bind_param("i", $orderId);
+                $updateStmt->execute();
+
+                // эту ошибку отрабатывать на фронте
+                echo json_encode(['error' => 'ORDER_ALREADY_PAID']);
+                $connect->close();
+                exit;
+            }
+        }
+    }
+
     $stmt = $connect->prepare("
         SELECT o.order_id, o.total_price, o.delivery_type, o.delivery_cost, o.status, o.created_at,
         u.login,
@@ -64,13 +104,6 @@ try {
 
     if (empty($order['login'])) {
         throw new Exception('EMPTY_USER_PHONE');
-    }
-
-    if ($order['status'] === 'cart') {
-        $updateStmt = $connect->prepare("UPDATE orders SET status = 'pending_payment' WHERE order_id = ?");
-        $updateStmt->bind_param("i", $orderId);
-        $updateStmt->execute();
-        $updateStmt->close();
     }
 
     //создаём массив товаров в нужном для чека формате
@@ -120,30 +153,47 @@ try {
 
     $yookassa = new \YooKassa\Client();
     $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
-    
-    $idempotenceKey = 'order_' . $orderId . '_' . time();
-    $payment = $yookassa->createPayment([
-        'amount' => [
-            'value' => number_format($order['total_price'], 2, '.', ''),
-            'currency' => 'RUB'
-        ],
-        'confirmation' => [
-            'type' => 'redirect',
-            'return_url' => 'https://cw187549.tw1.ru/order_success.php?orderId=' . $orderId
-        ],
-        'capture' => true,
-        'description' => 'Заказ №' . $orderId,
-        'metadata' => ['orderId' => $orderId],
 
-        'receipt' => [
-            'customer' => [
-                'phone' => $order['login']
+    try {
+        $idempotenceKey = 'order_' . $orderId . '_' . time();
+        
+        $payment = $yookassa->createPayment([
+            'amount' => [
+                'value' => number_format($order['total_price'], 2, '.', ''),
+                'currency' => 'RUB'
             ],
-            'items' => $items
-        ]
+            'confirmation' => [
+                'type' => 'redirect',
+                'return_url' => 'https://cw187549.tw1.ru/order_success.php?orderId=' . $orderId
+            ],
+            'capture' => true,
+            'description' => 'Заказ №' . $orderId,
+            'metadata' => ['orderId' => $orderId],
 
+            'receipt' => [
+                'customer' => [
+                    'phone' => $order['login']
+                ],
+                'items' => $items
+            ]
+        ], $idempotenceKey);
+    } catch (\YooKassa\Common\Exceptions\ApiException $e) {
+        error_log("YooKassa API error: " . $e->getMessage());
+        throw new Exception('PAYMENT_SYSTEM_ERROR');
+    } catch (\YooKassa\Common\Exceptions\BadApiRequestException $e) {
+        error_log("YooKassa bad request: " . $e->getMessage());
+        throw new Exception('INVALID_PAYMENT_DATA');
+    }
+    $expiresAt = date('Y-m-d H:i:s', time() + 1800); // устаревание оплаты через 30 минут
 
-    ], $idempotenceKey);
+    $updateStmt = $connect->prepare("UPDATE orders SET 
+        yookassa_payment_id = ?, 
+        payment_expires_at = ?, 
+        status = 'pending_payment' 
+        WHERE order_id = ?");
+    $updateStmt->bind_param("ssi", $payment->getId(), $expiresAt, $orderId);
+    $updateStmt->execute();
+    $updateStmt->close();
 
     $connect->commit();
 
