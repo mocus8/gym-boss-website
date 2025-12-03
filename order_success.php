@@ -25,7 +25,7 @@ try {
     }
 
     // получаем из бд данные о заказе (id заказа, статус и время оплаты)
-    $stmt = $connect->prepare("SELECT order_id, delivery_cost, status, paid_at FROM orders WHERE order_id = ? AND user_id = ?");
+    $stmt = $connect->prepare("SELECT order_id, delivery_cost, status, paid_at, yookassa_payment_id, payment_expires_at FROM orders WHERE order_id = ? AND user_id = ?");
     if (!$stmt) {
         throw new Exception('DATABASE_OPERATIONS_FAILED');
     }
@@ -35,18 +35,29 @@ try {
     $stmt->execute();
     $result = $stmt->get_result();
     $order = $result->fetch_assoc();
-    $paidAt = $order['paid_at'];
-    $deliveryCost = $order['delivery_cost'];
 
     // Заказ вообще не существует
     if (!$order) {
         throw new Exception('ORDER_NOT_FOUND');
     }
+    
+    $yookassaPaymentId = $order['yookassa_payment_id'];
+    $paymentExpiresAt = $order['payment_expires_at'];
+    $paidAt = $order['paid_at'];
+    $deliveryCost = $order['delivery_cost'];
+
+    if ($order['status'] !== 'paid' && $paymentExpiresAt && strtotime($paymentExpiresAt) < time()) {
+        throw new Exception('PAYMENT_TIME_EXPIRED');
+    }
 
     // Заказ есть, но не оплачен
-    if ($order['status'] !== 'paid') {
-        $paymentStatus = checkYooKassaStatus($orderId);
-        switch ($paymentStatus) {
+    if ($order['status'] !== 'paid') { 
+        if (!$yookassaPaymentId) {
+            throw new Exception('PAYMENT_NOT_CREATED');
+        }
+
+        $paymentYoukassaStatus = checkYooKassaStatus($yookassaPaymentId);
+        switch ($paymentYoukassaStatus) {
             case 'succeeded':
                 // Деньги списались, но вебхук не сработал - обновляем статус в БД
                 $updateStmt = $connect->prepare("UPDATE orders SET paid_at = NOW(), status = 'paid' WHERE order_id = ?");
@@ -74,6 +85,12 @@ try {
             case 'failed':
                 // Ошибка оплаты
                 throw new Exception('PAYMENT_FAILED');
+
+            case 'not_found':
+                throw new Exception('PAYMENT_NOT_FOUND');
+                
+            case 'api_error':
+                throw new Exception('PAYMENT_SYSTEM_ERROR');
                 
             default:
                 // Неизвестный статус или ошибка API

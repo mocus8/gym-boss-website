@@ -16,8 +16,6 @@ if (!$userId || !$orderId) {
 
 require_once __DIR__ . '/src/getOrderData.php';
 
-
-
 try {
     if (empty($orderItems)) {
         throw new Exception('ORDER_NOT_FOUND');
