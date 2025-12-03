@@ -6,7 +6,26 @@ use YooKassa\Model\Notification\NotificationSucceeded;
 use YooKassa\Model\Notification\NotificationWaitingForCapture;
 use YooKassa\Model\Notification\NotificationCanceled;
 
+// логирование вебхука (для финального через redis или laravel)
+function logWebhook($message) {
+    $logFile = __DIR__ . '/webhook.log';
+    
+    // Проверяем существует ли файл
+    if (!file_exists($logFile)) {
+        // Создаем файл
+        file_put_contents($logFile, '');
+        chmod($logFile, 0644); // Права на чтение/запись
+    }
+    
+    file_put_contents($logFile, 
+        date('Y-m-d H:i:s') . ' - ' . $message . "\n", 
+        FILE_APPEND
+    );
+}
+
 try {
+    logWebhook('Request from IP: ' . $_SERVER['REMOTE_ADDR']);
+
     $remoteIP = $_SERVER['REMOTE_ADDR'];
     $trustedRanges = [
         '185.71.76.0/27',
@@ -44,6 +63,8 @@ try {
     $source = file_get_contents('php://input');
     $requestBody = json_decode($source, true);
 
+    logWebhook('Event: ' . ($requestBody['event'] ?? 'unknown'));
+
     switch ($requestBody['event']) {
         case 'payment.succeeded':
             $notification = new NotificationSucceeded($requestBody);
@@ -60,12 +81,15 @@ try {
 
     $payment = $notification->getObject();
 
+    logWebhook('Payment ID: ' . $payment->getId() . ', Amount: ' . $payment->getAmount()->getValue() . ' ' . $payment->getAmount()->getCurrency());
+
     if ($requestBody['event'] === 'payment.succeeded') {
         $metadata = $payment->getMetadata();
         $orderId = $metadata['orderId'] ?? null;
+        $yookassaPaymentId = $payment->getId();
         
         if (!$orderId) {
-            error_log("No orderId in metadata");
+            logWebhook("No orderId in metadata");
             http_response_code(200);
             exit('OK');
         }
@@ -76,18 +100,27 @@ try {
         }
 
         // Обновляем статус заказа если прошли проверки
-        $stmt = $connect->prepare("UPDATE orders SET paid_at = NOW(), status = 'paid' WHERE order_id = ?");
-        $stmt->bind_param("i", $orderId);
+        $stmt = $connect->prepare("UPDATE orders SET
+            paid_at = NOW(),   
+            status = 'paid',
+            yookassa_payment_id = ?
+            WHERE order_id = ? 
+            AND (yookassa_payment_id IS NULL OR yookassa_payment_id = ?)
+        ");
+        $stmt->bind_param("sis", $yookassaPaymentId, $orderId, $yookassaPaymentId);
         $result = $stmt->execute();
         
-        if (!$result) {
-            throw new Exception('Execute failed: ' . $stmt->error);
+        if ($result && $stmt->affected_rows > 0) {
+            logWebhook('SUCCESS: Order ' . $orderId . ' marked as paid. Payment ID: ' . $yookassaPaymentId);
+        } else {
+            logWebhook('WARNING: Order ' . $orderId . ' not updated. Payment ID: ' . $yookassaPaymentId . ' (already paid or mismatch)');
         }
+    } else {
+        logWebhook('Event ' . $requestBody['event'] . ' received but not processed');
     }
-    
 } catch (Exception $e) {
     // ЛОГИРОВАНИЕ ОШИБОК (в реальном проекте использовать логирование в отдельный файл)
-    error_log("Webhook error: " . $e->getMessage());
+    logWebhook("Webhook error: " . $e->getMessage());
 } finally {
     if (isset($stmt)) $stmt->close();
     if (isset($connect)) $connect->close();
