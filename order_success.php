@@ -2,7 +2,6 @@
 session_start();
 
 require_once __DIR__ . '/src/helpers.php';
-require_once __DIR__ . '/src/checkYooKassaStatus.php';
 
 $userId = $_SESSION['user']['id'] ?? null;
 $orderId = $_GET['orderId'] ?? '';
@@ -27,7 +26,7 @@ try {
     // получаем из бд данные о заказе (id заказа, статус и время оплаты)
     $stmt = $connect->prepare("SELECT order_id, delivery_cost, status, paid_at, yookassa_payment_id, payment_expires_at FROM orders WHERE order_id = ? AND user_id = ?");
     if (!$stmt) {
-        throw new Exception('DATABASE_OPERATIONS_FAILED');
+        throw new Exception('DATABASE_QUERY_FAILED');
     }
 
     // Привязываем параметры
@@ -56,19 +55,35 @@ try {
             throw new Exception('PAYMENT_NOT_CREATED');
         }
 
-        $paymentYoukassaStatus = checkYooKassaStatus($yookassaPaymentId);
-        switch ($paymentYoukassaStatus) {
+        try {
+            require_once __DIR__ . '/vendor/autoload.php';
+            require_once __DIR__ . '/src/envLoader.php';
+            
+            $yookassa = new \YooKassa\Client();
+            $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
+            
+            $yookassaPaymentStatus = $yookassa->getPaymentInfo($yookassaPaymentId)->getStatus();
+            
+        } catch (\YooKassa\Common\Exceptions\NotFoundException $e) {
+            throw new Exception('PAYMENT_NOT_FOUND');
+
+        } catch (Exception $e) {
+            error_log("YooKassa API error: " . $e->getMessage());
+            throw new Exception('PAYMENT_SYSTEM_ERROR');
+        }
+
+        switch ($yookassaPaymentStatus) {
             case 'succeeded':
                 // Деньги списались, но вебхук не сработал - обновляем статус в БД
                 $updateStmt = $connect->prepare("UPDATE orders SET paid_at = NOW(), status = 'paid' WHERE order_id = ?");
                 $paidAt = date('Y-m-d H:i:s');
                 if (!$updateStmt) {
-                    throw new Exception('DATABASE_OPERATIONS_FAILED');
+                    throw new Exception('DATABASE_QUERY_FAILED');
                 }
                 $updateStmt->bind_param("i", $orderId);
                 if (!$updateStmt->execute()) {
                     $updateStmt->close();
-                    throw new Exception('DATABASE_OPERATIONS_FAILED');
+                    throw new Exception('DATABASE_QUERY_FAILED');
                 }
                 $updateStmt->close();
                 $order['status'] = 'paid'; // Обновляем локально
@@ -85,23 +100,17 @@ try {
             case 'failed':
                 // Ошибка оплаты
                 throw new Exception('PAYMENT_FAILED');
-
-            case 'not_found':
-                throw new Exception('PAYMENT_NOT_FOUND');
-                
-            case 'api_error':
-                throw new Exception('PAYMENT_SYSTEM_ERROR');
                 
             default:
                 // Неизвестный статус или ошибка API
                 throw new Exception('PAYMENT_STATUS_UNKNOWN');
         }
     }
-
 } catch (Exception $e) {
     $_SESSION['flash_payment_error'][$orderId] = $e->getMessage();
     header('Location: my_orders.php');
     exit();
+
 } finally {
     // Закрываем все соединения в finally (выполнится в любом случае)
     if (isset($stmt)) $stmt->close();

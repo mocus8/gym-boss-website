@@ -1,8 +1,11 @@
 <?php
-// тут помимо прочих исправлений нужны обработки ошибок юкассы, еще номер телефона проверять валидировать и т д
+// тут помимо прочих исправлений нужно номер телефона проверять валидировать и т д
 session_start();
-require_once __DIR__ . '/vendor/autoload.php';
+header('Content-Type: application/json');
+
 require_once __DIR__ . '/src/helpers.php';
+require_once __DIR__ . '/src/envLoader.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 $orderId = $input['order_id'] ?? '';
@@ -26,74 +29,36 @@ try {
         throw new Exception('DATABASE_CONNECT_FAILED');
     }
 
+    // ставим ожидание блокировок как 5 секунд, потом ошибка от sql
+    $connect->query("SET SESSION innodb_lock_wait_timeout = 5");
+
+    // начинаем транзакцию (либо все либо ничего для sql)
     $connect->begin_transaction();
 
-    // Проверяем есть ли активный платеж
-    $checkStmt = $connect->prepare("SELECT yookassa_payment_id, payment_expires_at 
-        FROM orders WHERE order_id = ? 
-        AND status = 'pending_payment'
-        ");
-    $checkStmt->bind_param("i", $orderId);
-    $checkStmt->execute();
-    $result = $checkStmt->get_result();
-    $existing = $result->fetch_assoc();
-    $checkStmt->close();
+    $yookassa = new \YooKassa\Client();
+    $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
 
-    if (!empty($existing['yookassa_payment_id'])) {
-        // Проверяем не истек ли платеж
-        if (strtotime($existing['payment_expires_at']) > time()) {
-            // Проверяем статус в ЮКассе
-            require_once __DIR__ . '/checkYooKassaStatus.php';
-            $status = checkYooKassaStatus($existing['yookassa_payment_id']);
-            
-            if ($status === 'pending') {
-                // Возвращаем существующую ссылку
-                $paymentInfo = $yookassa->getPaymentInfo($existing['yookassa_payment_id']);
-                echo json_encode([
-                    'confirmation_url' => $paymentInfo->getConfirmation()->getConfirmationUrl()
-                ]);
-                $connect->close();
-                exit;
-            } else if ($status === 'succeeded') {
-                // Платеж уже оплачен (вебхук мог не дойти)
-                $updateStmt = $connect->prepare("UPDATE orders SET status = 'paid', paid_at = NOW() WHERE order_id = ?");
-                $updateStmt->bind_param("i", $orderId);
-                $updateStmt->execute();
-
-                // эту ошибку отрабатывать на фронте
-                echo json_encode(['error' => 'ORDER_ALREADY_PAID']);
-                $connect->close();
-                exit;
-            }
-        }
-    }
-
+    // получаем всю инфу о заказе и блокируем на время выполнения через FOR UPDATE на случай одновременно оплаты
     $stmt = $connect->prepare("
-        SELECT o.order_id, o.total_price, o.delivery_type, o.delivery_cost, o.status, o.created_at,
-        u.login,
-        (SELECT COUNT(*) 
-        FROM orders o2 
-        WHERE o2.user_id = o.user_id 
-        AND o2.status = 'pending_payment'
-        AND o2.created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-        ) as user_recent_orders
-    FROM orders o
-    INNER JOIN users u ON o.user_id = u.id
-    WHERE o.order_id = ? AND o.user_id = ?
-    AND u.login IS NOT NULL
-    AND EXISTS (SELECT 1 FROM product_order po WHERE po.order_id = o.order_id)
-    HAVING user_recent_orders < 10
-    FOR UPDATE
+        SELECT o.order_id, o.total_price, o.delivery_type, o.delivery_cost, 
+               o.status, o.yookassa_payment_id, o.payment_expires_at,
+               u.login
+        FROM orders o
+        INNER JOIN users u ON o.user_id = u.id
+        WHERE o.order_id = ? AND o.user_id = ?
+        FOR UPDATE
     ");
+    
     if (!$stmt) {
-        throw new Exception('DATABASE_OPERATIONS_FAILED');
+        throw new Exception('DATABASE_QUERY_FAILED');
     }
     
     $stmt->bind_param("ii", $orderId, $userId);
     $stmt->execute();
     $result = $stmt->get_result();
     $order = $result->fetch_assoc();
-    
+    $stmt->close();
+
     if (!$order) {
         throw new Exception('ORDER_NOT_FOUND');
     }
@@ -102,11 +67,57 @@ try {
         throw new Exception('ORDER_ALREADY_PAID');
     }
 
+    // проверяем телефон (почту в будующем) для отправки чеков (важно, поэтому отдельно проверяем)
     if (empty($order['login'])) {
         throw new Exception('EMPTY_USER_PHONE');
     }
 
-    //создаём массив товаров в нужном для чека формате
+    // Проверяем есть ли активный платеж, не истек ли платеж
+    if (!empty($order['yookassa_payment_id']) &&
+        !empty($order['payment_expires_at']) && 
+        strtotime($order['payment_expires_at']) > time()) {
+
+        // Проверяем статус в ЮКассе        
+        try {
+            $yookassaExistingPayment = $yookassa->getPaymentInfo($order['yookassa_payment_id']);
+
+            if ($yookassaExistingPayment->getStatus() === 'pending') {
+                $connect->commit();
+                $connect->close();
+
+                // Возвращаем существующую ссылку
+                echo json_encode([
+                    'confirmation_url' => $yookassaExistingPayment->getConfirmation()->getConfirmationUrl()
+                ]);
+
+                exit;
+
+            } else if ($yookassaExistingPayment->getStatus() === 'succeeded') {
+                // Платеж уже оплачен (вебхук мог не дойти)
+                $updateStmt = $connect->prepare("
+                    UPDATE orders 
+                    SET status = 'paid', 
+                        paid_at = COALESCE(paid_at, NOW())
+                    WHERE order_id = ?
+                ");
+                $updateStmt->bind_param("i", $orderId);
+                $updateStmt->execute();
+                $updateStmt->close();
+
+                $connect->commit();
+                $connect->close();
+
+                // эту ошибку отрабатывать на фронте
+                echo json_encode(['error' => 'ORDER_ALREADY_PAID']);
+
+                exit;
+            }
+        } catch (Exception $e) {
+            // Платеж не найден - продолжаем
+        }
+    }
+
+    //создаём массив товаров в нужном для чека формате, для финалки проверять и валидировать НДС
     $items = [];
     foreach ($orderItems as $item) {
         $price = number_format($item['price'], 2, '.', '');
@@ -142,6 +153,7 @@ try {
         ];
     }
 
+    // проверяем итоговую стоимость (должна сходиться с чеком)
     $receiptTotal = 0;
     foreach ($items as $item) {
         $receiptTotal += $item['amount']['value'] * $item['quantity'];
@@ -151,12 +163,12 @@ try {
         throw new Exception('RECEIPT_TOTAL_MISMATCH');
     }
 
-    $yookassa = new \YooKassa\Client();
-    $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
+    // Фиксированный idempotenceKey для защиты от дублей
+    $dataHash = md5($orderId . $order['total_price']);
+    $idempotenceKey = 'order_' . $orderId . '_' . $dataHash;
 
+    // создаем платеж в юкассе
     try {
-        $idempotenceKey = 'order_' . $orderId . '_' . time();
-        
         $payment = $yookassa->createPayment([
             'amount' => [
                 'value' => number_format($order['total_price'], 2, '.', ''),
@@ -177,6 +189,7 @@ try {
                 'items' => $items
             ]
         ], $idempotenceKey);
+
     } catch (\YooKassa\Common\Exceptions\ApiException $e) {
         error_log("YooKassa API error: " . $e->getMessage());
         throw new Exception('PAYMENT_SYSTEM_ERROR');
@@ -184,32 +197,67 @@ try {
         error_log("YooKassa bad request: " . $e->getMessage());
         throw new Exception('INVALID_PAYMENT_DATA');
     }
-    $expiresAt = date('Y-m-d H:i:s', time() + 1800); // устаревание оплаты через 30 минут
 
-    $updateStmt = $connect->prepare("UPDATE orders SET 
-        yookassa_payment_id = ?, 
-        payment_expires_at = ?, 
-        status = 'pending_payment' 
-        WHERE order_id = ?");
+    // устанавливаем в бд устаревание оплаты через 30 минут
+    $expiresAt = date('Y-m-d H:i:s', time() + 1800);
+
+    $updateStmt = $connect->prepare("
+        UPDATE orders
+        SET yookassa_payment_id = ?, 
+            payment_expires_at = ?, 
+            status = 'pending_payment' 
+        WHERE order_id = ?
+    ");
     $updateStmt->bind_param("ssi", $payment->getId(), $expiresAt, $orderId);
     $updateStmt->execute();
     $updateStmt->close();
 
     $connect->commit();
 
+    // возвращаем ссылку для оплаты с нужными данными (создала юкасса)
     echo json_encode([
         'confirmation_url' => $payment->getConfirmation()->getConfirmationUrl()
     ]);
+
+// ловим таймаут по блокировке в бд (если FOR UPDATE сработал)
+} catch (mysqli_sql_exception $e) {
+    if ($e->getCode() == 1205) {
+        echo json_encode(['error' => 'PAYMENT_IN_PROGRESS']);
+    } else {
+        error_log("MySQL error [Order: $orderId]: " . $e->getMessage());
+        echo json_encode(['error' => 'DATABASE_ERROR']);
+    }
     
+    if (isset($connect)) {
+        try {
+            $connect->rollback();
+            $connect->close();
+        } catch (Exception $rollbackError) {
+            // Игнорируем ошибки при откате
+        }
+    }
+    
+// ловим общие ошибки
 } catch (Exception $e) {
+    error_log("Payment error [Order: $orderId, User: $userId]: " . $e->getMessage());
+
     http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
     
     if (isset($connect)) {
-        $connect->rollback();
+        try {
+            $connect->rollback();
+            $connect->close();
+        } catch (Exception $rollbackError) {
+            // Игнорируем ошибки при откате
+        }
     }
+
 } finally {
-    if (isset($stmt)) $stmt->close();
-    if (isset($connect)) $connect->close();
+    if (isset($stmt) && $stmt) $stmt->close();
+    // по thread_id проверяем что соединение активно
+    if (isset($connect) && $connect->thread_id) {
+        $connect->close();
+    }
 }
 ?>
