@@ -72,10 +72,27 @@ function initStoresMap(){
     .catch(error => {
         console.error('Ошибка загрузки магазинов:', error);
     });
+
+    const loader = document.querySelector('.stores_map_loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 200);
+    }
 }
 
 // Карта доставки
 function initDeliveryMap(){
+    // защита от повторного вызова
+    const container = document.getElementById('delivery-map');
+    if (!container) return; 
+    
+    if (container.children.length > 0) {
+        return;
+    }
+
     const map = new ymaps.Map('delivery-map', { 
         center: [55.76, 37.64], 
         zoom: 10,
@@ -337,10 +354,29 @@ function initDeliveryMap(){
             }
         });
     }
+
+    // Плавно убираем лоадер
+    const loader = document.getElementById('delivery-map-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+        // Через время завершения анимации - полностью убираем
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 200); // Время должно совпадать с transition (0.4s)
+    }
 }
 
 // Карта самовывоза
 function initPickupMap(){
+    // защита от повторного вызова
+    const container = document.getElementById('pickup-map');
+    if (!container) return; 
+    
+    if (container.children.length > 0) {
+        return;
+    }
+
     const map = new ymaps.Map('pickup-map', { 
         center: [55.8, 37.64], 
         zoom: 8 
@@ -476,6 +512,17 @@ function initPickupMap(){
             }
         });
     }
+
+    // Плавно убираем лоадер
+    const loader = document.getElementById('pickup-map-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+        // Через время завершения анимации - полностью убираем
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 200); // Время должно совпадать с transition (0.4s)
+    }
 }
 
 
@@ -484,12 +531,8 @@ if (typeof ymaps === 'undefined') {
     showMapError();
 } else {
     ymaps.ready(() => {
-        // Карта магазинов
+        // Карта магазинов (если она видна на странице)
         if (document.getElementById('stores-map')) {
-
-            document.querySelector('.stores_map_loader').style.opacity = '0';
-            document.querySelector('.stores_map_loader').style.visibility = 'hidden';
-
             try {
                 initStoresMap();
             } catch (error) {
@@ -498,20 +541,10 @@ if (typeof ymaps === 'undefined') {
             }
         }
 
-        // Карта заказа (проверяем API ключ)
-        if (document.getElementById('delivery-map')) {
-
-            document.querySelectorAll('.order_map_loader').forEach(loader => {
-            // Плавное исчезновение
-            loader.style.opacity = '0';
-            loader.style.visibility = 'hidden';
-            
-            // Через время завершения анимации - полностью убираем
-            setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 200); // Время должно совпадать с transition (0.4s)
-            });
-
+        // Карты оформления заказа (проверяем API ключ)
+        // Карта доставки (если есть и видна)
+        const deliveryModal = document.getElementById('modal-order-type-delivery');
+        if (document.getElementById('delivery-map') && deliveryModal && !deliveryModal.classList.contains('hidden')) {
             ymaps.geocode('Москва', { results: 1 })
                 .then(() => {
                     // API работает, инициализируем карту заказа
@@ -524,20 +557,6 @@ if (typeof ymaps === 'undefined') {
                 });
         }
 
-        // Карта самовывоза
-        if (document.getElementById('pickup-map')) {
-
-            // document.querySelectorAll('.order_map_loader').forEach(loader => {
-            //     loader.style.display = 'none';
-            // });
-            // т. к. на одной статнице скроеться сразу для двух 
-
-            try {
-                initPickupMap();
-            } catch (error) {
-                console.error('Ошибка карты самовывоза:', error);
-                showMapError('pickup');
-            }
-        }
+        // Карта самовывоза будет инициализироваться в обработчике переключения типа
     });
 }

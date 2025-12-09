@@ -138,6 +138,15 @@ document.querySelector('.order_types').addEventListener('click', function(e) {
     // toggle автоматически добавляет или удаляет класс
     document.getElementById('modal-order-type-delivery').classList.toggle('hidden', !isDelivery);
     document.getElementById('modal-order-type-pickup').classList.toggle('hidden', isDelivery);
+
+    // инициализируем карты
+    setTimeout(() => {
+        if (isDelivery) {
+            initDeliveryMap(); // Будет создана только один раз
+        } else {
+            initPickupMap();   // Будет создана только один раз
+        }
+    }, 50);
     
     // Переключение стилей кнопок выбора типа доставки
     document.getElementById('order-type-delivery').classList.toggle('chosen', isDelivery);

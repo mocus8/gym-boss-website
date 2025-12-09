@@ -71,7 +71,7 @@ if ($cartCount === 0) {
                         </button>
                     </div>
                     <div class="map_container">
-                        <div class="order_map_loader">
+                        <div class="order_map_loader" id="delivery-map-loader"> 
                             <img class="loader" src="img/loader.png" alt="Загрузка карты">
                         </div>
                         <div id="delivery-map"></div>
@@ -144,7 +144,7 @@ if ($cartCount === 0) {
                         Выберите магазин для самовывоза:
                     </div>
                     <div class="map_container">
-                        <div class="order_map_loader">
+                        <div class="order_map_loader" id="pickup-map-loader">
                             <img class="loader" src="img/loader.png" alt="Загрузка карты">
                         </div>
                         <div id="pickup-map"></div>
