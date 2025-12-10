@@ -33,7 +33,7 @@ input:autofill:active {
 }
 
 .hidden {
-    opacity: 0 !important;
+    /* opacity: 0 !important;
     visibility: hidden !important;
     position: absolute !important;
     pointer-events: none !important;
@@ -41,7 +41,15 @@ input:autofill:active {
     height: 0 !important;
     overflow: hidden !important;
     top: -9999px !important;
-    left: -9999px !important;
+    left: -9999px !important; */
+
+    position: absolute !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
 }
 
 ::-webkit-scrollbar {

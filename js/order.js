@@ -25,16 +25,15 @@ function clearOrderInterface(previousType) {
 
 // крутой объект через IIFE для универсальной модалки ошибки оплаты с текстом
 const PayErrorModal = (function() {
-    let isDelivery, deliveryModal, PickupModal, deliveryModalText, PickupModalText;
+    let deliveryModal, pickupModal, deliveryModalText, pickupModalText;
 
     function init() {
-        isDelivery = document.getElementById('order-type-delivery').classList.contains('chosen');
         deliveryModal = document.getElementById('error-pay-delivery');
-        PickupModal = document.getElementById('error-pay-pickup');
+        pickupModal = document.getElementById('error-pay-pickup');
         deliveryModalText = document.getElementById('error-pay-delivery-text');
-        PickupModalText = document.getElementById('error-pay-pickup-text');
+        pickupModalText = document.getElementById('error-pay-pickup-text');
 
-        if (!isDelivery || !deliveryModal || !PickupModal || !deliveryModalText || !PickupModalText) {
+        if (!deliveryModal || !pickupModal || !deliveryModalText || !pickupModalText) {
             console.error('Modal elements not found');
             return;
         }
@@ -53,6 +52,8 @@ const PayErrorModal = (function() {
     }
 
     function open(innerText) {
+        // определяем выбранный тип тут, динамически
+        const isDelivery = document.getElementById('order-type-delivery').classList.contains('chosen');
 
         // открытие для случая доставки
         if (isDelivery) {
@@ -63,26 +64,24 @@ const PayErrorModal = (function() {
             deliveryModalText.textContent = innerText;
             deliveryModal.classList.remove("hidden");
 
-        } else if (!isDelivery) {
+        } else {
             // открытие для случая самовывоза
 
-            if (!PickupModal) return;
+            if (!pickupModal) return;
 
             close();
 
-            PickupModalText.textContent = innerText;
-            PickupModal.classList.remove("hidden");
+            pickupModalText.textContent = innerText;
+            pickupModal.classList.remove("hidden");
         }
     }
 
     function close() {
-        if (!deliveryModal || !PickupModal) return;
-
-        deliveryModal.classList.add("hidden");
-        PickupModal.classList.add("hidden");
+        if (deliveryModal) deliveryModal.classList.add("hidden");
+        if (pickupModal) pickupModal.classList.add("hidden");
 
         if(deliveryModalText) deliveryModalText.textContent = '';
-        if(PickupModalText) PickupModalText.textContent = '';
+        if(pickupModalText) pickupModalText.textContent = '';
     }
 
     // Автоинициализация при загрузке
@@ -156,10 +155,6 @@ document.querySelector('.order_types').addEventListener('click', function(e) {
     updateDeliveryTypeInDB(isDelivery ? 'delivery' : 'pickup');
 });
 
-
-
-
-
 //обработчик кнопки оплаты
 document.querySelectorAll('.order_right_pay_button').forEach(button => {
     button.addEventListener('click', async function() {
@@ -202,8 +197,7 @@ document.querySelectorAll('.order_right_pay_button').forEach(button => {
             try {
                 result = await response.json();
             } catch (jsonError) {
-                // ТУТ ЭТУ ФУНКЦИЮ НАПИСАТЬ, ДОБАВИТЬ УНИВЕРСАЛЬНУЮ/ИСПОЛЬЗОВАТЬ СТАРУЮ ОШИБКУ
-                showUserError('Некорректный ответ от сервера');
+                PayErrorModal.open('Некорректный ответ от сервера.');
                 return;
             }
                             
