@@ -66,6 +66,11 @@ function initStoresMap(){
             }
         });
         map.setBounds(map.geoObjects.getBounds());
+
+        // Закрываем балуны при клике на карту
+        map.events.add('click', function() {
+            map.balloon.close();
+        });
     })
     .catch(error => {
         console.error('Ошибка загрузки магазинов:', error);
