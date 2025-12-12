@@ -1,27 +1,33 @@
-// Скрываем ошибки адреса при открытии страницы
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.error_address_not_found').forEach(block => {
-        block.classList.remove('open');
-    });
-});
-
-
-// Показ ошибки
+// Показ ошибки карты (по параметру)
 function showMapError(type = 'all') {
+    const VALID_TYPES = ['stores', 'delivery', 'pickup', 'all'];
+
+    // Валидация
+    if (!VALID_TYPES.includes(type)) {
+        console.error(`[MapError] Неверный тип: "${type}". Допустимо: ${VALID_TYPES.join(', ')}`);
+        type = 'all'; // fallback (резервный вариант, откат)
+    }
+
     console.error('Ошибка Яндекс.Карт:', type);
     
-    let className = `error_${type}_map`;
     if (type === 'all') {
         // Показываем все ошибки
         document.querySelectorAll('[class*="error_"]').forEach(block => {
             block.classList.add('open');
         });
-    } else {
-        // Показываем конкретную ошибку
-        document.querySelectorAll(`.${className}`).forEach(block => {
-            block.classList.add('open');
-        });
+        return;
     }
+
+    const className = `error_${type}_map`;
+    const elements = document.querySelectorAll(`.${className}`);
+
+    if (elements.length === 0) {
+        console.warn(`[MapError] Элемент .${className} не найден, показываю все ошибки`);
+        showMapError('all'); // рекурсивный вызов
+        return;
+    }
+
+    elements.forEach(block => block.classList.add('open'));
 }
 
 

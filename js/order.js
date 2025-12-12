@@ -1,3 +1,10 @@
+// Скрываем ошибки адреса при открытии страницы
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.error_address_not_found').forEach(block => {
+        block.classList.remove('open');
+    });
+});
+
 // Функция очистки интерфейса
 function clearOrderInterface(previousType) {
     if (previousType === 'delivery') {
