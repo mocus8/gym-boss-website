@@ -1,12 +1,11 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/src/helpers.php';
+require_once __DIR__ . '/src/envLoader.php';
 
-use YooKassa\Model\Notification\NotificationSucceeded;
-use YooKassa\Model\Notification\NotificationWaitingForCapture;
-use YooKassa\Model\Notification\NotificationCanceled;
+use YooKassa\Model\Notification\NotificationFactory;
 
-// логирование вебхука (для финального через redis или laravel)
+// Функция логирования вебхука (для финального сделать нормальное через redis или laravel)
 function logWebhook($message) {
     $logFile = __DIR__ . '/webhook.log';
     
@@ -23,109 +22,187 @@ function logWebhook($message) {
     );
 }
 
-try {
-    logWebhook('Request from IP: ' . $_SERVER['REMOTE_ADDR']);
+logWebhook('Request from IP: ' . $_SERVER['REMOTE_ADDR']);
 
-    $remoteIP = $_SERVER['REMOTE_ADDR'];
-    $trustedRanges = [
-        '185.71.76.0/27',
-        '185.71.77.0/27',
-        '77.75.153.0/25',
-        '77.75.156.11', 
-        '77.75.156.35',
-        '77.75.154.128/25',
-        '2a02:5180::/32'
-    ];
-    
-    $ipTrusted = false;
-    foreach ($trustedRanges as $range) {
-        if (strpos($range, '/') !== false) {
-            list($subnet, $bits) = explode('/', $range);
-            $ip = ip2long($remoteIP);
-            $subnet = ip2long($subnet);
-            $mask = -1 << (32 - $bits);
-            if (($ip & $mask) == ($subnet & $mask)) {
-                $ipTrusted = true;
-                break;
-            }
-        } else {
-            if ($remoteIP === $range) {
-                $ipTrusted = true;
-                break;
-            }
+// Проверка IP адреса места откуда идет уведомление
+$remoteIP = $_SERVER['REMOTE_ADDR'];
+$ipTrusted = false;
+$trustedRanges = [
+    '185.71.76.0/27',
+    '185.71.77.0/27',
+    '77.75.153.0/25',
+    '77.75.156.11', 
+    '77.75.156.35',
+    '77.75.154.128/25',
+    '2a02:5180::/32'
+];
+
+foreach ($trustedRanges as $range) {
+    if (strpos($range, '/') !== false) {
+        list($subnet, $bits) = explode('/', $range);
+        $ip = ip2long($remoteIP);
+        $subnet = ip2long($subnet);
+        $mask = -1 << (32 - $bits);
+        if (($ip & $mask) == ($subnet & $mask)) {
+            $ipTrusted = true;
+            break;
+        }
+    } else {
+        if ($remoteIP === $range) {
+            $ipTrusted = true;
+            break;
         }
     }
-    
-    if (!$ipTrusted) {
-        throw new Exception('Untrusted IP: ' . $remoteIP);
-    }
+}
 
+if (!$ipTrusted) {
+    logWebhook('Untrusted IP: ' . $remoteIP);
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+try {
     $source = file_get_contents('php://input');
     $requestBody = json_decode($source, true);
 
-    logWebhook('Event: ' . ($requestBody['event'] ?? 'unknown'));
-
-    switch ($requestBody['event']) {
-        case 'payment.succeeded':
-            $notification = new NotificationSucceeded($requestBody);
-            break;
-        case 'payment.waiting_for_capture':
-            $notification = new NotificationWaitingForCapture($requestBody);
-            break;
-        case 'payment.canceled':
-            $notification = new NotificationCanceled($requestBody);
-            break;
-        default:
-            throw new Exception('Unsupported event: ' . $requestBody['event']);
+    if (!$requestBody) {
+        throw new Exception('INVALID_JSON');
     }
 
+    logWebhook('Event received: ' . ($requestBody['event'] ?? 'unknown'));
+
+    // Создаем объект уведомления через фабрику (встроенный в SDK юкассы класс)
+    $factory = new NotificationFactory();
+    $notification = $factory->factory($requestBody);
     $payment = $notification->getObject();
+    
+    $yookassaPaymentId = $payment->getId();
+    $yookassaPaymentStatus = $payment->getStatus();
+    $metadata = $payment->getMetadata();
+    $orderId = $metadata['orderId'] ?? null;
+    
+    logWebhook("Payment ID: $yookassaPaymentId, Status: $yookassaPaymentStatus, Order: " . ($orderId ?? 'unknown'));
 
-    logWebhook('Payment ID: ' . $payment->getId() . ', Amount: ' . $payment->getAmount()->getValue() . ' ' . $payment->getAmount()->getCurrency());
-
-    if ($requestBody['event'] === 'payment.succeeded') {
-        $metadata = $payment->getMetadata();
-        $orderId = $metadata['orderId'] ?? null;
-        $yookassaPaymentId = $payment->getId();
-        
-        if (!$orderId) {
-            logWebhook("No orderId in metadata");
-            http_response_code(200);
-            exit('OK');
-        }
-
-        $connect = getDB();
-        if (!$connect) {
-            throw new Exception('Database connection failed');
-        }
-
-        // Обновляем статус заказа если прошли проверки
-        $stmt = $connect->prepare("UPDATE orders SET
-            paid_at = NOW(),   
-            status = 'paid',
-            yookassa_payment_id = ?
-            WHERE order_id = ? 
-            AND (yookassa_payment_id IS NULL OR yookassa_payment_id = ?)
-        ");
-        $stmt->bind_param("sis", $yookassaPaymentId, $orderId, $yookassaPaymentId);
-        $result = $stmt->execute();
-        
-        if ($result && $stmt->affected_rows > 0) {
-            logWebhook('SUCCESS: Order ' . $orderId . ' marked as paid. Payment ID: ' . $yookassaPaymentId);
-        } else {
-            logWebhook('WARNING: Order ' . $orderId . ' not updated. Payment ID: ' . $yookassaPaymentId . ' (already paid or mismatch)');
-        }
-    } else {
-        logWebhook('Event ' . $requestBody['event'] . ' received but not processed');
+    // Если нет orderId в metadata - выходим
+    if (!$orderId) {
+        throw new Exception('ORDER_NOT_FOUND');
     }
-} catch (Exception $e) {
-    // ЛОГИРОВАНИЕ ОШИБОК (в реальном проекте использовать логирование в отдельный файл)
-    logWebhook("Webhook error: " . $e->getMessage());
-} finally {
-    if (isset($stmt)) $stmt->close();
-    if (isset($connect)) $connect->close();
-}
 
-http_response_code(200);
-echo 'OK';
+    $connect = getDB();
+    if (!$connect) {
+        throw new Exception('DATABASE_ERROR');
+    }
+
+    // Транзакция для целостности данных
+    $connect->begin_transaction();
+
+    try {
+        // Проверяем повторную обработку одного и того же заказа (блокируем запись и проверяем статус)
+        $checkStmt = $connect->prepare("
+            SELECT status, yookassa_payment_id 
+            FROM orders 
+            WHERE order_id = ? 
+            FOR UPDATE
+        ");
+        $checkStmt->bind_param("i", $orderId);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        $order = $result->fetch_assoc();
+        $checkStmt->close();
+
+        if (!$order) {
+            throw new Exception('ORDER_NOT_FOUND');
+        }
+
+        // Если заказ уже оплачен - выходим
+        if ($order['status'] === 'paid') {
+            throw new Exception('ORDER_ALREADY_PAID');
+        }
+
+        // Обработка разных статусов платежа
+        switch ($yookassaPaymentStatus) {
+            case 'succeeded':
+                // Обновляем статус в бд как оплаченный
+                $updateStmt = $connect->prepare("
+                    UPDATE orders
+                    SET paid_at = NOW(),   
+                        status = 'paid',
+                        yookassa_payment_id = ?
+                    WHERE order_id = ?
+                ");
+                $updateStmt->bind_param("si", $yookassaPaymentId, $orderId);
+                $success = $updateStmt->execute();
+                $updateStmt->close();
+
+                if (!$success) {
+                    throw new Exception('DATABASE_ERROR');
+                }
+
+                logWebhook("SUCCESS: Order $orderId marked as paid");
+                break;
+
+            case 'canceled':
+            case 'failed':
+                // Обновляем статус в бд как отмененный
+                $updateStmt = $connect->prepare("
+                    UPDATE orders
+                    SET cancelled_at = NOW(),   
+                        status = 'cancelled',
+                        yookassa_payment_id = ?
+                    WHERE order_id = ?
+                ");
+                $updateStmt->bind_param("si", $yookassaPaymentId, $orderId);
+                $success = $updateStmt->execute();
+                $updateStmt->close();
+
+                if (!$success) {
+                    throw new Exception('DATABASE_ERROR');
+                }
+
+                logWebhook("SUCCESS: Order $orderId marked as cancelled");
+                break;
+
+            case 'pending':
+                // Ничего не делаем (платеж создан, но еще не оплачен)
+                logWebhook("Payment $yookassaPaymentId is pending for order $orderId");
+                break;
+            default:
+                logWebhook("Unknown payment status: $yookassaPaymentStatus for payment $yookassaPaymentId");
+        }
+
+        // При успехе коммитим транзакцию
+        $connect->commit();
+    } catch (Exception $e) {
+        // При ошибке откатываем транзакцию 
+        $connect->rollback();
+        throw $e; // Пробрасываем выше
+    }
+
+} catch (Exception $e) {
+    // Сливаем в логи только безопасные ошибки (те что сами создали, отсальные могут содержать секреты)
+    $safeErrorCodes = [
+        'ORDER_NOT_FOUND',
+        'DATABASE_ERROR',
+        'INVALID_JSON',
+        'ORDER_ALREADY_PAID'
+    ];
+
+    $errorCode = $e->getMessage();
+
+    if (in_array($errorCode, $safeErrorCodes)) {
+        $error = $errorCode;
+    } else {
+        // Системная ошибка - общее сообщение
+        $error = 'SYSTEM_ERROR';
+    }
+
+    // Логирование общих ошибок (в реальном проекте использовать логирование в отдельный файл)
+    logWebhook("Webhook error [Order: $orderId]: " . $error);
+} finally {
+    if (isset($connect)) $connect->close();
+
+    // Всегда возвращаем 200 ОК для юкассы
+    http_response_code(200);
+    echo 'OK';
+}
 ?>
