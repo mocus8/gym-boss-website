@@ -157,6 +157,8 @@ export function getErrorMessage(status, errorCode) {
         'ORDER_ALREADY_PAID': 'Заказ уже оплачен. Обновите страницу для актуального статуса',
         'ORDER_ALREADY_CANCELLED': 'Заказ уже отменен. Обновите страницу',
         'ORDER_CANCELLED': 'Заказ отменен. Создайте новый заказ',
+        'PAYMENT_PENDING': 'Заказ еще не оплачен. Попробуйте еще раз',
+        'PAYMENT_NOT_CREATED': 'Ошибка во время создания оплаты. Попробуйте еще раз',
         'ORDER_EXPIRED': 'Время оплаты истекло. Создайте новый заказ',
         'ORDER_CANNOT_BE_CANCELLED': 'Заказ нельзя отменить в текущем статусе',
         'RECEIPT_TOTAL_MISMATCH': 'Ошибка расчета суммы. Попробуйте еще раз или свяжитесь с поддержкой',

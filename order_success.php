@@ -1,4 +1,5 @@
 <?php
+// Тут зарефакторить и новые коды ошибок добавить в utils
 session_start();
 
 require_once __DIR__ . '/src/helpers.php';
@@ -20,13 +21,23 @@ if (!$orderId) {
 try {
     $connect = getDB();
     if (!$connect || $connect->connect_error) {
-        throw new Exception('DATABASE_CONNECT_FAILED');
+        throw new Exception('DATABASE_ERROR');
     }
 
     // получаем из бд данные о заказе (id заказа, статус и время оплаты)
-    $stmt = $connect->prepare("SELECT order_id, delivery_cost, status, paid_at, yookassa_payment_id, payment_expires_at FROM orders WHERE order_id = ? AND user_id = ?");
+    $stmt = $connect->prepare("
+        SELECT 
+            order_id, 
+            delivery_cost, 
+            status, 
+            paid_at, 
+            yookassa_payment_id, 
+            payment_expires_at 
+        FROM orders 
+        WHERE order_id = ? AND user_id = ?
+    ");
     if (!$stmt) {
-        throw new Exception('DATABASE_QUERY_FAILED');
+        throw new Exception('DATABASE_ERROR');
     }
 
     // Привязываем параметры
@@ -46,7 +57,7 @@ try {
     $deliveryCost = $order['delivery_cost'];
 
     if ($order['status'] !== 'paid' && $paymentExpiresAt && strtotime($paymentExpiresAt) < time()) {
-        throw new Exception('PAYMENT_TIME_EXPIRED');
+        throw new Exception('ORDER_EXPIRED');
     }
 
     // Заказ есть, но не оплачен
@@ -65,9 +76,10 @@ try {
             $yookassaPaymentStatus = $yookassa->getPaymentInfo($yookassaPaymentId)->getStatus();
             
         } catch (\YooKassa\Common\Exceptions\NotFoundException $e) {
-            throw new Exception('PAYMENT_NOT_FOUND');
+            throw new Exception('ORDER_NOT_FOUND');
 
         } catch (Exception $e) {
+            // потом нормально логировать
             error_log("YooKassa API error: " . $e->getMessage());
             throw new Exception('PAYMENT_SYSTEM_ERROR');
         }
@@ -75,18 +87,27 @@ try {
         switch ($yookassaPaymentStatus) {
             case 'succeeded':
                 // Деньги списались, но вебхук не сработал - обновляем статус в БД
-                $updateStmt = $connect->prepare("UPDATE orders SET paid_at = NOW(), status = 'paid' WHERE order_id = ?");
-                $paidAt = date('Y-m-d H:i:s');
+                $updateStmt = $connect->prepare("
+                    UPDATE orders 
+                    SET paid_at = NOW(), status = 'paid' 
+                    WHERE order_id = ?
+                ");
                 if (!$updateStmt) {
-                    throw new Exception('DATABASE_QUERY_FAILED');
+                    throw new Exception('DATABASE_ERROR');
                 }
+
                 $updateStmt->bind_param("i", $orderId);
                 if (!$updateStmt->execute()) {
                     $updateStmt->close();
-                    throw new Exception('DATABASE_QUERY_FAILED');
+                    throw new Exception('DATABASE_ERROR');
                 }
+
                 $updateStmt->close();
-                $order['status'] = 'paid'; // Обновляем локально
+
+                // Обновляем локально и сохраняем время для рассчёта срока готовности заказа
+                $order['status'] = 'paid';
+                $paidAt = date('Y-m-d H:i:s');
+
                 break;
                 
             case 'pending':
@@ -95,7 +116,7 @@ try {
                 
             case 'canceled':
                 // Оплата отменена
-                throw new Exception('PAYMENT_CANCELED');
+                throw new Exception('ORDER_CANCELLED');
                 
             case 'failed':
                 // Ошибка оплаты
@@ -103,7 +124,7 @@ try {
                 
             default:
                 // Неизвестный статус или ошибка API
-                throw new Exception('PAYMENT_STATUS_UNKNOWN');
+                throw new Exception('PAYMENT_NOT_CREATED');
         }
     }
 } catch (Exception $e) {
@@ -112,7 +133,6 @@ try {
     exit();
 
 } finally {
-    // Закрываем все соединения в finally (выполнится в любом случае)
     if (isset($stmt)) $stmt->close();
     if (isset($connect)) $connect->close();
 }
