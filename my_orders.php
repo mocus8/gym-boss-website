@@ -97,15 +97,18 @@ if (!isset($_SESSION['user']['id'])) {
                     ?>
                             <div class="order" data-order-id="<?= $order['order_id'] ?>">
                                 <div class="order_number">
-                                    Заказ <?= '#' . str_pad($order['order_id'], 6, '0', STR_PAD_LEFT) ?>
+                                    Заказ <?= '#' . str_pad($order['order_id'], 6, '0', STR_PAD_LEFT) ?> (оформлен <?= date('d.m.Y', strtotime($order['created_at'])) ?>)
                                 </div>
+
                                 <div class="order_data">
                                     Стоимость: <?= $order['total_price'] ?> ₽
                                 </div>
+
                                 <div class="order_data">
                                     Способ получения: <br>
                                     <?= $order['delivery_type'] === 'pickup' ? 'самовывоз' : 'доставка' ?>
                                 </div>
+                                
                                 <?php
                                 if ($order['delivery_type'] === 'pickup' && $order['store_address']) { 
                                 ?>  
@@ -121,6 +124,7 @@ if (!isset($_SESSION['user']['id'])) {
                                 <?php
                                 } 
                                 ?>
+
                                 <div class="order_data" data-field="status">
                                     Статус заказа: <br>
                                     <?= match($order['status']) {
@@ -132,37 +136,16 @@ if (!isset($_SESSION['user']['id'])) {
                                         default => $order['status']
                                     } ?> 
                                 </div>
-                                <?php
-                                if ($order['status'] === 'paid') {
-                                ?>
-                                     <a href="order_success.php?orderId=<?= $order['order_id'] ?>">
-                                        <div class="order_button">
-                                            детали заказа
-                                        </div>
-                                    </a>
-                                <?php
-                                } else if ($order['status'] === 'pending_payment') {
-                                ?>
-                                    <div class="order_button" data-action="pay">
-                                        Оплатить
+
+                                <a href="order.php?orderId=<?= $order['order_id'] ?>">
+                                    <div class="order_button">
+                                        Перейти к заказу
                                     </div>
-                                    <div class="order_button" data-action="cancel">
-                                        Отменить
-                                    </div>
-                                <?php
-                                }
-                                ?>
-                                <div class="order_error hidden" id="error-modal-<?= $order['order_id'] ?>">
-                                    <img class="error_modal_icon" src="img/error_modal_icon.png">
-                                    <div id="error-modal-text-<?= $order['order_id'] ?>"></div>
-                                </div> 
+                                </a>
                             </div>
                         <?php
                         }
                         ?>
-                        <div class="order_refund_info">
-                            Для возврата заказа свяжитесь с менеджером (<a href='tel: +70000000000' class="colour_href">+7 000 000 00 00</a>). Вернуть получится только заказы с момента получения которых прошло менее 14 дней
-                        </div>
                     <?php
                     }
                     ?>
@@ -170,24 +153,5 @@ if (!isset($_SESSION['user']['id'])) {
             </main>
             <?php require_once __DIR__ . '/footer.php';?>
         </div>
-        <div class="registration_modal_blur" id="order-cancel-modal">
-            <div class="account_delete_modal">
-                <div class="account_delete_modal_entry_text" id='order-delete-modal-entry-text'></div>
-                <div class="registration_modal_form">
-                    <div class="registration_modal_buttons">
-                        <button class="registration_modal_button" type="button" id="close-order-cancel-modal">
-                            Вернуться
-                        </button>
-                        <form action="/src/cancelOrder.php" method="POST" class="registration_modal_button" id="cancel-order-form">
-                            <input type="hidden" name="order_id" id="cancel-order-id">
-                            <button type="submit">
-                                Отменить заказ
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <script type="module" src="js/my_orders.js"></script>
 	</body>
 </html>

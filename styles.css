@@ -2298,10 +2298,6 @@ button {
     white-space: nowrap
 }
 
-.order_right_row_gap {
-    margin-top: 0.75vw;
-}
-
 .order_right_row {
     max-width: 37.5vw;
     font-size: 1.75vw;
@@ -2415,7 +2411,7 @@ button {
     height: 100%;
 }
 
-.order_success_back {
+.order_back {
     position: relative;
     margin-top: 0.75vw;
     margin-bottom: 0.75vw;
@@ -2423,50 +2419,64 @@ button {
     margin-right: auto;
     max-width: 65vw;
     min-width: 40vw;
-    background-image: url("./img/404_back.svg");
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    padding: 0.5vw 1vw 0.5vw 1vw;
+    height: min-content;
+    border: 0.15vw solid black;
+    border-radius: 0.5vw;
+    background-color: #BD1B1B;
+    padding: 1vw 1vw 1vw 1vw;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vw;
 }
 
-.order_success_title {
-    margin-bottom: 1vw;
-    margin-left: 2vw;
+.order_title {
+    margin-left: auto;
+    margin-right: auto;
     font-size: 2.5vw;
     font-family: "Jost", Arial;
     text-align: center;
 }
 
-.order_success_row {
+.order_row {
     font-size: 1.75vw;
     font-family: "Jost", Arial;
 }
 
-.order_success_actions {
+.order_pending_actions {
+    margin-left: auto;
+    margin-right: auto;
     display: flex;
-    margin-top: 4vw;
+    margin-top: 1vw;
+    flex-direction: row;
+    gap: 15px;
+    align-items: center;
+}
+
+.order_last_actions {
+    display: flex;
+    margin-top: 1vw;
     flex-direction: column;
     gap: 15px;
     align-items: center;
 }
 
-.order_success_actions_button {
+.order_action_button {
     display: block;
-    background-image: url("./img/header_button_click.svg");
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
+    border: 0.15vw solid black;
+    background-color: #4B4B4B;
+    border-radius: 0.5vw;
     padding: 0.5vw 2.75vw 0.5vw 2.75vw;
     font-size: 1.75vw;
     font-family: "Jost", Arial;
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-.order_success_actions_button:hover {
+.order_action_button:hover {
     transform: scale(1.05);
     filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
 }
 
-.order_success_actions_button:active {
+.order_action_button:active {
     transform: scale(1);
     filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
 }
@@ -2494,7 +2504,7 @@ button {
     align-items: center;
     justify-content: flex-start;
     gap: 2.5vw;
-    padding: 2.5vw 2vw 1.5vw 0.5vw;
+    padding: 3vw 2vw 1.5vw 0.5vw;
     white-space: nowrap;
     font-size: 1.5vw;
     font-family: "Jost", Arial;
@@ -2561,14 +2571,7 @@ button {
 }
 
 .order_refund_info {
-    position: relative;
-    margin-top: auto;
-    border-radius: 0.5vw;
-    background-color: #BD1B1B;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1vw 0.5vw 1vw 0.5vw;
+    margin-top: 1vw;
     font-size: 1.25vw;
     font-family: "Jost", Arial;
 }
