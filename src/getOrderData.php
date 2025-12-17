@@ -19,7 +19,7 @@ function getOrderData($orderId) {
         }
         
         $orderStmt = $connect->prepare("
-                SELECT o.order_id, o.delivery_type, o.delivery_address_id, o.store_id,
+                SELECT o.order_id, o.delivery_type, o.delivery_address_id, o.store_id, o.created_at,
                 s.name as store_name, s.address as store_address, s.work_hours, s.phone,
                 da.address_line as delivery_address
         FROM orders o

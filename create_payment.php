@@ -210,7 +210,7 @@ try {
             ],
             'confirmation' => [
                 'type' => 'redirect',
-                'return_url' => 'https://cw187549.tw1.ru/order_success.php?orderId=' . $orderId
+                'return_url' => 'https://cw187549.tw1.ru/order.php?orderId=' . $orderId
             ],
             'capture' => true,
             'description' => 'Заказ №' . $orderId,

@@ -1048,7 +1048,7 @@ button {
     top: 45%;
     transform: translateX(-50%);
     width: 50vw;
-    height: 9vw;
+    /* height: 9vw; */
     background-image: url("./img/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -2474,11 +2474,13 @@ button {
 .order_action_button:hover {
     transform: scale(1.05);
     filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
+    cursor: pointer;
 }
 
 .order_action_button:active {
     transform: scale(1);
     filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
+    cursor: pointer;
 }
 
 .orders_list {
