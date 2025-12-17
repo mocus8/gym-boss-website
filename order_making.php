@@ -104,7 +104,6 @@ if ($cartCount === 0) {
                         <?php
                         }
                         ?>
-                        <div class="order_right_row_gap"></div>
                         <div class="order_right_row">Количество товаров: <?= $cartCount ?></div>
                         <div class="order_right_row">Стоимость всех товаров: <?= $cartTotalPrice ?> ₽</div>
                         <?php
@@ -165,7 +164,6 @@ if ($cartCount === 0) {
                         <?php
                             }
                         ?>
-                        <div class="order_right_row_gap"></div>
                         <div class="order_right_row">Количество товаров: <?= $cartCount ?></div>
                         <div class="order_right_row">Стоимость всех товаров: <?= $cartTotalPrice ?> ₽</div>
                         <div class="order_right_row">Итого: <?= $cartTotalPrice ?> ₽</div>
@@ -191,6 +189,6 @@ if ($cartCount === 0) {
         <?php require_once __DIR__ . '/footer.php'; ?>
     </div>
     <script defer src="js/maps.js"></script>
-    <script defer src="js/order.js"></script>
+    <script defer src="js/order-making.js"></script>
 </body>
 </html>
