@@ -1,3 +1,5 @@
+# CI pipeline for GymBoss project
+
 name: Test & Lint
 on: [pull_request, push]
 
