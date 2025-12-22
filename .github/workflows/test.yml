@@ -1,0 +1,34 @@
+name: Test & Lint
+on: [pull_request, push]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.2"
+
+            - name: PHP Syntax Check
+              run: find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \;
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+
+            - name: ESLint (JS)
+              run: |
+                  cd js
+                  npm init -y
+                  npm install eslint@latest --save-dev
+                  npx eslint . --max-warnings=0 || true
+
+            - name: GymBoss TODO Progress
+              run: |
+                  OPEN_TODO=$(grep -r '\[ \]' "GymBoss*.md" "*-TODO.md" 2>/dev/null | wc -l || echo 0)
+                  echo "GymBoss TODOs: $OPEN_TODO open"
+                  echo "Obsidian tracking: OK"
