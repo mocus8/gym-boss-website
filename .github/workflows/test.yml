@@ -28,9 +28,3 @@ jobs:
                   npm init -y
                   npm install eslint@latest --save-dev
                   npx eslint . --max-warnings=0 || true
-
-            - name: GymBoss TODO Progress
-              run: |
-                  OPEN_TODO=$(grep -r '\[ \]' "GymBoss*.md" "*-TODO.md" 2>/dev/null | wc -l || echo 0)
-                  echo "GymBoss TODOs: $OPEN_TODO open"
-                  echo "Obsidian tracking: OK"
