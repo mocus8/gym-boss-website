@@ -4,19 +4,38 @@ services:
     nginx:
         image: nginx:alpine
         ports:
-            - "8080:80" # Сайт будет доступен по http://localhost:8080
+            - "80:80" # Сайт будет доступен по http://localhost
         volumes:
-            - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-            - ./:/var/www/html # Папка с index.php
+            - .:/var/www/html # Папка с index.php
+            - php_sessions:/var/lib/php/sessions # Сессии PHP сохраняются
+            - ./nginx.conf:/etc/nginx/nginx.conf:ro # Конфиг Nginx
+            - nginx_logs:/var/log/nginx # Логи сохраняются
         depends_on:
             - php
-
+        restart: unless-stopped
+        healthcheck: # Автоматическая проверка "жив ли контейнер"
+            test: ["CMD-SHELL", "nginx -t"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        networks:
+            - gymboss
     php:
         build: .
         volumes:
-            - ./:/var/www/html
+            - .:/var/www/html
+        environment:
+            - ENCRYPTION_KEY=${ENCRYPTION_KEY}
         depends_on:
             - mysql
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "php-fpm -t"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        networks:
+            - gymboss
 
     mysql:
         image: mysql:8.0
@@ -29,7 +48,22 @@ services:
             - "3306:3306"
         volumes:
             - mysql_data:/var/lib/mysql
-            - ./db:/docker-entrypoint-initdb.d # Сюда здесь dump.sql
+            - ./db:/docker-entrypoint-initdb.d # Здесь dump.sql
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        networks:
+            - gymboss
 
 volumes:
     mysql_data:
+    nginx_logs:
+    php_sessions:
+
+# Определение сети для взаимодействия 3 контейнеров (nginx, php, mysql)
+networks:
+    gymboss:
+        driver: bridge
