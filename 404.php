@@ -2,10 +2,10 @@
 <html>
 	<head>
 		<meta charset="utf-8">
+        <meta name="robots" content="noindex, nofollow">
 		<title>
             Интернет-магазин "Boss Of This Gym"
 		</title>
-        <link rel="canonical" href="<?= htmlspecialchars($baseUrl, ENT_QUOTES) ?>/404">
         <link rel="icon" href="/public/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" href="/styles.css">
 	</head>

@@ -10,7 +10,6 @@ require_once __DIR__ . '/src/envLoader.php';
 
 // Получаем URL сайта из переменных окружения
 $appUrl = getenv('APP_URL');
-
 if (!$appUrl) {
     // логируем
     error_log('APP_URL is not set');
