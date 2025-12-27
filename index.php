@@ -23,6 +23,19 @@ $baseUrl   = rtrim($appUrl, '/');
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = rtrim($uri, '/');
 
+// Маршруты требуещие авторизации
+$protectedRoutes = [
+    '/my-orders',
+    '/order-making',
+    // сюда же можно добавить ещё маршрутов закрытых для неавторизированных пользователей
+];
+
+// Если маршрут требует авторизации и пользователь не залогинен — на главную
+if (in_array($uri, $protectedRoutes, true) && empty($_SESSION['user']['id'])) {
+    header('Location: /');
+    exit;
+}
+
 // Определение маршрутов
 $routes = [
     ''              => 'home.php',

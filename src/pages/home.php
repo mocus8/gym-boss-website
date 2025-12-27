@@ -81,7 +81,7 @@ if (function_exists('getCartSessionId')) {
 
 // Также с примером того что может быть в контроллере:
 // $title  = 'Gym Boss - спорттовары'; - тут тайтл по умолчанию в app.php, не указваем
-//$robots = 'noindex,nofollow'; - индексируется по умолчанию app.php, не указваем
+// $robots = 'noindex,nofollow'; - индексируется по умолчанию app.php, не указваем
 $canonical = $baseUrl . '/'; // добавляем "/" чтобы получить каноникал главной страницы как https://gymboss.ru/
 // $pageScripts = ['/js/cart.js']; - какие скрипты нужны для страницы, тут не нужны - не указываем
 
@@ -92,4 +92,3 @@ $content = ob_get_clean();
 
 // И подключаем главный шаблон сайта
 require __DIR__ . '/../templates/layouts/app.php';
-?>
