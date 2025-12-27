@@ -2,7 +2,7 @@
 $title  = 'Страница не найдена';
 $robots = 'noindex,nofollow';
 
-// Через буфер записываем в переменную кнотент страницы
+// Через буфер записываем в переменную контент страницы
 ob_start();
 require __DIR__ . '/../templates/pages/404.php';
 $content = ob_get_clean();
