@@ -31,7 +31,7 @@ if ($cartCount === 0) {
             <img class="loader" src="/img/loader.png" alt="Загрузка">
         </div>
         <div class="desktop">
-            <?php require_once __DIR__ . '/header.php' ?>
+            <?php require_once __DIR__ . '/templates/partials/header.php' ?>
             <main class="main">
                 <div class="button_return_position">
                     <a href="/">
@@ -188,7 +188,7 @@ if ($cartCount === 0) {
                     </div>
                 </div>
             </main>
-            <?php require_once __DIR__ . '/footer.php'; ?>
+            <?php require_once __DIR__ . '/templates/partials/footer.php'; ?>
         </div>
         <script defer src="/js/maps.js"></script>
         <script defer src="/js/order-making.js"></script>

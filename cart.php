@@ -15,7 +15,7 @@
         </div>
         <div class="desktop">
             <?php
-            require_once __DIR__ . '/header.php';
+            require_once __DIR__ . '/templates/partials/header.php';
             require_once __DIR__ . '/src/getCartInfo.php';
             ?>
 
@@ -121,7 +121,7 @@
                     ?>
                 </div>
             </main>
-            <?php require_once __DIR__ . '/footer.php'; ?>
+            <?php require_once __DIR__ . '/templates/partials/footer.php'; ?>
         </div>
         <script defer type="module" src="/js/cart.js"></script>
 	</body>
