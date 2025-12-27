@@ -79,11 +79,7 @@ if (function_exists('getCartSessionId')) {
     getCartSessionId();
 }
 
-$title     = 'Gym Boss - спорттовары';
-$robots    = 'index,follow';
 $canonical = $baseUrl . '/'; // добавляем "/" чтобы получить каноникал главной страницы как https://gymboss.ru/
-// Какие js нужны этой странице (если не нужны не указываем)
-// $pageScripts = ['/js/home.js']; - тут не нужен, для примера
 
 // Через буфер записываем в переменную контент страницы
 ob_start();
