@@ -55,9 +55,10 @@ yarn-error.log*
 .yarn-integrity
 
 # =================================
-# Кеш + Логи (GymBoss + Laravel)
+# Кеш + логи + временные файлы (GymBoss + Laravel)
 # =================================
-public/cache/
+var/
+var/cache/
 public/sess*/
 public/tmp/
 tmp/
