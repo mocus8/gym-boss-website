@@ -21,12 +21,14 @@ function send_sms_verification($phone) {
     // Текст сообщения
     $message = "Код подтверждения: $code";
     $testMode = (SMSC_TEST_MODE === 'true');
-    $query = $testMode ? "cost=3" : "";
-    
+    $query = $testMode ? "cost=3" : "";    
+
     // Отправка через SDK
-    list($smsId, $smsCount, $cost, $balance) = send_sms(
-        $phone, $message, 0, 0, 0, 0, SMSC_SENDER, $query
-    );
+    $result = send_sms($phone, $message, 0, 0, 0, 0, SMSC_SENDER, $query);
+
+    // Всегда есть 0 и 1 (по доке: при успехе и при ошибке)
+    $smsId    = $result[0] ?? null;
+    $smsCount = $result[1] ?? 0; // >0 — успех, <0 — ошибка
     
     if ($smsCount > 0) {
         return [
@@ -36,7 +38,7 @@ function send_sms_verification($phone) {
             'debug_phone' => $phone //это для теста без реальных sms, потом убрать!!!
         ];
     } else {
-        error_log("SMSC Error: $smsId for phone $phone");
+        error_log("SMSC error for $phone: id=$smsId, code=$smsCount");
         unset($_SESSION['sms_verification']);
         return [
             'success' => false,
