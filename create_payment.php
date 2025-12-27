@@ -1,5 +1,20 @@
 <?php
 // тут помимо прочих исправлений нужно номер телефона проверять валидировать и т д
+
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/src/envLoader.php';
+
+// Получаем URL сайта из переменных окружения
+$appUrl = getenv('APP_URL');
+if (!$appUrl) {
+    // логируем
+    error_log('Sitemap generator error: APP_URL is not set');
+    // и падаем
+    exit(1);
+}
+
+$baseUrl   = rtrim($appUrl, '/');
+
 session_start();
 header('Content-Type: application/json');
 
@@ -206,7 +221,7 @@ try {
             ],
             'confirmation' => [
                 'type' => 'redirect',
-                'return_url' => $baseUrl . '/' . $orderId
+                'return_url' => $baseUrl . '/order/' . $orderId
             ],
             'capture' => true,
             'description' => 'Заказ №' . $orderId,
@@ -234,8 +249,10 @@ try {
         throw new Exception('PAYMENT_SERVICE_UNAVAILABLE');
     }
 
-    // устанавливаем в бд устаревание оплаты через 30 минут
+    // Устанавливаем в бд устаревание оплаты через 30 минут
     $expiresAt = date('Y-m-d H:i:s', time() + 1800);
+    // Сохраняем id платежа
+    $paymentId = $payment->getId();
 
     $updateStmt = $connect->prepare("
         UPDATE orders
@@ -244,7 +261,7 @@ try {
             status = 'pending_payment' 
         WHERE order_id = ?
     ");
-    $updateStmt->bind_param("ssi", $payment->getId(), $expiresAt, $orderId);
+    $updateStmt->bind_param("ssi", $paymentId, $expiresAt, $orderId);
     $updateStmt->execute();
     $updateStmt->close();
 
