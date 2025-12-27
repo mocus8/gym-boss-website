@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/envLoader.php';
 require_once __DIR__ . '/secure/captchaVerification.php';
 
 // тут нужна еще проверка CSRF токенов и ограничение частоты запросов. это все через laravel можно сделать
@@ -11,7 +12,11 @@ $login = $_POST["login"];
 $password = $_POST["password"]; 
 $name = $_POST["name"];
 
-requireCaptcha();
+// Если локальный режим окружения то не проверяем капчу
+$isLocal = getenv('APP_ENV') === 'local';
+if (!$isLocal){
+    requireCaptcha();
+}
 
 $cartSessionId = getCartSessionId();
 
