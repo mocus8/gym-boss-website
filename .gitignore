@@ -19,7 +19,6 @@ docker-compose.override.yml
 # =================================
 vendor/
 /vendor/
-composer.lock
 .phpunit.result.cache
 
 # =================================

@@ -310,6 +310,9 @@ document.querySelectorAll(".order_right_pay_button").forEach((button) => {
         const abortController = new AbortController();
         const timeoutId = setTimeout(() => abortController.abort(), 15000); // 15 сек
 
+        let response;
+        let result;
+
         try {
             // Передаем order_id В POST
             const response = await fetch("/create_payment.php", {
@@ -327,10 +330,12 @@ document.querySelectorAll(".order_right_pay_button").forEach((button) => {
             clearTimeout(timeoutId);
 
             // Проверка что ответ JSON
-            let result;
             try {
                 result = await response.json();
             } catch (jsonError) {
+                // Потом нормально логировать
+                console.error("JSON parse error:", jsonError);
+
                 payErrorModal.open(
                     "Некорректный ответ от сервера, попробуйте еще раз"
                 );
