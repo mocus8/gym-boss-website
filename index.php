@@ -38,7 +38,7 @@ $routes = [
 
 // Если маршрут есть в списке, подключаем соответствующий файл
 if (isset($routes[$uri])) {
-    require __DIR__ . '/' . $routes[$uri];
+    require __DIR__ . '/src/pages/' . $routes[$uri];
     exit;
 }
 // Страница товара: /product/slug
