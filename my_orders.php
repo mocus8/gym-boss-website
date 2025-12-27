@@ -23,7 +23,7 @@ if (!isset($_SESSION['user']['id'])) {
         </div>
         <div class="desktop">
             <?php 
-            require_once __DIR__ . '/templates/partials/header.php'; 
+            require_once __DIR__ . '/src/templates/partials/header.php'; 
 
             try {
                 $connect = getDB();
@@ -151,7 +151,7 @@ if (!isset($_SESSION['user']['id'])) {
                     ?>
                 </div>
             </main>
-            <?php require_once __DIR__ . '/templates/partials/footer.php';?>
+            <?php require_once __DIR__ . '/src/templates/partials/footer.php';?>
         </div>
 	</body>
 </html>

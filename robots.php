@@ -23,6 +23,6 @@ echo "Disallow: /order-making\n";
 echo "Disallow: /db\n";
 echo "Disallow: /scripts\n";
 echo "Disallow: /src\n";
-echo "Disallow: /templates\n\n";
+echo "Disallow: /src/templates\n\n";
 
 echo "Sitemap: {$baseUrl}/sitemap.xml\n";

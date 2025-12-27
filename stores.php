@@ -15,7 +15,7 @@
             <img class="loader" src="/img/loader.png" alt="Загрузка">
         </div>
         <div class="desktop">
-            <?php require_once __DIR__ . '/templates/partials/header.php';?>
+            <?php require_once __DIR__ . '/src/templates/partials/header.php';?>
             <main class="main">
                 <div class="button_return_position">
                     <a href="/">
@@ -95,7 +95,7 @@
                     </div>
                 </div>
             </main>
-            <?php require_once __DIR__ . '/templates/partials/footer.php'; ?>
+            <?php require_once __DIR__ . '/src/templates/partials/footer.php'; ?>
         </div>
         <script src="https://api-maps.yandex.ru/2.1/?apikey=<?= getenv('YANDEX_MAPS_KEY') ?>&lang=ru_RU"></script>
         <script defer src="/js/maps.js"></script>

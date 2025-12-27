@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../../templates/partials/header.php'; ?>
+<?php require_once __DIR__ . '/../../src/templates/partials/header.php'; ?>
 
 <main class="main">
     <div class="button_return_position">
@@ -12,7 +12,7 @@
         </a>
     </div>
 
-    <div class="order_back">
+    <div class="order_back" id="order-container" data-order-id="<?= $orderId ?>">
         <div>
             <div class="order_row">
                 Номер заказа: <?= '#' . str_pad($orderId, 6, '0', STR_PAD_LEFT) ?>
@@ -65,8 +65,13 @@
             Итоговая стоимость: <?= $orderTotalPrice + $deliveryCost?> ₽
         </div>
 
-        <div class="order_title">
-            Заказ отменен
+        <div class="order_title" id="order-pending-title">
+            Заказ успешно оформлен и ожидает оплаты.
+        </div>
+
+        <div class="order_pending_actions" id="order-pending-actions">
+            <button class="order_action_button" id="order-pay-btn">Оплатить</button>
+            <button class="order_action_button" id="order-cancel-btn">Отменить</button>
         </div>
 
         <div class="order_last_actions">
@@ -76,4 +81,26 @@
     </div>
 </main>
 
-<?php require_once __DIR__ . '/../../templates/partials/footer.php';?>
+<div class="order_error hidden" id="error-modal-<?= $orderId ?>">
+    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+    <div id="error-modal-text-<?= $orderId ?>"></div>
+</div> 
+
+<div class="registration_modal_blur" id="order-cancel-modal">
+    <div class="account_delete_modal">
+        <div class="account_delete_modal_entry_text">Вы уверены что хотите отменить заказ <?= $orderId ?>?</div>
+        <div class="registration_modal_form">
+            <div class="registration_modal_buttons">
+                <button class="registration_modal_button" id="order-cancel-modal-exit">
+                    Вернуться
+                </button>
+
+                <button class="registration_modal_button" id="order-cancel-modal-submit">
+                    Отменить заказ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php require_once __DIR__ . '/../../src/templates/partials/footer.php';?>

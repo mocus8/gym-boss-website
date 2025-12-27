@@ -122,7 +122,7 @@ foreach ($cartItems as $item) {
             <img class="loader" src="/img/loader.png" alt="Загрузка">
         </div>
         <div class="desktop">
-            <?php require_once __DIR__ . '/templates/partials/header.php'; ?>
+            <?php require_once __DIR__ . '/src/templates/partials/header.php'; ?>
             <main class="main">
                 <div class="product_left">
                     <a href="/">
@@ -174,7 +174,7 @@ foreach ($cartItems as $item) {
                     </div>
                 </div>
             </main>
-            <?php require_once __DIR__ . '/templates/partials/footer.php'; ?>
+            <?php require_once __DIR__ . '/src/templates/partials/footer.php'; ?>
         </div>
         <script defer src="/js/cart.js"></script>
 	</body>

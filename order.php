@@ -194,7 +194,7 @@ require_once __DIR__ . '/src/getOrderData.php';
         <div class="desktop">
             <?php
             // Подключаем нужный шаблон
-            include "templates/order/{$template}";
+            include "src/templates/order/{$template}";
             ?>
         </div>
 

@@ -1,4 +1,4 @@
-<?php require_once __DIR__ . '/../../templates/partials/header.php'; ?>
+<?php require_once __DIR__ . '/../../src/templates/partials/header.php'; ?>
 
 <main class="main">
     <div class="button_return_position">
@@ -113,4 +113,4 @@
     </div>
 </main>
 
-<?php require_once __DIR__ . '/../../templates/partials/footer.php';?>
+<?php require_once __DIR__ . '/../../src/templates/partials/footer.php';?>
