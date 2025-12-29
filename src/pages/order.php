@@ -1,22 +1,26 @@
 <?php
+// Контроллер страницы заказа
+
 // Тут зарефакторить и новые коды ошибок добавить в utils
 
 $userId = $_SESSION['user']['id'] ?? null;
 $orderId = $_GET['orderId'] ?? '';
 $paidAt = null;
 
+// Проверка на авторизацию не выносится в index, т.к. uri динамический
 if (!$userId) {
     header('Location: /');
     exit();
 }
 
 if (!$orderId) {
+    http_response_code(404);
     require __DIR__ . '/404.php';
     exit();
 }
 
 // Определяем дефолтный шаблон для страницы и ошибку для показа
-$template = 'error.php';
+$templateSrc = 'error.php';
 $error_message = '';
 
 try {
@@ -56,11 +60,6 @@ try {
     $paymentExpiresAt = $order['payment_expires_at'];
     $paidAt = $order['paid_at'];
     $deliveryCost = $order['delivery_cost'];
-
-
-    // if ($order['status'] !== 'paid' && $paymentExpiresAt && strtotime($paymentExpiresAt) < time()) {
-    //     throw new Exception('ORDER_EXPIRED');
-    // }
 
     // Заказ есть, но не оплачен
     if ($order['status'] === 'pending_payment') { 
@@ -147,20 +146,20 @@ try {
     // Выбор шаблона статусу в бд (откорректирован юкассой выше)
     switch ($order['status']) {
         case 'paid':
-            $template = 'status_success.php';
+            $templateSrc = 'status_success.php';
             break;
         case 'pending_payment':
-            $template = 'status_pending.php';
+            $templateSrc = 'status_pending.php';
             break;
         case 'cancelled':
-            $template = 'status_cancelled.php';
+            $templateSrc = 'status_cancelled.php';
             break;
         default:
-            $template = 'error.php';
+            $templateSrc = 'error.php';
     }
 
 } catch (Exception $e) {
-    $template = 'error.php';
+    $templateSrc = 'error.php';
     $error_message = $e->getMessage();
 
     // Потом нормально логировать
@@ -172,32 +171,16 @@ try {
 }
 
 // Тут потом поменять на класс/норм функцию
-require_once __DIR__ . '/src/getOrderData.php';
-?>
+require_once __DIR__ . '/../getOrderData.php';
 
-<!DOCTYPE html>
-<html>
-	<head>
-        <meta charset="utf-8">
-        <meta name="robots" content="noindex, nofollow">
-		<title>
-            Gym Boss - спорттовары
-		</title>
-        <link rel="icon" href="/public/favicon.ico" type="image/x-icon">
-		<link rel="stylesheet" href="/styles.css">
-	</head>
-	<body class="body">
-        <div class="loader-overlay" id="loader">
-            <!-- <div class="loading-text">Загрузка...</div> -->
-        </div>
+$title  = "Заказ № $orderId - Gym Boss";
+$robots = 'noindex,nofollow';
+$pageModuleScripts = ['/js/order.js'];
 
-        <div class="desktop">
-            <?php
-            // Подключаем нужный шаблон
-            include "src/templates/order/{$template}";
-            ?>
-        </div>
+// Через буфер записываем в переменную контент страницы (один из шаблонов по статусу)
+ob_start();
+require __DIR__ . "/../templates/order/{$templateSrc}";
+$content = ob_get_clean();
 
-        <script type="module" src="/js/order.js"></script>
-	</body>
-</html>
+// И подключаем главный шаблон сайта
+require __DIR__ . '/../templates/layouts/app.php';
