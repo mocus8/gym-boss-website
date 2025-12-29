@@ -57,7 +57,7 @@ if (isset($routes[$uri])) {
 // Страница товара: /product/slug
 elseif (preg_match('#^/product/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
     $_GET['url'] = $matches[1];
-    require __DIR__ . '/src/product.php';
+    require __DIR__ . '/src/pages/product.php';
     exit;
 }
 // Страница заказа: /order/123, также записываем в GET id
