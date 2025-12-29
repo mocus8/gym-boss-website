@@ -12,16 +12,12 @@
     Товары в корзине:
 </div>
 <div class="cart_products">
-    <?php
-    if ($cartCount == 0) {
-    ?>
+    <?php if ($cartCount == 0) { ?>
         <div class="cart_empty">
             Корзина пуста
         </div>
-    <?php
-    } else {
-        foreach ($cartItems as $item) {
-    ?>
+    <?php } else {
+        foreach ($cartItems as $item) { ?>
         <div class="cart_product" data-product-id="<?= $item['id'] ?>" data-price="<?= $item['price'] ?>">
             <div class="product_click">
                 <a href="product/<?= $item['slug'] ?>">
@@ -51,10 +47,8 @@
                 </div>
             </div>
         </div>
-    <?php
-        }
-    }
-    ?>
+    <?php }
+    } ?>
 </div>
 <div class="cart_right">
     <img class="order_icon" src="/img/cart.png">
@@ -72,10 +66,8 @@
             Итого: <span data-total-counter><?= $cartTotalPrice ?></span> ₽
         </div>
     </div>
-    <?php
-    if ($cartCount != 0) {
-        if ($idUser) {
-    ?>
+    <?php if ($cartCount != 0) {
+        if ($userId) { ?>
         <a href="/order-making" class="order-button-link">
             <div class="order_start">
                 <div class="order_start_text">
@@ -83,9 +75,7 @@
                 </div>
             </div>
         </a>
-    <?php
-        } else {
-    ?>
+    <?php } else { ?>
         <a class="order-button-link" id="open-registration-modal-from-cart">
             <div class="order_start">
                 <div class="order_start_text">
@@ -93,8 +83,6 @@
                 </div>
             </div>
         </a>
-    <?php
-        }
-    }
-    ?>
+    <?php }
+    } ?>
 </div>

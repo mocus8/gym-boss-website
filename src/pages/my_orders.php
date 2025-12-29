@@ -28,8 +28,9 @@ try {
     if (!$stmt) {
         throw new Exception('Failed to prepare statement');
     }
-    
-    $stmt->bind_param("i", $idUser);
+
+    $userId = $_SESSION['user']['id'];
+    $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
     
