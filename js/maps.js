@@ -105,6 +105,52 @@ function initStoresMap() {
     }
 }
 
+// Промис загрузки скриптов DaData (типа флага, но асинхронный, его можно ожидать await)
+let dadataPromise = null;
+
+// Функция загрузки скрипта DaData
+function loadDaDataScript() {
+    // Если уже есть обещание то ничего не делаем
+    if (dadataPromise) {
+        return dadataPromise;
+    }
+
+    // Присваиваем промису значение функции
+    dadataPromise = new Promise((resolve, reject) => {
+        // Создаем тег <script> в памяти (не реально в документе)
+        const script = document.createElement("script");
+
+        // URL для скрипта
+        const url = `https://cdn.jsdelivr.net/npm/@dadata/suggestions@25.4.1/dist/suggestions.min.js`;
+
+        // Вставляем в скрипт URL
+        script.src = url;
+
+        // Обработчик на загрузку скрипта
+        script.onload = () => {
+            if (!window.Dadata) {
+                reject(
+                    new Error(
+                        "DaData скрипт загрузился, но window.Dadata не найден"
+                    )
+                );
+                return;
+            }
+            resolve(); // промис выполнен успешно
+        };
+
+        // Обработчик на ошибку скрипта
+        script.onerror = () => {
+            reject(new Error("Ошибка загрузки скрипта DaData"));
+        };
+
+        // Вставляем скрипт в DOM
+        document.head.appendChild(script);
+    });
+
+    return dadataPromise;
+}
+
 // Класс через ES6 для карты доставки, конструктор с параметром (контейнер для создания в нем карты)
 class DeliveryMap {
     #map = null; // объект Яндекс.Карты
@@ -376,6 +422,9 @@ class DeliveryMap {
     async #initDaData() {
         try {
             if (this.#daDataInitialized) return;
+
+            // Ждем загрузки скриптов DaData
+            await loadDaDataScript();
 
             if (this.#addressInput) {
                 const response = await fetch("/src/serviceProxy.php");
@@ -872,53 +921,52 @@ let pickupMap = null;
 let yandexMapsPromise = null;
 
 function loadYandexMapsScripts() {
+    // Если уже есть обещание то ничего не делаем
     if (yandexMapsPromise) {
         return yandexMapsPromise;
-    } else {
-        // Присваиваем промису значение функции
-        yandexMapsPromise = new Promise((resolve, reject) => {
-            // Создаем тег <script> в памяти (не реально в документе)
-            const script = document.createElement("script");
+    }
 
-            // Получаем ip ключ для карт
-            const key = document.body?.dataset?.yandexMapsKey;
-            if (!key) {
+    // Присваиваем промису значение функции
+    yandexMapsPromise = new Promise((resolve, reject) => {
+        // Создаем тег <script> в памяти (не реально в документе)
+        const script = document.createElement("script");
+
+        // Получаем ip ключ для карт
+        const key = document.body?.dataset?.yandexMapsKey;
+        if (!key) {
+            reject(new Error("YANDEX_MAPS_KEY не найден в data-атрибуте body"));
+            return;
+        }
+
+        // Собираем URL для скрипта
+        const url = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(key)}&lang=ru_RU&load=package.full`;
+
+        // Вставляем в скрипт URL
+        script.src = url;
+
+        // Обработчик на загрузку скрипта
+        script.onload = () => {
+            if (!window.ymaps) {
                 reject(
-                    new Error("YANDEX_MAPS_KEY не найден в data-атрибуте body")
+                    new Error(
+                        "Yandex Maps скрипт загрузился, но ymaps не найден"
+                    )
                 );
                 return;
             }
+            resolve(); // промис выполнен успешно
+        };
 
-            // Собираем URL для скрипта
-            const url = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(key)}&lang=ru_RU&load=package.full`;
+        // Обработчик на ошибку скрипта
+        script.onerror = () => {
+            reject(new Error("Ошибка загрузки скрипта Yandex Maps"));
+        };
 
-            // Вставляем в скрипт URL
-            script.src = url;
+        // Вставляем скрипт в DOM
+        document.head.appendChild(script);
+    });
 
-            // Обработчик на загрузку скрипта
-            script.onload = () => {
-                if (!window.ymaps) {
-                    reject(
-                        new Error(
-                            "Yandex Maps скрипт загрузился, но ymaps не найден"
-                        )
-                    );
-                    return;
-                }
-                resolve(); // промис выполнен успешно
-            };
-
-            // Обработчик на ошибку скрипта
-            script.onerror = () => {
-                reject(new Error("Ошибка загрузки скрипта Yandex Maps"));
-            };
-
-            // Вставляем скрипт в DOM
-            document.head.appendChild(script);
-        });
-
-        return yandexMapsPromise;
-    }
+    return yandexMapsPromise;
 }
 
 // Функция для инициализации карт

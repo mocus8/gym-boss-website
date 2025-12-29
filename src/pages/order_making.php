@@ -11,7 +11,6 @@ if ($cartCount === 0) {
 $title  = 'Оформление заказа - Gym Boss';
 $robots = 'noindex,nofollow';
 $pageScripts = [
-    'https://cdn.jsdelivr.net/npm/@dadata/suggestions@25.4.1/dist/suggestions.min.js',
     '/js/maps.js',
     '/js/order-making.js'
 ];
