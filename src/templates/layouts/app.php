@@ -23,7 +23,7 @@ $canonical = $canonical ?? $defaultCanonical;
 		<link rel="stylesheet" href="/styles.css">
 	</head>
 
-	<body class="body">
+	<body class="body" data-yandex-maps-key="<?= getenv('YANDEX_MAPS_KEY') ?>">
         <div class="loader-overlay" id="loader">
             <img class="loader" src="/img/loader.png" alt="Загрузка">
         </div>

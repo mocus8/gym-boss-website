@@ -12,7 +12,6 @@ $title  = 'Оформление заказа - Gym Boss';
 $robots = 'noindex,nofollow';
 $pageScripts = [
     'https://cdn.jsdelivr.net/npm/@dadata/suggestions@25.4.1/dist/suggestions.min.js',
-    'https://api-maps.yandex.ru/2.1/?apikey=' . getenv('YANDEX_MAPS_KEY') . '&lang=ru_RU&load=package.full',
     '/js/maps.js',
     '/js/order-making.js'
 ];

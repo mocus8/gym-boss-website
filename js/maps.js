@@ -868,45 +868,114 @@ class PickupMap {
 // объявляем переменную для карты (т.к. она одна на страницу)
 let pickupMap = null;
 
-if (typeof ymaps === "undefined") {
-    showMapError();
-} else {
-    ymaps.ready(() => {
-        // Карта магазинов (если она видна на странице)
-        if (document.getElementById("stores-map")) {
-            try {
-                initStoresMap();
-            } catch (error) {
-                console.error("Ошибка карты магазинов:", error);
-                showMapError("stores");
+// Промис загрузки скриптов для карт (типа флага, но асинхронный, его можно ожидать await)
+let yandexMapsPromise = null;
+
+function loadYandexMapsScripts() {
+    if (yandexMapsPromise) {
+        return yandexMapsPromise;
+    } else {
+        // Присваиваем промису значение функции
+        yandexMapsPromise = new Promise((resolve, reject) => {
+            // Создаем тег <script> в памяти (не реально в документе)
+            const script = document.createElement("script");
+
+            // Получаем ip ключ для карт
+            const key = document.body?.dataset?.yandexMapsKey;
+            if (!key) {
+                reject(
+                    new Error("YANDEX_MAPS_KEY не найден в data-атрибуте body")
+                );
+                return;
             }
-        }
 
-        // Карты оформления заказа (проверяем API ключ)
-        // Карта доставки (если есть и видна)
-        const deliveryModal = document.getElementById(
-            "modal-order-type-delivery"
-        );
-        if (
-            document.getElementById("delivery-map") &&
-            deliveryModal &&
-            !deliveryModal.classList.contains("hidden")
-        ) {
-            ymaps
-                .geocode("Москва", { results: 1 })
-                .then(() => {
-                    // создаем карту если ее нет
-                    if (!deliveryMap) {
-                        deliveryMap = new DeliveryMap("delivery-map");
-                    }
-                })
-                .catch((error) => {
-                    // API не работает
-                    console.error("Неверный API ключ Яндекс.Карт:", error);
-                    showMapError("delivery");
-                });
-        }
+            // Собираем URL для скрипта
+            const url = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(key)}&lang=ru_RU&load=package.full`;
 
-        // Карта самовывоза будет инициализироваться в обработчике переключения типа
-    });
+            // Вставляем в скрипт URL
+            script.src = url;
+
+            // Обработчик на загрузку скрипта
+            script.onload = () => {
+                if (!window.ymaps) {
+                    reject(
+                        new Error(
+                            "Yandex Maps скрипт загрузился, но ymaps не найден"
+                        )
+                    );
+                    return;
+                }
+                resolve(); // промис выполнен успешно
+            };
+
+            // Обработчик на ошибку скрипта
+            script.onerror = () => {
+                reject(new Error("Ошибка загрузки скрипта Yandex Maps"));
+            };
+
+            // Вставляем скрипт в DOM
+            document.head.appendChild(script);
+        });
+
+        return yandexMapsPromise;
+    }
 }
+
+// Функция для инициализации карт
+function initAllMaps() {
+    if (typeof ymaps === "undefined") {
+        showMapError();
+    } else {
+        ymaps.ready(() => {
+            // Карта магазинов (если она видна на странице)
+            if (document.getElementById("stores-map")) {
+                try {
+                    initStoresMap();
+                } catch (error) {
+                    console.error("Ошибка карты магазинов:", error);
+                    showMapError("stores");
+                }
+            }
+
+            // Карты оформления заказа (проверяем API ключ)
+            // Карта доставки (если есть и видна)
+            const deliveryModal = document.getElementById(
+                "modal-order-type-delivery"
+            );
+            if (
+                document.getElementById("delivery-map") &&
+                deliveryModal &&
+                !deliveryModal.classList.contains("hidden")
+            ) {
+                ymaps
+                    .geocode("Москва", { results: 1 })
+                    .then(() => {
+                        // создаем карту если ее нет
+                        if (!deliveryMap) {
+                            deliveryMap = new DeliveryMap("delivery-map");
+                        }
+                    })
+                    .catch((error) => {
+                        // API не работает
+                        console.error("Неверный API ключ Яндекс.Карт:", error);
+                        showMapError("delivery");
+                    });
+            }
+
+            // Карта самовывоза будет инициализироваться в обработчике переключения типа
+        });
+    }
+}
+
+// Запускаем асинхронную загрузку скрипта Яндекс.Карт
+// Функция loadYandexMapsScripts сразу возвращает Promise (объект ожидания результата)
+loadYandexMapsScripts()
+    // Эта функция НЕ вызывается сразу, она будет вызвана когда Promise перейдёт в состояние "успех" (resolve)
+    .then(() => {
+        initAllMaps();
+    })
+    // Эта функция НЕ вызывается сразу, она будет вызвана если Promise завершится с ошибкой (reject)
+    .catch((error) => {
+        console.error("[Maps] Не удалось загрузить скрипты карт:", error);
+        showMapError();
+    });
