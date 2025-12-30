@@ -1,23 +1,8 @@
 <?php
 // Единая точка входа, проостейший роутер
 
-session_start();
-
-// Подключаем необходимые для всего сайта php-файлы 
-require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/src/helpers.php';
-require_once __DIR__ . '/src/envLoader.php';
-
-// Получаем URL сайта из переменных окружения
-$appUrl = getenv('APP_URL');
-if (!$appUrl) {
-    // логируем
-    error_log('APP_URL is not set');
-    // и падаем
-    throw new RuntimeException('APP_URL is not set');
-}
-
-$baseUrl   = rtrim($appUrl, '/');
+// Подключаем bootstrap (общая инициализация)
+require_once __DIR__ . '/src/bootstrap.php';
 
 // Разбор URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

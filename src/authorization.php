@@ -1,6 +1,5 @@
 <?php
-session_start();
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
@@ -8,11 +7,8 @@ header('Content-Type: application/json');
 $login = $_POST["login"];
 $password = $_POST["password"];
 
-// Устанавливаем соединение с базой данных
-$connect = getDB();
-
 // Используем подготовленные выражения для защиты от SQL-инъекций
-$stmt = $connect->prepare("SELECT id, password, name FROM users WHERE login = ?");
+$stmt = $db->prepare("SELECT id, password, name FROM users WHERE login = ?");
 // Привязываем параметр (s - string) к запросу
 $stmt->bind_param("s", $login);
 // Выполняем запрос

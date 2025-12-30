@@ -10,13 +10,6 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     // Берем данные из кэша
     $categoriesWithProducts = unserialize(file_get_contents($cacheFile));
 } else {
-    // Делаем запрос к БД
-    if (isset($db) && $db instanceof PDO) {
-        $connect = $db; // Используем существующее соединение
-    } else {
-        $connect = getDB(); // Создаем новое
-    }
-
     $sql = "
         SELECT 
             ctg.category_id as ctg_id,
@@ -38,7 +31,7 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
         ORDER BY ctg.name, prdct.name
     ";
 
-    $stmt = $connect->prepare($sql);
+    $stmt = $db->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
 

@@ -2,12 +2,7 @@
 
 // Получаем инфу о заказах пользователя
 try {
-    $connect = getDB();
-    if (!$connect || $connect->connect_error) {
-        throw new Exception('Database connection failed');
-    }
-    
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         SELECT 
             o.order_id, 
             o.status, 
@@ -44,7 +39,6 @@ try {
     $ordersInfo = [];
 } finally {
     if (isset($stmt)) $stmt->close();
-    if (isset($connect)) $connect->close();
 }
 
 $title  = 'Мои заказы - Gym Boss';

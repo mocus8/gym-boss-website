@@ -1,15 +1,9 @@
 <?php
-require_once __DIR__ . '/helpers.php';
-// header('Content-Type: application/json');
+require_once __DIR__ . '/bootstrap.php';
+
 // тут зарефаткорить (crsf, статусы и другое)
 
-$connect = getDB();
-if (!$connect) {
-    echo json_encode([]);
-    exit;
-}
-
-$stmt = $connect->prepare("SELECT id, name, address, work_hours, phone, coordinates FROM stores");
+$stmt = $db->prepare("SELECT id, name, address, work_hours, phone, coordinates FROM stores");
 if ($stmt && $stmt->execute()) {
     $result = $stmt->get_result();
     $stores = [];
@@ -43,5 +37,4 @@ if ($stmt && $stmt->execute()) {
 }
 
 if ($stmt) $stmt->close();
-$connect->close();
 ?>

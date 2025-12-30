@@ -24,13 +24,8 @@ $templateSrc = 'error.php';
 $error_message = '';
 
 try {
-    $connect = getDB();
-    if (!$connect || $connect->connect_error) {
-        throw new Exception('DATABASE_ERROR');
-    }
-
     // получаем из бд данные о заказе (id заказа, статус и время оплаты)
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         SELECT 
             order_id, 
             delivery_cost, 
@@ -89,7 +84,7 @@ try {
 
             case 'succeeded':
                 // Деньги списались, но вебхук не сработал - обновляем статус в БД
-                $updateStmt = $connect->prepare("
+                $updateStmt = $db->prepare("
                     UPDATE orders 
                     SET paid_at = NOW(), status = 'paid' 
                     WHERE order_id = ?
@@ -115,7 +110,7 @@ try {
             case 'canceled':
             case 'failed':
                 // Платеж отменен или неудался - меняем статус в бд на отмененный
-                $updateStmt = $connect->prepare("
+                $updateStmt = $db->prepare("
                     UPDATE orders 
                     SET cancelled_at = NOW(), status = 'cancelled' 
                     WHERE order_id = ?
@@ -167,7 +162,6 @@ try {
 
 } finally {
     if (isset($stmt)) $stmt->close();
-    if (isset($connect)) $connect->close();
 }
 
 // Тут потом поменять на класс/норм функцию

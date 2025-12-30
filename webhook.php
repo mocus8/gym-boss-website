@@ -1,7 +1,5 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/src/helpers.php';
-require_once __DIR__ . '/src/envLoader.php';
+require_once __DIR__ . '/src/bootstrap.php';
 
 use YooKassa\Model\Notification\NotificationFactory;
 
@@ -88,17 +86,12 @@ try {
         throw new Exception('ORDER_NOT_FOUND');
     }
 
-    $connect = getDB();
-    if (!$connect) {
-        throw new Exception('DATABASE_ERROR');
-    }
-
     // Транзакция для целостности данных
-    $connect->begin_transaction();
+    $db->begin_transaction();
 
     try {
         // Проверяем повторную обработку одного и того же заказа (блокируем запись и проверяем статус)
-        $checkStmt = $connect->prepare("
+        $checkStmt = $db->prepare("
             SELECT status, yookassa_payment_id 
             FROM orders 
             WHERE order_id = ? 
@@ -123,7 +116,7 @@ try {
         switch ($yookassaPaymentStatus) {
             case 'succeeded':
                 // Обновляем статус в бд как оплаченный
-                $updateStmt = $connect->prepare("
+                $updateStmt = $db->prepare("
                     UPDATE orders
                     SET paid_at = NOW(),   
                         status = 'paid',
@@ -144,7 +137,7 @@ try {
             case 'canceled':
             case 'failed':
                 // Обновляем статус в бд как отмененный
-                $updateStmt = $connect->prepare("
+                $updateStmt = $db->prepare("
                     UPDATE orders
                     SET cancelled_at = NOW(),   
                         status = 'cancelled',
@@ -171,10 +164,10 @@ try {
         }
 
         // При успехе коммитим транзакцию
-        $connect->commit();
+        $db->commit();
     } catch (Exception $e) {
         // При ошибке откатываем транзакцию 
-        $connect->rollback();
+        $db->rollback();
         throw $e; // Пробрасываем выше
     }
 
@@ -199,8 +192,6 @@ try {
     // Логирование общих ошибок (в реальном проекте использовать логирование в отдельный файл)
     logWebhook("Webhook error [Order: $orderId]: " . $error);
 } finally {
-    if (isset($connect)) $connect->close();
-
     // Всегда возвращаем 200 ОК для юкассы
     http_response_code(200);
     echo 'OK';

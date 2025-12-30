@@ -1,9 +1,9 @@
 <?php
 // тут нехватает crsf токена, и мб еще что то надо доделать
-session_start();
+
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/bootstrap.php';
 
 // Разрешаем только POST запросы
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -28,13 +28,7 @@ if (!is_numeric($orderId) || $orderId <= 0) {
 }
 
 try {
-    $connect = getDB();
-    if (!$connect) {
-        http_response_code(503); // Service Unavailable
-        throw new Exception('DATABASE_ERROR');
-    }
-
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         UPDATE orders 
         SET status = 'cancelled', 
             cancelled_at = NOW()
@@ -89,8 +83,5 @@ try {
 
     echo json_encode(['error' => $error]);
 
-} finally {
-    // по thread_id проверяем что соединение активно
-    if (isset($connect)) $connect->close();
 }
 ?>

@@ -7,10 +7,8 @@ $idUser = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : '';
 // Получаем slug товара из URL
 $productSlug = $_GET['url'] ?? '';
 
-$connect = getDB();
-
 // Получаем данные товара
-$stmt = $connect->prepare("SELECT * FROM products WHERE slug = ?");
+$stmt = $db->prepare("SELECT * FROM products WHERE slug = ?");
 $stmt->bind_param("s", $productSlug);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -28,7 +26,7 @@ $productPrice = $product['price'];
 $productDescription = $product['description'] ?? 'Описание отсутствует';
 
 // Получаем изображение товара из product_images
-$stmt_images = $connect->prepare("SELECT image_path FROM product_images WHERE product_id = ? ORDER BY image_id ASC");
+$stmt_images = $db->prepare("SELECT image_path FROM product_images WHERE product_id = ? ORDER BY image_id ASC");
 $stmt_images->bind_param("i", $productId);
 $stmt_images->execute();
 $images_result = $stmt_images->get_result();
@@ -49,7 +47,7 @@ if ($productImages) {
 
 // Получаем данные корзины
 if ($idUser) {
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
     SELECT p.product_id, p.name, p.price, po.amount 
     FROM product_order po 
     JOIN products p ON po.product_id = p.product_id 
@@ -58,7 +56,7 @@ if ($idUser) {
     ");
     $stmt->bind_param("i", $idUser);
 } else {
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
     SELECT p.product_id, p.name, p.price, po.amount 
     FROM product_order po 
     JOIN products p ON po.product_id = p.product_id 

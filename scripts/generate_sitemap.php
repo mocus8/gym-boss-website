@@ -2,9 +2,7 @@
 // Генератор sitemap.xml для учебного проекта
 // Запуск: docker-compose exec php php /var/www/html/scripts/generate_sitemap.php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../src/envLoader.php';
-require_once __DIR__ . '/../src/helpers.php';
+require_once __DIR__ . '/../src/bootstrap.php';
 
 // Получаем URL сайта из переменных окружения
 $appUrl = getenv('APP_URL');
@@ -28,12 +26,7 @@ $urls = [
 
 // Попробуем подключиться к БД и добавить страницы товаров
 try {
-    $connect = getDB();
-    if (!$connect) {
-        throw new Exception('connection failed');
-    }
-
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         SELECT
             slug,
             COALESCE(updated_at, created_at) AS changed
@@ -79,10 +72,6 @@ try {
 } finally {
     if (isset($stmt) && $stmt instanceof mysqli_stmt) {
         $stmt->close();
-    }
-
-    if (isset($connect) && $connect instanceof mysqli) {
-        $connect->close();
     }
 }
 

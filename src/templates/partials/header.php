@@ -1,6 +1,4 @@
 <?php
-$connect = getDB();
-
 $cartSessionId = getCartSessionId();
 //?-оператор, если условие верно, то $idUser = $_SESSION['user']['id'], если условие ложно, то $idUser = '' (пустая строка)
 $idUser = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : '';
@@ -8,13 +6,13 @@ $idUser = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : '';
 $headerCartCount = 0;
 
 if ($idUser) {
-    $stmt = $connect->prepare("SELECT SUM(po.amount) as total 
+    $stmt = $db->prepare("SELECT SUM(po.amount) as total 
                               FROM product_order po 
                               JOIN orders o ON po.order_id = o.order_id
                               WHERE o.user_id = ? AND o.status = 'cart'");
     $stmt->bind_param("i", $idUser);
 } else {
-    $stmt = $connect->prepare("SELECT SUM(po.amount) as total 
+    $stmt = $db->prepare("SELECT SUM(po.amount) as total 
                               FROM product_order po 
                               JOIN orders o ON po.order_id = o.order_id
                               WHERE o.session_id = ? AND o.status = 'cart'");
@@ -32,7 +30,7 @@ if ($result) {
 
 if ($idUser != '') {
     //ищем пользователя в бд
-    $stmt = $connect->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->bind_param("i", $idUser);
     $stmt->execute();
     $result = $stmt->get_result();

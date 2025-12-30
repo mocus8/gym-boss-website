@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/bootstrap.php';
 
 // ПОДКЛЮЧАЕМСЯ К БД И ПОЛУЧАЕМ ДАННЫЕ КОРЗИНЫ
-function getCartData() {
+function getCartData(mysqli $db) {
 
     // ИНИЦИАЛИЗИРУЕМ ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ
     $cartItems = [];
@@ -13,18 +13,12 @@ function getCartData() {
     $cartOrderId = null;
 
     try {
-        $connect = getDB();
-        // ПОДКЛЮЧАЕМСЯ К БД С ОБРАБОТКОЙ ОШИБОК
-        if (!$connect || $connect->connect_error) {
-            throw new Exception('Database connection failed');
-        }
-
         if (!$userId && !$cartSessionId) {
             throw new Exception('Ukwown user');
         }
 
         if ($userId) {
-            $stmt = $connect->prepare("
+            $stmt = $db->prepare("
             SELECT o.order_id, p.product_id, p.slug, p.name, p.price, po.amount, 
                 (SELECT pi.image_path 
                     FROM product_images pi 
@@ -42,7 +36,7 @@ function getCartData() {
                 throw new Exception('Database operations with userId failed');
             }
         } else {
-            $stmt = $connect->prepare("
+            $stmt = $db->prepare("
             SELECT o.order_id, p.product_id, p.slug, p.name, p.price, po.amount,
                 (SELECT pi.image_path 
                     FROM product_images pi 
@@ -86,7 +80,6 @@ function getCartData() {
             }
         }
         $stmt->close();
-        $connect->close();
     } catch (Exception $e) {
         // ЛОГИРОВАНИЕ ОШИБОК (в реальном проекте использовать логирование в отдельный файл)
         error_log("Cart API Error: " . $e->getMessage());
@@ -111,7 +104,7 @@ function getCartData() {
 }
 
 // Получаем данные с проверкой на ошибки
-$cartData = getCartData();
+$cartData = getCartData($db);
 $cartOrderId = $cartData['cart_id'];
 $cartItems = $cartData['items'];
 $cartTotalPrice = $cartData['total_price'];

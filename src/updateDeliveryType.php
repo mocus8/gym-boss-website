@@ -1,14 +1,9 @@
 <?php
 // тут не хватает многих проверок для продакшена, потом зарефакторить с остальными api
-session_start();
-require_once __DIR__ . '/helpers.php';
-header('Content-Type: application/json');
 
-$connect = getDB();
-if (!$connect) {
-    echo json_encode(['success' => false, 'message' => 'Ошибка подключения к БД']);
-    exit;
-}
+require_once __DIR__ . '/bootstrap.php';
+
+header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $json = file_get_contents('php://input');
@@ -23,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // получаем данные заказа перед обновлением
-    $stmt = $connect->prepare("SELECT total_price, delivery_cost FROM orders WHERE user_id = ? AND status = 'cart'");
+    $stmt = $db->prepare("SELECT total_price, delivery_cost FROM orders WHERE user_id = ? AND status = 'cart'");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -52,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // меняем тип доставки и адрес на тот что был  
-    $stmt = $connect->prepare("UPDATE orders SET total_price = ?, delivery_type = ?, delivery_cost = ?, delivery_address_id = NULL, store_id = NULL WHERE user_id = ? AND status = 'cart'");
+    $stmt = $db->prepare("UPDATE orders SET total_price = ?, delivery_type = ?, delivery_cost = ?, delivery_address_id = NULL, store_id = NULL WHERE user_id = ? AND status = 'cart'");
     
     if ($stmt) {
         $stmt->bind_param("dsdi", $new_total_price, $delivery_type, $delivery_cost, $user_id);
@@ -67,6 +62,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Ошибка подготовки запроса']);
     }
 }
-
-$connect->close();
 ?>

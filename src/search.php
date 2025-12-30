@@ -1,7 +1,5 @@
 <?php
-session_start();
-
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
@@ -41,14 +39,6 @@ if (empty($conditions)) {
     exit;
 }
 
-$connect = getDB();
-
-if (!$connect) {
-    http_response_code(500);
-    echo json_encode(['error' => 'db_connection_failed']);
-    exit;
-}
-
 // Ищем в бд схожие названия
 $sql = "
     SELECT 
@@ -83,7 +73,7 @@ $caseParams = array_slice($params, 0, 4);
 $params = array_merge($caseParams, $params);
 $types = 'ssss' . $types;
 
-$stmt = $connect->prepare($sql);
+$stmt = $db->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -108,7 +98,6 @@ while ($row = $result->fetch_assoc()) {
 }
 
 $stmt->close();
-$connect->close();
 
 // если все проверки прошли выдаем найденные товары
 http_response_code(200);

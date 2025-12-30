@@ -1,21 +1,8 @@
 <?php
 // тут помимо прочих исправлений нужно номер телефона проверять валидировать и т д
 
-require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/src/envLoader.php';
+require_once __DIR__ . '/src/bootstrap.php';
 
-// Получаем URL сайта из переменных окружения
-$appUrl = getenv('APP_URL');
-if (!$appUrl) {
-    // логируем
-    error_log('Sitemap generator error: APP_URL is not set');
-    // и падаем
-    exit(1);
-}
-
-$baseUrl   = rtrim($appUrl, '/');
-
-session_start();
 header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -42,22 +29,16 @@ try {
         throw new Exception('ORDER_NOT_FOUND');
     }
 
-    $connect = getDB();
-    if (!$connect) {
-        http_response_code(503); // Service Unavailable
-        throw new Exception('DATABASE_ERROR');
-    }
-
     // ставим ожидание блокировок как 5 секунд, потом ошибка от sql
-    $connect->query("SET SESSION innodb_lock_wait_timeout = 5");
+    $db->query("SET SESSION innodb_lock_wait_timeout = 5");
     // начинаем транзакцию (либо все либо ничего для sql)
-    $connect->begin_transaction();
+    $db->begin_transaction();
 
     $yookassa = new \YooKassa\Client();
     $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
 
     // получаем всю инфу о заказе и блокируем на время выполнения через FOR UPDATE на случай одновременно оплаты
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         SELECT o.order_id, o.total_price, o.delivery_type, o.delivery_cost, 
                o.status, o.yookassa_payment_id, o.payment_expires_at,
                u.login
@@ -114,8 +95,7 @@ try {
             $yookassaExistingPayment = $yookassa->getPaymentInfo($order['yookassa_payment_id']);
 
             if ($yookassaExistingPayment->getStatus() === 'pending') {
-                $connect->commit();
-                $connect->close();
+                $db->commit();
 
                 // Возвращаем существующую ссылку
                 http_response_code(200); // успех
@@ -127,7 +107,7 @@ try {
 
             } else if ($yookassaExistingPayment->getStatus() === 'succeeded') {
                 // Платеж уже оплачен (вебхук мог не дойти)
-                $updateStmt = $connect->prepare("
+                $updateStmt = $db->prepare("
                     UPDATE orders 
                     SET status = 'paid', 
                         paid_at = COALESCE(paid_at, NOW())
@@ -137,8 +117,7 @@ try {
                 $updateStmt->execute();
                 $updateStmt->close();
 
-                $connect->commit();
-                $connect->close();
+                $db->commit();
 
                 http_response_code(409); // Conflict
                 echo json_encode(['error' => 'ORDER_ALREADY_PAID']);
@@ -254,7 +233,7 @@ try {
     // Сохраняем id платежа
     $paymentId = $payment->getId();
 
-    $updateStmt = $connect->prepare("
+    $updateStmt = $db->prepare("
         UPDATE orders
         SET yookassa_payment_id = ?, 
             payment_expires_at = ?, 
@@ -265,7 +244,7 @@ try {
     $updateStmt->execute();
     $updateStmt->close();
 
-    $connect->commit();
+    $db->commit();
 
     // возвращаем ссылку для оплаты с нужными данными (создала юкасса)
     http_response_code(201); // Created (лучше чем 200 для создания ресурса)
@@ -282,10 +261,9 @@ try {
         echo json_encode(['error' => 'DATABASE_ERROR']);
     }
     
-    if (isset($connect)) {
+    if (isset($db)) {
         try {
-            $connect->rollback();
-            $connect->close();
+            $db->rollback();
         } catch (Exception $rollbackError) {
             // Игнорируем ошибки при откате
         }
@@ -328,16 +306,13 @@ try {
 
     echo json_encode(['error' => $error]);
     
-    if (isset($connect)) {
+    if (isset($db)) {
         try {
-            $connect->rollback();
+            $db->rollback();
         } catch (Exception $rollbackError) {
             // Игнорируем ошибки при откате
         }
     }
 
-} finally {
-    // по thread_id проверяем что соединение активно
-    if (isset($connect)) $connect->close();
 }
 ?>

@@ -1,7 +1,7 @@
 <?php
 // тут не хватает многих проверок для продакшена, потом зарефакторить с остальными api
-session_start();
-require_once __DIR__ . '/helpers.php';
+
+require_once __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
@@ -24,12 +24,11 @@ if (!$productId || !$action) {
 }
 
 // Подключаемся к базе данных
-$connect = getDB();
 $cartSessionId = getCartSessionId();
 $userId = $_SESSION['user']['id'] ?? null;
 
 // 1. ПРОВЕРЯЕМ СУЩЕСТВОВАНИЕ ТОВАРА
-$stmt = $connect->prepare("SELECT product_id, price FROM products WHERE product_id = ?");
+$stmt = $db->prepare("SELECT product_id, price FROM products WHERE product_id = ?");
 $stmt->bind_param("i", $productId);
 $stmt->execute();
 $productResult = $stmt->get_result();
@@ -42,10 +41,10 @@ if ($productResult->num_rows === 0) {
 
 // 2. НАХОДИМ ИЛИ СОЗДАЕМ КОРЗИНУ
 if ($userId) {
-    $stmt = $connect->prepare("SELECT order_id FROM orders WHERE user_id = ? AND status = 'cart'");
+    $stmt = $db->prepare("SELECT order_id FROM orders WHERE user_id = ? AND status = 'cart'");
     $stmt->bind_param("i", $userId);
 } else {
-    $stmt = $connect->prepare("SELECT order_id FROM orders WHERE session_id = ? AND status = 'cart'");
+    $stmt = $db->prepare("SELECT order_id FROM orders WHERE session_id = ? AND status = 'cart'");
     $stmt->bind_param("s", $cartSessionId);
 }
 
@@ -55,14 +54,14 @@ $order = $orderResult->fetch_assoc();
 
 if (!$order) {
     if ($userId) {
-        $stmt = $connect->prepare("INSERT INTO orders (user_id, status, total_price) VALUES (?, 'cart', 0)");
+        $stmt = $db->prepare("INSERT INTO orders (user_id, status, total_price) VALUES (?, 'cart', 0)");
         $stmt->bind_param("i", $userId);
     } else {
-        $stmt = $connect->prepare("INSERT INTO orders (session_id, status, total_price) VALUES (?, 'cart', 0)");
+        $stmt = $db->prepare("INSERT INTO orders (session_id, status, total_price) VALUES (?, 'cart', 0)");
         $stmt->bind_param("s", $cartSessionId);
     }
     $stmt->execute();
-    $orderId = $connect->insert_id;
+    $orderId = $db->insert_id;
 } else {
     $orderId = $order['order_id'];
 }
@@ -70,24 +69,24 @@ if (!$order) {
 // 3. ОБРАБАТЫВАЕМ ДЕЙСТВИЯ
 switch ($action) {
     case 'add_to_cart':
-        $stmt = $connect->prepare("SELECT amount FROM product_order WHERE order_id = ? AND product_id = ?");
+        $stmt = $db->prepare("SELECT amount FROM product_order WHERE order_id = ? AND product_id = ?");
         $stmt->bind_param("ii", $orderId, $productId);
         $stmt->execute();
         $existingItem = $stmt->get_result()->fetch_assoc();
 
         if ($existingItem) {
             $newAmount = $existingItem['amount'] + 1;
-            $stmt = $connect->prepare("UPDATE product_order SET amount = ? WHERE order_id = ? AND product_id = ?");
+            $stmt = $db->prepare("UPDATE product_order SET amount = ? WHERE order_id = ? AND product_id = ?");
             $stmt->bind_param("iii", $newAmount, $orderId, $productId);
         } else {
-            $stmt = $connect->prepare("INSERT INTO product_order (order_id, product_id, amount) VALUES (?, ?, 1)");
+            $stmt = $db->prepare("INSERT INTO product_order (order_id, product_id, amount) VALUES (?, ?, 1)");
             $stmt->bind_param("ii", $orderId, $productId);
         }
         $stmt->execute();
         break;
 
     case 'subtract_cart':
-        $stmt = $connect->prepare("SELECT amount FROM product_order WHERE order_id = ? AND product_id = ?");
+        $stmt = $db->prepare("SELECT amount FROM product_order WHERE order_id = ? AND product_id = ?");
         $stmt->bind_param("ii", $orderId, $productId);
         $stmt->execute();
         $existingItem = $stmt->get_result()->fetch_assoc();
@@ -100,17 +99,17 @@ switch ($action) {
 
         if ($existingItem['amount'] > 1) {
             $newAmount = $existingItem['amount'] - 1;
-            $stmt = $connect->prepare("UPDATE product_order SET amount = ? WHERE order_id = ? AND product_id = ?");
+            $stmt = $db->prepare("UPDATE product_order SET amount = ? WHERE order_id = ? AND product_id = ?");
             $stmt->bind_param("iii", $newAmount, $orderId, $productId);
         } else {
-            $stmt = $connect->prepare("DELETE FROM product_order WHERE order_id = ? AND product_id = ?");
+            $stmt = $db->prepare("DELETE FROM product_order WHERE order_id = ? AND product_id = ?");
             $stmt->bind_param("ii", $orderId, $productId);
         }
         $stmt->execute();
         break;
 
     case 'remove_cart':
-        $stmt = $connect->prepare("DELETE FROM product_order WHERE order_id = ? AND product_id = ?");
+        $stmt = $db->prepare("DELETE FROM product_order WHERE order_id = ? AND product_id = ?");
         $stmt->bind_param("ii", $orderId, $productId);
         $stmt->execute();
 
@@ -125,7 +124,7 @@ switch ($action) {
 // 4. ОБНОВЛЯЕМ ОБЩУЮ СУММУ ЗАКАЗА
 
 // получаем новую сумму товаров
-$stmt = $connect->prepare("
+$stmt = $db->prepare("
     SELECT SUM(p.price * po.amount) as total 
     FROM product_order po 
     JOIN products p ON po.product_id = p.product_id 
@@ -138,7 +137,7 @@ $totalRow = $totalResult->fetch_assoc();
 $itemsTotal = $totalRow['total'] ?? 0;
 
 // получаем текущий тип доставки для расчета
-$stmt = $connect->prepare("
+$stmt = $db->prepare("
     SELECT delivery_type FROM orders WHERE order_id = ?
 ");
 $stmt->bind_param("i", $orderId);
@@ -156,7 +155,7 @@ if ($orderType == 'delivery' && $itemsTotal != 0 && $itemsTotal < 5000) {
 $newTotalPrice = $itemsTotal + $deliveryCost;
 
 // Обновляем стоимость доставки и итоговую в orders
-$updateStmt = $connect->prepare("UPDATE orders SET total_price = ?, delivery_cost = ? WHERE order_id = ?");
+$updateStmt = $db->prepare("UPDATE orders SET total_price = ?, delivery_cost = ? WHERE order_id = ?");
 $updateStmt->bind_param("ddi", $newTotalPrice, $deliveryCost, $orderId);
 $updateStmt->execute();
 $updateStmt->close();
@@ -167,7 +166,7 @@ $totalCount = 0;
 $totalPrice = 0;
 
 if ($userId) {
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         SELECT p.product_id, p.name, p.price, po.amount 
         FROM product_order po 
         JOIN products p ON po.product_id = p.product_id 
@@ -176,7 +175,7 @@ if ($userId) {
     ");
     $stmt->bind_param("i", $userId);
 } else {
-    $stmt = $connect->prepare("
+    $stmt = $db->prepare("
         SELECT p.product_id, p.name, p.price, po.amount 
         FROM product_order po 
         JOIN products p ON po.product_id = p.product_id 
