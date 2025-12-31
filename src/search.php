@@ -93,7 +93,7 @@ while ($row = $result->fetch_assoc()) {
         'slug' => $row['prdct_slug'],
         'name' => $row['prdct_name'],
         'price' => $row['prdct_price'],
-        'image_path' => !empty($row['img_path']) ? '/'.$row['img_path'] : '/img/default.png'
+        'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/img/default.png'
     ];
 }
 
