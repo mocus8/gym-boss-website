@@ -3,19 +3,18 @@ require_once __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
-$idUser = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : '';
 $oldPassword = $_POST['oldPassword'];
 $newPassword = $_POST['newPassword'];
 $name = $_POST['name'];
 
-if ($idUser == '') {
+if ($userId == '') {
     header("Location: /");
     exit;
  }
 
 //берём старый пароль
 $stmt = $db->prepare("SELECT password FROM users WHERE id = ?");
-$stmt->bind_param("i", $idUser);
+$stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -38,7 +37,7 @@ if (!password_verify($oldPassword, $user['password'])) {
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
     $stmt = $db->prepare("UPDATE `users` SET `password` = ?, `name` = ? WHERE `id` = ?");
-    $stmt->bind_param("ssi", $hashedPassword, $name, $idUser);
+    $stmt->bind_param("ssi", $hashedPassword, $name, $userId);
 
     if ($stmt->execute()) {
         echo json_encode([

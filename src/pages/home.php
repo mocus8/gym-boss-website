@@ -68,10 +68,6 @@ if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTime) {
     file_put_contents($cacheFile, serialize($categoriesWithProducts));
 }
 
-if (function_exists('getCartSessionId')) {
-    getCartSessionId();
-}
-
 // Также с примером того что может быть в контроллере:
 // $title  = 'Gym Boss - спорттовары'; - тут тайтл по умолчанию в app.php, не указваем
 // $robots = 'noindex,nofollow'; - индексируется по умолчанию app.php, не указваем

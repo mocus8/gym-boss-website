@@ -23,10 +23,6 @@ if (!$productId || !$action) {
     exit;
 }
 
-// Подключаемся к базе данных
-$cartSessionId = getCartSessionId();
-$userId = $_SESSION['user']['id'] ?? null;
-
 // 1. ПРОВЕРЯЕМ СУЩЕСТВОВАНИЕ ТОВАРА
 $stmt = $db->prepare("SELECT product_id, price FROM products WHERE product_id = ?");
 $stmt->bind_param("i", $productId);

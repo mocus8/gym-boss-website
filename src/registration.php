@@ -15,8 +15,6 @@ if (!$isLocal){
     requireCaptcha();
 }
 
-$cartSessionId = getCartSessionId();
-
 // 1. Проверяем нет ли такого пользователя
 $check = $db->prepare("SELECT id FROM users WHERE login = ?");
 $check->bind_param("s", $login);

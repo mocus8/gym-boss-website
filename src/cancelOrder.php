@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $orderId = $_POST["order_id"] ?? '';
-$userId = $_SESSION['user']['id'] ?? null;
 
 if (!$userId || !$orderId) {
     http_response_code(400); // Bad Request

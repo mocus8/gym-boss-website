@@ -1,9 +1,6 @@
 <?php
 // Контроллер страницы товара
 
-$cartSessionId = getCartSessionId();
-$idUser = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : '';
-
 // Получаем slug товара из URL
 $productSlug = $_GET['url'] ?? '';
 
@@ -46,7 +43,7 @@ if ($productImages) {
 }
 
 // Получаем данные корзины
-if ($idUser) {
+if ($userId) {
     $stmt = $db->prepare("
     SELECT p.product_id, p.name, p.price, po.amount 
     FROM product_order po 
@@ -54,7 +51,7 @@ if ($idUser) {
     JOIN orders o ON po.order_id = o.order_id
     WHERE o.user_id = ? AND o.status = 'cart'
     ");
-    $stmt->bind_param("i", $idUser);
+    $stmt->bind_param("i", $userId);
 } else {
     $stmt = $db->prepare("
     SELECT p.product_id, p.name, p.price, po.amount 

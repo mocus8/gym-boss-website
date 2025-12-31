@@ -3,7 +3,6 @@
 
 // Тут зарефакторить и новые коды ошибок добавить в utils
 
-$userId = $_SESSION['user']['id'] ?? null;
 $orderId = $_GET['orderId'] ?? '';
 $paidAt = null;
 

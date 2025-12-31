@@ -35,10 +35,7 @@ if (password_verify($password, $user['password'])) {
     session_regenerate_id(true);
 
     // Сохраняем данные пользователя в сессию
-    $_SESSION['user'] = [
-        'id' => $user['id'],
-        'name' => $user['name']
-    ];
+    $_SESSION['user'] = ['id' => $user['id']];
     echo json_encode([
         'success' => true,
     ]);

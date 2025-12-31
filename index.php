@@ -16,7 +16,7 @@ $protectedRoutes = [
 ];
 
 // Если маршрут требует авторизации и пользователь не залогинен — на главную
-if (in_array($uri, $protectedRoutes, true) && empty($_SESSION['user']['id'])) {
+if (in_array($uri, $protectedRoutes, true) && $userId === null) {
     header('Location: /');
     exit;
 }

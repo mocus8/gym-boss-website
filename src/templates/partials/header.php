@@ -1,16 +1,12 @@
 <?php
-$cartSessionId = getCartSessionId();
-//?-оператор, если условие верно, то $idUser = $_SESSION['user']['id'], если условие ложно, то $idUser = '' (пустая строка)
-$idUser = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : '';
-
 $headerCartCount = 0;
 
-if ($idUser) {
+if ($userId) {
     $stmt = $db->prepare("SELECT SUM(po.amount) as total 
                               FROM product_order po 
                               JOIN orders o ON po.order_id = o.order_id
                               WHERE o.user_id = ? AND o.status = 'cart'");
-    $stmt->bind_param("i", $idUser);
+    $stmt->bind_param("i", $userId);
 } else {
     $stmt = $db->prepare("SELECT SUM(po.amount) as total 
                               FROM product_order po 
@@ -28,10 +24,10 @@ if ($result) {
 }
 
 
-if ($idUser != '') {
+if ($userId != '') {
     //ищем пользователя в бд
     $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->bind_param("i", $idUser);
+    $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -68,7 +64,7 @@ if ($idUser != '') {
             </div>
         </a>
         <?php
-        if (!$idUser) {
+        if (!$userId) {
         ?>
         <a class="order-button-link" id="open-my-orders-for-guest" style="cursor: pointer;">
             <div class="header_button">
@@ -129,7 +125,7 @@ if ($idUser != '') {
         </div>
     </div>
     <?php
-    if ($idUser == '') {
+    if ($userId == '') {
     ?>
         <div class="header_account">
             <img class="header_account_icon" src="/img/person.png">

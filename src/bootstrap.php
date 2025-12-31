@@ -1,42 +1,34 @@
 <?php
-// Общая инициализация окружения
+// bootstrap - общая инициализация окружения
 
 session_start();
 
 // Подключаем общие файлы
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/envLoader.php';
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../vendor/autoload.php';   // подключаем composer
+require_once __DIR__ . '/envLoader.php';    // подключаем загрузчик .env файла
+require_once __DIR__ . '/support/helpers.php'; // подключаем файл с вспомогательными утилитами
+require_once __DIR__ . '/Db/Db.php'; // подключаем файл с классом для подключения к бд
+require_once __DIR__ . '/Cart/CartSession.php'; // подключаем файл с классом для получения cart
 
-// Читаем переменные окружения для БД
-$dbHost = getenv('DB_HOST');
-$dbName = getenv('DB_NAME');
-$dbUser = getenv('DB_USER');
-$dbPass = getenv('DB_PASS');
+// Подключаем пространства имен
+use App\Db\Db;  // используем класс Db из пространства имен App\Db
+use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
 
-// Если переменных нет, то логируем и падаем 
-if ($dbHost === false || $dbName === false || $dbUser === false || $dbPass === false) {
-    error_log('Database env variables are not set');
-    throw new RuntimeException('Database configuration error');
-}
+// Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
+$db = Db::connectFromEnv();
 
-// Подключение к БД
-$db = mysqli_connect($dbHost, $dbUser, $dbPass, $dbName);
+// Создаем экземпляр класса и получаем id сеанса корзины (не статически т.к. более гибко для будующего)
+$cartSession = new CartSession();
+$cartSessionId = $cartSession->getId();
 
-// Проверяем подключение
-if ($db === false) {
-    error_log('DB connection failed: ' . mysqli_connect_error());
-    throw new RuntimeException('Database connection failed');
-}
-
+// Полчаем id user-а из сессии
+$userId = $_SESSION['user']['id'] ?? null;
 
 // Получаем URL сайта из переменных окружения
 $appUrl = getenv('APP_URL');
 if (!$appUrl) {
-    // логируем
-    error_log('APP_URL is not set');
-    // и падаем
-    throw new RuntimeException('APP_URL is not set');
+    error_log('APP_URL is not set');    // логируем
+    throw new RuntimeException('APP_URL is not set');   // и падаем
 }
 
 $baseUrl   = rtrim($appUrl, '/');

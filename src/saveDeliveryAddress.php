@@ -9,16 +9,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
     $delivery_type = $data['delivery_type'] ?? 'delivery';
-    $user_id = $_SESSION['user']['id'] ?? null;
 
-    if (!$user_id) {
+    if (!$userId) {
         echo json_encode(['success' => false, 'message' => 'Пользователь не авторизован']);
         exit;
     }
 
     // Получаем текущий заказ
     $stmt = $db->prepare("SELECT order_id, total_price, delivery_cost FROM orders WHERE user_id = ? AND status = 'cart'");
-    $stmt->bind_param("i", $user_id);
+    $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
     $order = $result->fetch_assoc();
@@ -31,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $address = $data['address'] ?? '';
             $postalCode = $data['postalCode'] ?? '';
             $stmt = $db->prepare("SELECT id FROM delivery_addresses WHERE user_id = ? AND address_line = ?");
-            $stmt->bind_param("is", $user_id, $address);
+            $stmt->bind_param("is", $userId, $address);
             $stmt->execute();
             $result = $stmt->get_result();
             $existing_address = $result->fetch_assoc();
@@ -40,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $address_id = $existing_address['id'];
             } else {
                 $stmt = $db->prepare("INSERT INTO delivery_addresses (user_id, address_line, postal_code) VALUES (?, ?, ?)");
-                $stmt->bind_param("iss", $user_id, $address, $postalCode);
+                $stmt->bind_param("iss", $userId, $address, $postalCode);
                 $stmt->execute();
                 $address_id = $db->insert_id;
             }

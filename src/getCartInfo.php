@@ -1,18 +1,17 @@
 <?php
+
 // ПОДКЛЮЧАЕМСЯ К БД И ПОЛУЧАЕМ ДАННЫЕ КОРЗИНЫ
-function getCartData(mysqli $db) {
+function getCartData(?int $userId, ?string $cartSessionId, \mysqli $db) {    // ?int - nullable int: либо int, либо null
 
     // ИНИЦИАЛИЗИРУЕМ ПЕРЕМЕННЫЕ ПО УМОЛЧАНИЮ
     $cartItems = [];
     $cartTotalPrice = 0;
     $cartCount = 0;
-    $cartSessionId = getCartSessionId();
-    $userId = $_SESSION['user']['id'] ?? null;
     $cartOrderId = null;
 
     try {
         if (!$userId && !$cartSessionId) {
-            throw new Exception('Ukwown user');
+            throw new Exception('Unknown user');
         }
 
         if ($userId) {
@@ -102,7 +101,7 @@ function getCartData(mysqli $db) {
 }
 
 // Получаем данные с проверкой на ошибки
-$cartData = getCartData($db);
+$cartData = getCartData($userId, $cartSessionId, $db);
 $cartOrderId = $cartData['cart_id'];
 $cartItems = $cartData['items'];
 $cartTotalPrice = $cartData['total_price'];

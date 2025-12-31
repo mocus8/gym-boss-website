@@ -10,16 +10,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode($json, true);
     
     $delivery_type = $data['delivery_type'] ?? 'delivery';
-    $user_id = $_SESSION['user']['id'] ?? null;
 
-    if (!$user_id) {
+    if (!$userId) {
         echo json_encode(['success' => false, 'message' => 'Пользователь не авторизован']);
         exit;
     }
 
     // получаем данные заказа перед обновлением
     $stmt = $db->prepare("SELECT total_price, delivery_cost FROM orders WHERE user_id = ? AND status = 'cart'");
-    $stmt->bind_param("i", $user_id);
+    $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
     $order = $result->fetch_assoc();
@@ -50,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $db->prepare("UPDATE orders SET total_price = ?, delivery_type = ?, delivery_cost = ?, delivery_address_id = NULL, store_id = NULL WHERE user_id = ? AND status = 'cart'");
     
     if ($stmt) {
-        $stmt->bind_param("dsdi", $new_total_price, $delivery_type, $delivery_cost, $user_id);
+        $stmt->bind_param("dsdi", $new_total_price, $delivery_type, $delivery_cost, $userId);
         
         if ($stmt->execute()) {
             echo json_encode(['success' => true]);
