@@ -1,29 +1,4 @@
 <?php
-$headerCartCount = 0;
-
-if ($userId) {
-    $stmt = $db->prepare("SELECT SUM(po.amount) as total 
-                              FROM product_order po 
-                              JOIN orders o ON po.order_id = o.order_id
-                              WHERE o.user_id = ? AND o.status = 'cart'");
-    $stmt->bind_param("i", $userId);
-} else {
-    $stmt = $db->prepare("SELECT SUM(po.amount) as total 
-                              FROM product_order po 
-                              JOIN orders o ON po.order_id = o.order_id
-                              WHERE o.session_id = ? AND o.status = 'cart'");
-    $stmt->bind_param("s", $cartSessionId);
-}
-
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result) {
-    $cartData = mysqli_fetch_assoc($result);
-    $headerCartCount = $cartData['total'] ?? 0;
-}
-
-
 if ($userId != '') {
     //ищем пользователя в бд
     $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
@@ -59,7 +34,7 @@ if ($userId != '') {
             <div class="header_button">
                 <img class="header_button_icon" src="/img/cart.png">
                 <div class="header_button_text">
-                    Корзина (<span id="header-cart-counter"><?= $headerCartCount ?></span>)
+                    Корзина (<span id="header-cart-counter"><?= $cartCount ?></span>)
                 </div>
             </div>
         </a>
