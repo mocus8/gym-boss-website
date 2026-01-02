@@ -60,6 +60,19 @@ class CartController {
         ], JSON_UNESCAPED_UNICODE);
     }
 
+    // Приватный метод для сборки состояния корзины 
+    private function buildCartData(int $cartId): array {
+        $items = $this->cartService->getItems($cartId);
+        $count = $this->cartService->getItemsCount($cartId);
+        $total = $this->cartService->getItemsTotal($cartId);
+
+        return [
+            'items' => $items,
+            'count' => $count,
+            'total' => $total,
+        ];
+    }
+
     // Метод для получения данных о корзине, возвращает массив - список товаров, общее кол-во, стоимость
     // Использует сразу три метода CartService
     // Обработчик запроса GET /api/cart
@@ -70,17 +83,11 @@ class CartController {
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
-            // Используем методы класса CartService 
-            $items = $this->cartService->getItems($cartId);
-            $count = $this->cartService->getItemsCount($cartId);
-            $total = $this->cartService->getItemsTotal($cartId);
+            // Собираем состояние корзины
+            $data = $this->buildCartData($cartId);
 
             // Возвращаем успех через приватную функцию
-            $this->success(200, [
-                'items' => $items,
-                'count' => $count,
-                'total' => $total,
-            ]);
+            $this->success(200, $data);
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
@@ -117,7 +124,9 @@ class CartController {
             // Через метод класса CartService добавляем в бд добавляем/прибавляем опр-ое кол-во товара в корзину
             $this->cartService->addItem($cartId, $productId, $qty);
 
-            $this->success(201);    // ресурс создан
+            $data = $this->buildCartData($cartId);
+
+            $this->success(201, $data);    // ресурс создан
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
@@ -154,7 +163,9 @@ class CartController {
             // Через метод класса CartService удаляем товар из корзины в бд
             $this->cartService->removeItem($cartId, $productId);
 
-            $this->success();
+            $data = $this->buildCartData($cartId);
+
+            $this->success(200, $data);
 
         } catch (\InvalidArgumentException $e) {
             $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
@@ -188,7 +199,9 @@ class CartController {
             // Через метод класса CartService обновляем в бд опр-ое кол-во товара в корзине
             $this->cartService->updateItemQty($cartId, $productId, $qty);
 
-            $this->success();
+            $data = $this->buildCartData($cartId);
+            
+            $this->success(200, $data);
 
         } catch (\InvalidArgumentException $e) {
             $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
@@ -214,7 +227,9 @@ class CartController {
             // Через метод класса CartService очищаем в бд корзину
             $this->cartService->clearCart($cartId);
 
-            $this->success();
+            $data = $this->buildCartData($cartId);
+
+            $this->success(200, $data);
 
         } catch (\Throwable $e) {
             // Релизовать во время добавления логирования, также добавить контекст

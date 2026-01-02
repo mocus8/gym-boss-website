@@ -1,4 +1,5 @@
 // Файл для взаимодействия с api-контроллером: отправкой запросов и получения ответов.
+// Всегда озвращается объект с полями: { success: true, data: { items, count, total } }
 
 const CART_BASE_URL = "/api/cart/";
 
@@ -26,11 +27,16 @@ async function requestCart(path, options = {}) {
 
     // Если HTTP статус не 2xx или в data API вернул success: false то считаем это ошибкой.
     if (!response.ok || (data && data.success === false)) {
-        const error = new Error(
-            (data && data.error) || `Cart API error (${response.status})`
-        );
-        error.status = response.status;
-        error.payload = data;
+        const apiError = data && data.error;
+        const message =
+            apiError && apiError.message
+                ? apiError.message
+                : `Cart API error (${response.status})`;
+
+        const error = new Error(message); // понятное сообщение
+        error.status = response.status; // HTTP-код
+        error.code = apiError && apiError.code; // бизнес-код с бэка
+        error.payload = data; // весь ответ
         throw error;
     }
 
@@ -39,23 +45,14 @@ async function requestCart(path, options = {}) {
 
 // Функция для получения корзины
 // Отправляет запрос GET /api/cart
-// Возвращает объект с полями: { success: true, data: { items, count, total } }
 export function getCart() {
     return requestCart("", {
         method: "GET",
     });
 }
 
-/**
- * Добавить товар в корзину.
- * POST /api/cart/add-item
- * productId: number
- * qty: number (по умолчанию 1)
- */
-
 // Функция для добавления опр-ого кол-ва товара в корзину
 // Отправляет запрос POST /api/cart/add-item
-// Ничего не возвращает
 // JSON.stringify({...}) - превращает объект в JSON‑строку
 // Nubmer - приводит строку к числу
 export function addCartItem(productId, qty = 1) {
@@ -70,7 +67,6 @@ export function addCartItem(productId, qty = 1) {
 
 // Функция для удаления товара из корзины
 // Отправляет запрос POST /api/cart/remove-item
-// Ничего не возвращает
 export function removeCartItem(productId) {
     return requestCart("remove-item", {
         method: "POST",
@@ -83,7 +79,6 @@ export function removeCartItem(productId) {
 // Функция для жесткого установления кол-ва товара в корзине
 // Если qty = 0 — на бэке товар убирается
 // Отправляет запрос POST /api/cart/update-item-qty
-// Ничего не возвращает
 export function updateCartItemQty(productId, qty) {
     return requestCart("update-item-qty", {
         method: "POST",
@@ -96,7 +91,6 @@ export function updateCartItemQty(productId, qty) {
 
 // Функция для очистки корзины
 // Отправляет запрос POST /api/cart/clear
-// Ничего не возвращает
 export function clearCart() {
     return requestCart("clear", {
         method: "POST",
