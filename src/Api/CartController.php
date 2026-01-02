@@ -30,6 +30,32 @@ class CartController {
     //     $this->logger = $logger;
     // }
 
+    // Приватный метод для получения, декодирования и проверки json входных данных
+    private function getJsonBody(): ?array {
+        $rawBody = file_get_contents('php://input');
+        $data = json_decode($rawBody, true);
+    
+        if (!is_array($data)) {
+            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
+            return null;
+        }
+    
+        return $data;
+    }
+
+    // Приватный метод для сборки состояния корзины 
+    private function buildCartData(int $cartId): array {
+        $items = $this->cartService->getItems($cartId);
+        $count = $this->cartService->getItemsCount($cartId);
+        $total = $this->cartService->getItemsTotal($cartId);
+
+        return [
+            'items' => $items,
+            'count' => $count,
+            'total' => $total,
+        ];
+    }
+
     // Приватная функция для отправки успеха
     private function success(int $status = 200, array $data = []): void {
         http_response_code($status);
@@ -58,19 +84,6 @@ class CartController {
                 'message' => $message,
             ],
         ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватный метод для сборки состояния корзины 
-    private function buildCartData(int $cartId): array {
-        $items = $this->cartService->getItems($cartId);
-        $count = $this->cartService->getItemsCount($cartId);
-        $total = $this->cartService->getItemsTotal($cartId);
-
-        return [
-            'items' => $items,
-            'count' => $count,
-            'total' => $total,
-        ];
     }
 
     // Метод для получения данных о корзине, возвращает массив - список товаров, общее кол-во, стоимость
@@ -111,12 +124,16 @@ class CartController {
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
-            // Как $productId = $_POST['product_id'] ?? ''; только со строгой валидацией, другой синтаксис
-            $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
-            $qty = filter_input(INPUT_POST, 'qty', FILTER_VALIDATE_INT);
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) {
+                return;
+            }
 
-            if ($productId === false || $productId <= 0 || $qty === false || $qty <= 0) {
-                // Unprocessable entity, невалидные данные
+            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
+            $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
+
+            if ($productId <= 0 || $qty <= 0) {
                 $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
                 return;
             }
@@ -153,9 +170,14 @@ class CartController {
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
-            $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
+            $data = $this->getJsonBody();
+            if ($data === null) {
+                return;
+            }
 
-            if ($productId === false || $productId <= 0) {
+            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
+
+            if ($productId <= 0) {
                 $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id');
                 return;
             }
@@ -188,10 +210,15 @@ class CartController {
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
-            $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
-            $qty = filter_input(INPUT_POST, 'qty', FILTER_VALIDATE_INT);
+            $data = $this->getJsonBody();
+            if ($data === null) {
+                return;
+            }
 
-            if ($productId === false || $productId <= 0 || $qty === false || $qty < 0) {
+            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
+            $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
+
+            if ($productId <= 0 || $qty < 0) {
                 $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
                 return;
             }
