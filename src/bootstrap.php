@@ -3,7 +3,7 @@
 
 session_start();
 
-// Подключаем общие файлы
+// Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
 require_once __DIR__ . '/../vendor/autoload.php';    // подключаем composer
 require_once __DIR__ . '/envLoader.php';    // подключаем загрузчик .env файла
 require_once __DIR__ . '/support/helpers.php';    // подключаем файл с вспомогательными утилитами
