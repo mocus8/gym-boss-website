@@ -1,6 +1,8 @@
 <?php
 // Контроллер страницы товара
 
+// Получаем данные о товаре (потом вынести в сервис и контроллеры)
+
 // Получаем slug товара из URL
 $productSlug = $_GET['url'] ?? '';
 
@@ -42,63 +44,9 @@ if ($productImages) {
     $mainImage = '/img/default.png';
 }
 
-$userId = getCurrentUserId();
-
-// Получаем данные корзины
-if ($userId) {
-    $stmt = $db->prepare("
-    SELECT p.product_id, p.name, p.price, po.amount 
-    FROM product_order po 
-    JOIN products p ON po.product_id = p.product_id 
-    JOIN orders o ON po.order_id = o.order_id
-    WHERE o.user_id = ? AND o.status = 'cart'
-    ");
-    $stmt->bind_param("i", $userId);
-} else {
-    $stmt = $db->prepare("
-    SELECT p.product_id, p.name, p.price, po.amount 
-    FROM product_order po 
-    JOIN products p ON po.product_id = p.product_id 
-    JOIN orders o ON po.order_id = o.order_id
-    WHERE o.session_id = ? AND o.status = 'cart'
-    ");
-    $stmt->bind_param("s", $cartSessionId);
-}
-
-$stmt->execute();
-$result = $stmt->get_result();
-
-$cartItems = [];
-$cartTotalPrice = 0;
-$cartCount = 0;
-
-if ($result) {
-    while ($item = $result->fetch_assoc()) {
-        $cartItems[] = [
-            'id' => $item['product_id'],
-            'name' => $item['name'],
-            'price' => $item['price'],
-            'amount' => $item['amount']
-        ];
-        $cartTotalPrice += $item['price'] * $item['amount'];
-        $cartCount += $item['amount'];
-    }
-}
-
-$inCart = false;
-$cartAmount = 0;
-
-foreach ($cartItems as $item) {
-    if ($item['id'] == $productId) {
-        $inCart = true;
-        $cartAmount = $item['amount'];
-        break;
-    }
-}
-
 $title  = "$productName - Gym Boss";
 $canonical = $baseUrl . "/$productSlug"; 
-$pageScripts = ['/js/cart.js' ];
+$pageModuleScripts = ['/js/pages/product.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

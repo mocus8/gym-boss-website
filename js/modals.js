@@ -214,65 +214,6 @@ class HeaderModal {
 // создаем объект класса
 const headerModal = new HeaderModal();
 
-// версия универсальной модалки в хедере с текстом в виде объекта через IIFE
-// const HeaderModal = (function() {
-//     let closeTimer = null;
-//     let modal, text, progress, closeBtn;
-
-//     function init() {
-//         modal = document.getElementById('header-modal');
-//         text = document.getElementById('header-modal-text');
-//         progress = document.getElementById('header-modal-progress-fill');
-//         closeBtn = document.getElementById('header-modal-close');
-
-//         if (!modal || !text || !progress || !closeBtn) {
-//             console.error('Modal elements not found');
-//             return;
-//         }
-
-//         closeBtn.addEventListener('click', close);
-//     }
-
-//     function open(innerText) {
-//         if (!modal) return;
-
-//         close();
-
-//         text.textContent = innerText;
-//         modal.classList.remove("hidden");
-
-//         progress.classList.remove("shrinking");
-//         // Принудительный reflow, гарантируем что анимация перезапуститься
-//         void progress.offsetWidth;
-//         progress.classList.add("shrinking");
-
-//        closeTimer = setTimeout(close, 5000);
-//     }
-
-//     function close() {
-//         if (!modal) return;
-
-//         modal.classList.add("hidden");
-//         progress.classList.remove("shrinking");
-
-//         if(text) text.textContent = '';
-
-//         if (closeTimer) clearTimeout(closeTimer);
-
-//         closeTimer = null;
-//     }
-
-//     // Автоинициализация при загрузке
-//     if (document.readyState === 'loading') {
-//         document.addEventListener('DOMContentLoaded', init);
-//     } else {
-//         init();
-//     }
-
-//     // возвращаем функции для открытия и закрытия
-//     return { open, close };
-// })(); // () на конце выполняет сразу (для всех функций), и это исользуется все последующее разы
-
 // крутой класс через ES6 для управления SMS таймерами
 // Singleton паттерн - гарантируем один экземпляр (будет создан всего один объект класса)
 class SmsTimerManager {

@@ -83,3 +83,62 @@ class Notification {
 }
 
 export const notification = new Notification();
+
+// Похожая модалка, но черех IIFE
+// const HeaderModal = (function() {
+//     let closeTimer = null;
+//     let modal, text, progress, closeBtn;
+
+//     function init() {
+//         modal = document.getElementById('header-modal');
+//         text = document.getElementById('header-modal-text');
+//         progress = document.getElementById('header-modal-progress-fill');
+//         closeBtn = document.getElementById('header-modal-close');
+
+//         if (!modal || !text || !progress || !closeBtn) {
+//             console.error('Modal elements not found');
+//             return;
+//         }
+
+//         closeBtn.addEventListener('click', close);
+//     }
+
+//     function open(innerText) {
+//         if (!modal) return;
+
+//         close();
+
+//         text.textContent = innerText;
+//         modal.classList.remove("hidden");
+
+//         progress.classList.remove("shrinking");
+//         // Принудительный reflow, гарантируем что анимация перезапуститься
+//         void progress.offsetWidth;
+//         progress.classList.add("shrinking");
+
+//        closeTimer = setTimeout(close, 5000);
+//     }
+
+//     function close() {
+//         if (!modal) return;
+
+//         modal.classList.add("hidden");
+//         progress.classList.remove("shrinking");
+
+//         if(text) text.textContent = '';
+
+//         if (closeTimer) clearTimeout(closeTimer);
+
+//         closeTimer = null;
+//     }
+
+//     // Автоинициализация при загрузке
+//     if (document.readyState === 'loading') {
+//         document.addEventListener('DOMContentLoaded', init);
+//     } else {
+//         init();
+//     }
+
+//     // возвращаем функции для открытия и закрытия
+//     return { open, close };
+// })(); // () на конце выполняет сразу (для всех функций), и это исользуется все последующее разы
