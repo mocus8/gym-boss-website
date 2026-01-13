@@ -1071,32 +1071,3 @@ document.addEventListener("click", function (e) {
         document.querySelector(".product_main_img").src = e.target.src;
     }
 });
-
-//есть ли в корзине + меняем кнопки (при загрузке страницы)
-document.addEventListener("DOMContentLoaded", function () {
-    if (typeof cartAmount !== "undefined") {
-        if (cartAmount != 0) {
-            openModal("product-button-add-in-cart");
-            closeModal("product-button-add-not-in-cart");
-        } else {
-            closeModal("product-button-add-in-cart");
-            openModal("product-button-add-not-in-cart");
-        }
-    }
-});
-
-//есть ли в корзине + меняем кнопки (при клике на кнопки)
-document.addEventListener("click", function (event) {
-    if (event.target.id === "product-button-add-not-in-cart") {
-        openModal("product-button-add-in-cart");
-        closeModal("product-button-add-not-in-cart");
-    } else if (event.target.hasAttribute("data-product-subtract-cart")) {
-        // Проверяем значение в счетчике ПЕРЕД кликом
-        const counter = document.getElementById("product-cart-counter");
-        const currentAmount = counter ? parseInt(counter.textContent) : 0;
-        if (currentAmount === 1) {
-            closeModal("product-button-add-in-cart");
-            openModal("product-button-add-not-in-cart");
-        }
-    }
-});
