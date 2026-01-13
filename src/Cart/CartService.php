@@ -200,13 +200,13 @@ class CartService {
                 p.name,
                 p.price,
                 ci.amount,
-                (
+                COALESCE((
                     SELECT pi.image_path
                     FROM product_images AS pi
                     WHERE pi.product_id = p.product_id
                     ORDER BY pi.image_id ASC
                     LIMIT 1
-                ) AS image_path
+                ), '/img/default.png') AS image_path
             FROM cart_items AS ci
             JOIN products AS p ON ci.product_id = p.product_id
             WHERE ci.cart_id = ?
