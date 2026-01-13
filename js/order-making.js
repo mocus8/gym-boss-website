@@ -354,8 +354,8 @@ document.querySelectorAll(".order_right_pay_button").forEach((button) => {
 
                 // Получение и показ понятного сообщения об ошибке
                 const errorMessage = getErrorMessage(
-                    response.status,
-                    result?.error
+                    result?.error,
+                    response.status
                 );
                 payErrorModal.open(errorMessage);
                 return;

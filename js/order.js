@@ -171,8 +171,8 @@ document
 
                 // Получение и показ понятного сообщения об ошибке
                 const errorMessage = getErrorMessage(
-                    response.status,
-                    result?.error
+                    result?.error,
+                    response.status
                 );
                 errorModal.open(errorMessage);
                 return;
@@ -299,8 +299,8 @@ document
 
                 // Получение и показ понятного сообщения об ошибке
                 const errorMessage = getErrorMessage(
-                    response.status,
-                    result?.error
+                    result?.error,
+                    response.status
                 );
                 errorModal.open(errorMessage);
                 return;
