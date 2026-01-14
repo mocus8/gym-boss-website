@@ -69,37 +69,7 @@ async function initStoresList() {
                 // Получаем ссылку на магазин на картах (на адресс)
                 const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address.replace(/<br>/g, ", "))}`;
 
-                // // Меняем HTML блока через .innerHTML
-
-                // const storeHTML = `
-                //     <div class="store">
-                //         <div class="store_name">
-                //         <strong>${store.name}</strong>
-                //         </div>
-                //         <div class="store_address">
-                //             Адрес:<br>
-                //             ${store.address}
-                //         </div>
-                //         <div class="store_time">
-                //             Время работы:<br>
-                //             ${store.work_hours.replace(/\n/g, "<br>")}
-                //         </div>
-                //         <div class="store_time">
-                //             Телефон:<br>
-                //             <a href='tel: ${store.phone}' class="colour_href">
-                //                 <div style="margin-top: 10px;">${store.phone}</div>
-                //             </a>
-                //         </div>
-                //         <a href="${yandexMapsUrl}" target="_blank">
-                //             <div class="store_button">
-                //                 На карте
-                //             </div>
-                //         </a>
-                //     </div>
-                // `;
-                // container.innerHTML += storeHTML;
-
-                // // Меняем HTML блока через работу с DOM узлами
+                // Меняем HTML блока через работу с DOM узлами
 
                 // Корневой блок магазина
                 const storeDiv = document.createElement("div");
@@ -177,6 +147,36 @@ async function initStoresList() {
 
                 // Добавляем магазин в контейнер
                 container.appendChild(storeDiv);
+
+                // // Меняем HTML блока через .innerHTML
+
+                // const storeHTML = `
+                //     <div class="store">
+                //         <div class="store_name">
+                //         <strong>${store.name}</strong>
+                //         </div>
+                //         <div class="store_address">
+                //             Адрес:<br>
+                //             ${store.address}
+                //         </div>
+                //         <div class="store_time">
+                //             Время работы:<br>
+                //             ${store.work_hours.replace(/\n/g, "<br>")}
+                //         </div>
+                //         <div class="store_time">
+                //             Телефон:<br>
+                //             <a href='tel: ${store.phone}' class="colour_href">
+                //                 <div style="margin-top: 10px;">${store.phone}</div>
+                //             </a>
+                //         </div>
+                //         <a href="${yandexMapsUrl}" target="_blank">
+                //             <div class="store_button">
+                //                 На карте
+                //             </div>
+                //         </a>
+                //     </div>
+                // `;
+                // container.innerHTML += storeHTML;
             }
         });
     } catch (error) {
