@@ -1,14 +1,10 @@
 <?php
 // Контроллер корзины
 
-// Получаем корзину пользователя
-require_once __DIR__ . '/../getCartInfo.php';
-
-$userId = getCurrentUserId();
-
 $title  = 'Корзина товаров - Gym Boss';
 $robots = 'noindex,nofollow';
-$pageScripts = ['/js/cart.js'];
+// $pageScripts = ['/js/cart.js'];
+$pageModuleScripts = ['/js/pages/cart.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

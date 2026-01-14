@@ -1724,6 +1724,22 @@ button {
     gap: 2.75vw;
 }
 
+.cart_products_loader {
+    position: relative;
+    margin-top: 12.5%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 15vw;
+    height: 4.75vw;
+    background-image: url("./img/contacts_back.svg");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    padding: 0.5% 4% 0.5% 4%;
+    font-size: 2.5vw;
+    font-family: "Jost", Arial;
+    white-space: nowrap;
+}
+
 .cart_product {
     position: relative;
     width: 15.7vw;
