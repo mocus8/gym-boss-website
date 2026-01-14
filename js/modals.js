@@ -116,6 +116,18 @@ setupModal(
     "close-account-exit-modal"
 );
 
+// Отркытие по дата-атрибуту (все кнопки с ним открывают), делигирование событий. Потом переделать все модалки, сделав все не через
+// setup modal, а через такое делегирование и data-атрибуты вместо id. Также все открытие модалок делать через добавление к кнопке
+// дата атрибута
+document.addEventListener("click", (e) => {
+    const trigger = e.target.closest("[data-open-modal]");
+    if (!trigger) return;
+
+    const name = trigger.dataset.openModal;
+    const modal = document.getElementById(`${name}-modal`);
+    if (modal) modal.classList.add("open");
+});
+
 // функция очистки номера телефона
 function validatePhoneNumber(phone) {
     let cleaned = phone.replace(/[^\d+]/g, "");

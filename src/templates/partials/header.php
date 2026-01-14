@@ -41,7 +41,7 @@ if ($userId != '') {
         <?php
         if (!$userId) {
         ?>
-        <a class="order-button-link" id="open-my-orders-for-guest" style="cursor: pointer;">
+        <a data-open-modal="authorization" style="cursor: pointer;">
             <div class="header_button">
                 <img class="header_button_icon" src="/img/box.png">
                 <div class="header_button_text">
