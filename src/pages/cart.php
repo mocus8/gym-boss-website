@@ -3,7 +3,6 @@
 
 $title  = 'Корзина товаров - Gym Boss';
 $robots = 'noindex,nofollow';
-// $pageScripts = ['/js/cart.js'];
 $pageModuleScripts = ['/js/pages/cart.js'];
 
 // Через буфер записываем в переменную контент страницы
