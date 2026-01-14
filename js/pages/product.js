@@ -1,5 +1,5 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
-import { addCartItem, getCart, updateCartItemQty } from "../cart/api.js";
+import { getCart, addCartItem, updateCartItemQty } from "../cart/api.js";
 import { getErrorMessage, updateHeaderCounter } from "../utils.js";
 import { notification } from "../ui/Notification.js";
 
@@ -58,7 +58,16 @@ window.addEventListener("load", async function () {
 
         toggleProductButtons(cartCount);
     } catch (e) {
-        console.error("Не удалось загрузить корзину на странице товара", e);
+        // Логирование в консоль с полным контекстом
+        console.error(
+            "[product-page] Не удалось прогрузить состояние кнопок товара",
+            {
+                message: e.message,
+                code: e.code,
+                status: e.status,
+                payload: e.payload,
+            }
+        );
     }
 });
 
