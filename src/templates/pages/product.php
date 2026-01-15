@@ -23,7 +23,7 @@
     </div>
 
     <div class="product_description_text">
-        <?= $productDescription ?>
+        <?= $productDescriptionHtml ?>
     </div>
 </div>
 

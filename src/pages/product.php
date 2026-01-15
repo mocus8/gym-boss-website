@@ -24,6 +24,22 @@ $productName = $product['name'];
 $productPrice = $product['price'];
 $productDescription = $product['description'] ?? 'Описание отсутствует';
 
+// Форматируем описание
+$paragraphs = preg_split("/\R{2,}/u", $productDescription);
+$productDescriptionHtml = '';
+
+foreach ($paragraphs as $p) {
+    $p = trim($p);
+    if ($p === '') {
+        continue;
+    }
+
+    $safe = htmlspecialchars($p, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safe = nl2br($safe);
+
+    $productDescriptionHtml .= "<p>{$safe}</p>";   // получаем отформатированное описание
+}
+
 // Получаем изображение товара из product_images
 $stmt_images = $db->prepare("SELECT image_path FROM product_images WHERE product_id = ? ORDER BY image_id ASC");
 $stmt_images->bind_param("i", $productId);
