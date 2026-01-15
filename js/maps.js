@@ -200,7 +200,18 @@ function initStoresMap() {
         .then((stores) => {
             stores.forEach((store) => {
                 if (store.coordinates && store.coordinates.length === 2) {
-                    const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address.replace(/<br>/g, ", "))}`;
+                    const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address)}`;
+
+                    // Разбиваем часы работы по переносам строк
+                    const workHoursHtml = store.work_hours
+                        ? store.work_hours
+                              .split("\n")
+                              .map((line) => line.trim())
+                              .filter((line) => line !== "")
+                              .map((line) => `<div>${line}</div>`)
+                              .join("")
+                        : "";
+
                     map.geoObjects.add(
                         new ymaps.Placemark(
                             store.coordinates,
@@ -209,8 +220,8 @@ function initStoresMap() {
                         <div style="min-width: 250px; font-family: 'Jost', Arial; font-size: 16px; color: black;">
                             <div style="margin-bottom: 15px;">
                                 <strong>${store.address}</strong><br>
-                                <div style="margin-top: 10px;">${store.work_hours}</div>
-                                <a href='tel: ${store.phone}' class="colour_href">
+                                <div style="margin-top: 10px;">${workHoursHtml}</div>
+                                <a href='tel:${store.phone}' class="colour_href">
                                     <div style="margin-top: 10px;">${store.phone}</div>
                                 </a>
                             </div>
@@ -887,6 +898,16 @@ class PickupMap {
 
             stores.forEach((store, index) => {
                 if (store.coordinates && store.coordinates.length === 2) {
+                    // Разбиваем часы работы по переносам строк
+                    const workHoursHtml = store.work_hours
+                        ? store.work_hours
+                              .split("\n")
+                              .map((line) => line.trim())
+                              .filter((line) => line !== "")
+                              .map((line) => `<div>${line}</div>`)
+                              .join("")
+                        : "";
+
                     const placemark = new ymaps.Placemark(
                         store.coordinates,
                         {
@@ -894,7 +915,7 @@ class PickupMap {
                             <div style="min-width: 250px; font-family: 'Jost', Arial; font-size: 16px; color: black;">
                                 <div style="margin-bottom: 15px;">
                                     <strong>${store.address}</strong><br>
-                                    <div style="margin-top: 10px;">${store.work_hours}</div>
+                                    <div style="margin-top: 10px;">${workHoursHtml}</div>
                                     <a href='tel: ${store.phone}' class="colour_href">
                                         <div style="margin-top: 10px;">${store.phone}</div>
                                     </a>
