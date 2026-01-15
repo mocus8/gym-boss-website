@@ -12,3 +12,8 @@ function getCurrentUserId(): ?int {
 
     return $userId;
 }
+
+// Форматирование цены товара
+function formatPrice(float $value): string {
+    return number_format($value, 2, ',', ' ');
+}

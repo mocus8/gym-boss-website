@@ -25,7 +25,7 @@
         foreach ($orderItems as $item) { 
         ?>   
             <div class="order_right_products_row">
-                <?= htmlspecialchars($item['name']) ?>, (<?= $item['amount'] ?> шт.) - <?= $item['price'] * $item['amount'] ?> ₽
+                <?= htmlspecialchars($item['name']) ?>, (<?= $item['amount'] ?> шт.) - <?= number_format($item['price'] * $item['amount'], 2, ',', ' ') ?> ₽
             </div>
         <?php
             }
@@ -51,7 +51,7 @@
             </div>
 
             <div class="order_row">
-                Стоимость доставки: <?= (int)$deliveryCost ?> ₽
+                Стоимость доставки: <?= number_format((int)$deliveryCost, 2, ',', ' ') ?> ₽
             </div>
         <?php
         } 
@@ -59,7 +59,7 @@
     </div>
 
     <div class="order_row">
-        Итоговая стоимость: <?= $orderTotalPrice + $deliveryCost?> ₽
+        Итоговая стоимость: <?= number_format($orderTotalPrice + $deliveryCost, 2, ',', ' ') ?> ₽
     </div>
 
     <div>

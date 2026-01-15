@@ -64,17 +64,17 @@
             <div class="order_right_order">Ваш заказ</div>
             <?php foreach ($cartItems as $item) {  ?>   
                 <div class="order_right_products_row">
-                    <?= htmlspecialchars($item['name']) ?>, (<?= $item['amount'] ?> шт.) - <?= $item['price'] * $item['amount'] ?> ₽
+                    <?= htmlspecialchars($item['name']) ?> (<?= $item['amount'] ?> шт.) - <?= number_format($item['price'] * $item['amount'], 2, ',', ' ') ?> ₽
                 </div>
             <?php } ?>
             <div class="order_right_row">Количество товаров: <?= $cartCount ?></div>
-            <div class="order_right_row">Стоимость всех товаров: <?= $cartTotalPrice ?> ₽</div>
+            <div class="order_right_row">Стоимость всех товаров: <?= number_format($cartTotalPrice, 2, ',', ' ') ?> ₽</div>
             <?php if ($cartTotalPrice < 5000) { ?> 
-                <div class="order_right_row">Стоимость доставки: 750 ₽ (бесплатно при заказе от 5000 ₽)</div>
-                <div class="order_right_row">Итого: <?= $cartTotalPrice + 750?> ₽</div>
+                <div class="order_right_row">Стоимость доставки: 750,00 ₽ (бесплатно при заказе от 5000 ₽)</div>
+                <div class="order_right_row">Итого: <?= number_format($cartTotalPrice, 2, ',', ' ') ?> ₽</div>
             <?php } else { ?>
                 <div class="order_right_row">Стоимость доставки: 0 ₽ (бесплатно при заказе от 5000 ₽)</div>
-                <div class="order_right_row">Итого: <?= $cartTotalPrice?></div>
+                <div class="order_right_row">Итого: <?= number_format($cartTotalPrice, 2, ',', ' ') ?> ₽</div>
             <?php } ?>
             <div class="order_right_row">Адрес доставки: <span id="order-right-delivery-address">не указан</span></div>
         </div>
@@ -114,12 +114,12 @@
             <div class="order_right_order">Ваш заказ</div>
             <?php foreach ($cartItems as $item) { ?>   
                 <div class="order_right_products_row">
-                    <?= htmlspecialchars($item['name']) ?>, (<?= $item['amount'] ?> шт.) - <?= $item['price'] * $item['amount'] ?> ₽
+                    <?= htmlspecialchars($item['name']) ?> (<?= $item['amount'] ?> шт.) - <?= number_format($item['price'] * $item['amount'], 2, ',', ' ') ?> ₽
                 </div>
             <?php } ?>
             <div class="order_right_row">Количество товаров: <?= $cartCount ?></div>
-            <div class="order_right_row">Стоимость всех товаров: <?= $cartTotalPrice ?> ₽</div>
-            <div class="order_right_row">Итого: <?= $cartTotalPrice ?> ₽</div>
+            <div class="order_right_row">Стоимость всех товаров: <?= number_format($cartTotalPrice, 2, ',', ' ') ?> ₽</div>
+            <div class="order_right_row">Итого: <?= number_format($cartTotalPrice, 2, ',', ' ') ?> ₽</div>
             <div class="order_right_row">Адрес магазина для самовывоза:<br><span id="order-right-pickup-address">не указан</span></div>
         </div>
         <button class="order_right_pay_button" data-order-id="<?= $cartOrderId ?>">

@@ -18,7 +18,7 @@
                                 <?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>
                             </div>
                             <div class="product_price_1">
-                                <?= htmlspecialchars($productData['price'], ENT_QUOTES, 'UTF-8') ?> ₽
+                                <?= htmlspecialchars(formatPrice((float)$productData['price']), ENT_QUOTES, 'UTF-8') ?> ₽
                             </div>
                         </div>
                     </div>

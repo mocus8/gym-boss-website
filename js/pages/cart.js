@@ -5,7 +5,7 @@ import {
     updateCartItemQty,
     removeCartItem,
 } from "../cart/api.js";
-import { getErrorMessage, updateHeaderCounter } from "../utils.js";
+import { updateHeaderCounter, getErrorMessage, formatPrice } from "../utils.js";
 import { notification } from "../ui/Notification.js";
 
 // Функция для рендера блока товара
@@ -40,7 +40,7 @@ function createCartProductElement(item) {
     const price = document.createElement("div");
     price.classList.add("cart_product_price");
     price.id = `cart-item-total-${item.product_id}`;
-    price.textContent = `${item.price * item.amount} ₽`;
+    price.textContent = `${formatPrice(item.price * item.amount)} ₽`;
     productClick.appendChild(price);
 
     // Блок взаимодействия
@@ -136,7 +136,7 @@ function updateCartInfo(cartData) {
     if (!itemsTotalQty) return;
 
     const count = Number(cartData?.count ?? 0);
-    const total = Number(cartData?.total ?? 0);
+    const total = formatPrice(Number(cartData?.total ?? 0));
 
     itemsTotalQty.textContent = String(count);
     itemsTotalPrice.forEach((item) => {

@@ -24,7 +24,7 @@
                 </div>
 
                 <div class="order_data">
-                    Стоимость: <?= $order['total_price'] ?> ₽
+                    Стоимость: <?= number_format($order['total_price'], 2, ',', ' ') ?> ₽
                 </div>
 
                 <div class="order_data">

@@ -34,7 +34,7 @@
         </div>
 
         <div class="product_price_2">
-            <?= number_format($productPrice, 0, '', ' ') ?> ₽
+            <?= number_format($productPrice, 2, ',', ' ') ?> ₽
         </div>
 
         <div class="product_availability">

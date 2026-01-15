@@ -1,11 +1,3 @@
-// Функция для обновления счетчика в header
-export async function updateHeaderCounter(qty) {
-    const headerCounter = document.getElementById("header-cart-counter");
-    if (!headerCounter) return;
-
-    headerCounter.textContent = Number(qty);
-}
-
 // крутой класс через ES6 для универсальной модалки ошибки оплаты с текстом
 export class ErrorModal {
     static #allInstances = new Set(); // все созданные объекты класса
@@ -152,6 +144,26 @@ export class ErrorModal {
         // Очищаем Set всех созданных объектов
         ErrorModal.#allInstances.clear();
     }
+}
+
+// Функция для обновления счетчика в header
+export async function updateHeaderCounter(qty) {
+    const headerCounter = document.getElementById("header-cart-counter");
+    if (!headerCounter) return;
+
+    headerCounter.textContent = Number(qty);
+}
+
+// Создаем объект для форматирования цены (два знака после запятой)
+const priceFormatter = new Intl.NumberFormat("ru-RU", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
+// Функция для форматирования цены
+export function formatPrice(value) {
+    const number = Number(value) || 0;
+    return `${priceFormatter.format(number)}`;
 }
 
 // Константа со всеми кодами ошибок
