@@ -8,8 +8,8 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
+use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления корзинами пользователей (через методы сервиса)
