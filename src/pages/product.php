@@ -19,7 +19,7 @@ $productDescriptionHtml = '';
 
 try {
     // Данные о товаре
-    $product = $productService->getProductBySlug($productSlug);
+    $product = $productService->getBySlug($productSlug);
 
     if ($product === null) {
         http_response_code(404);
@@ -44,12 +44,12 @@ try {
     }
 
     // Картинки
-    $images = $productService->getProductImagesById((int)$product['product_id']);
+    $images = $productService->getImagesById((int)$product['product_id']);
     
 } catch (\Throwable $e) {
     // Тут потом нормально логировать
     error_log(sprintf(
-        '[product] getProductBySlug/getProductImagesById failed: %s in %s:%d',
+        '[product] getBySlug/getImagesById failed: %s in %s:%d',
         $e->getMessage(),
         $e->getFile(),
         $e->getLine()

@@ -118,7 +118,7 @@ class ProductService {
     }
 
     // Получение товара из бд по slug
-    public function getProductBySlug(string $slug): ?array {
+    public function getBySlug(string $slug): ?array {
         $sql = "SELECT * FROM products WHERE slug = ?";
 
         $stmt = $this->db->prepare($sql);
@@ -154,7 +154,7 @@ class ProductService {
     }
 
     // Получение товара из бд по id
-    public function getProductById(int $id): ?array {
+    public function getById(int $id): ?array {
         $sql = "SELECT * FROM products WHERE product_id = ?";
 
         $stmt = $this->db->prepare($sql);
@@ -190,7 +190,7 @@ class ProductService {
     }
 
     // Получение товаров из бд по массиву из id
-    public function getProductsByIds(array $ids): array {
+    public function getByIds(array $ids): array {
         // Фильтруем и приводим к int:
         // array_map('intval', $ids): array_map применяет функцию ко всем элементам массива, intval приводит значение к целому числу.
         // array_unique: убирает дубликаты из массива
@@ -318,7 +318,7 @@ class ProductService {
     }
 
     // Получение картинок товара по id
-    public function getProductImagesById(int $productId): array {
+    public function getImagesById(int $productId): array {
         $sql = "
             SELECT image_path 
             FROM product_images 

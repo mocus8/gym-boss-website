@@ -271,7 +271,7 @@ class CartService {
         $stmt->close();
 
         // Получаем массив товаров через productService
-        $products = $this->productService->getProductsByIds($ids);
+        $products = $this->productService->getByIds($ids);
 
         // Собираем итоговый массив позиций корзины: товар + amount
         $items = [];
