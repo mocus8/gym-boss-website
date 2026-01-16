@@ -1,7 +1,22 @@
 <?php
 // Контроллер главной страницы
 
-$catalog = $productService->getCatalog();
+// Получаем католог через сервис
+try {
+    $catalog = $productService->getCatalog();
+} catch (\Throwable $e) {
+    // Тут потом нормально логировать
+    error_log(sprintf(
+        '[home] getCatalog failed: %s in %s:%d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+    
+    http_response_code(500);
+    require __DIR__ . '/500.php';
+    exit;
+}
 
 // Также с примером того что может быть в контроллере:
 // $title  = 'Gym Boss - спорттовары'; - тут тайтл по умолчанию в app.php, не указваем
