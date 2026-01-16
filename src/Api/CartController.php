@@ -24,8 +24,9 @@ class CartController {
         $this->cartService = $cartService;
     }
 
-    // Будующий онструктор (магический метод), просто присваиваем внешюю $db в переменную создоваемого объекта
+    // Будующий онструктор (с логером)
     // public function __construct(CartService $cartService, Logger $logger) {
+    //     $this->cartSession = $cartSession;
     //     $this->cartService = $cartService;
     //     $this->logger = $logger;
     // }
