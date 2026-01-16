@@ -9,14 +9,14 @@
     </a>
 
     <div class="product_minor_images">
-        <?php for ($i = 0; $i < count($productImages); $i++) { ?>
-            <button class="product_minor_images_button">
-                <img class="product_img_2" src="<?= htmlspecialchars($productImages[$i]) ?>" alt="<?= htmlspecialchars($productName) ?>">
-            </button>
-        <?php } ?>
+    <?php foreach ($images as $image) { ?>
+        <button class="product_minor_images_button">
+            <img class="product_img_2" src="<?= htmlspecialchars($image, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="<?= htmlspecialchars($productName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+        </button>
+    <?php } ?>
     </div>
 
-    <img class="product_main_img" src="<?= htmlspecialchars($mainImage) ?>" alt="<?= htmlspecialchars($productName) ?>">
+    <img class="product_main_img" src="<?= htmlspecialchars($images[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="<?= htmlspecialchars($productName) ?>">
 
     <div class="product_description_head">
         О товаре:
@@ -34,7 +34,7 @@
         </div>
 
         <div class="product_price_2">
-            <?= number_format($productPrice, 2, ',', ' ') ?> ₽
+            <?= number_format($product['price'], 2, ',', ' ') ?> ₽
         </div>
 
         <div class="product_availability">
@@ -42,19 +42,19 @@
         </div>
     </div>
 
-    <button class="product_button_add_not_in_cart" type="button" id="button-add" data-product-add-cart data-product-id="<?= $productId ?>">
+    <button class="product_button_add_not_in_cart" type="button" id="button-add" data-product-add-cart data-product-id="<?= (int)$product['product_id'] ?>">
         Добавить в корзину
     </button>
 
     <div class="product_button_add_in_cart hidden" type="button" id="button-change-qty">
         <button class="product_sign_button">
-            <img class="product_interaction_sign" src="/img/minus.png" data-product-subtract-cart data-product-id="<?= $productId ?>">
+            <img class="product_interaction_sign" src="/img/minus.png" data-product-subtract-cart data-product-id="<?= (int)$product['product_id'] ?>">
         </button>
 
         <span id="product-cart-counter"><?= $cartAmount ?></span>
 
         <button class="product_sign_button">
-            <img class="product_interaction_sign" src="/img/plus.png" data-product-add-cart data-product-id="<?= $productId ?>"> 
+            <img class="product_interaction_sign" src="/img/plus.png" data-product-add-cart data-product-id="<?= (int)$product['product_id'] ?>"> 
         </button>
     </div>
 </div>

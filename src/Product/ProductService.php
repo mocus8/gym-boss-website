@@ -20,7 +20,6 @@ class ProductService {
     }
 
     // Методы которые еще нужно реализовать:
-    // getBySlug
     // getById
     // getByIds
     // getPricesByIds
@@ -122,5 +121,88 @@ class ProductService {
         @file_put_contents($cacheFile, serialize($catalog));
 
         return $catalog;
+    }
+
+    // Получение бд товара по slug
+    public function getProductBySlug(string $slug): ?array {
+        $sql = "SELECT * FROM products WHERE slug = ?";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $slug);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $product = $result->fetch_assoc();
+        $stmt->close();
+
+        // Если ничего не нашли - возвращаем null
+        if (!$product) {
+            return null;
+        }
+
+        return $product;
+    }
+
+    // Получение картинок товара по id
+    public function getProductImagesById(int $productId): array {
+        $sql = "
+            SELECT image_path 
+            FROM product_images 
+            WHERE product_id = ? 
+            ORDER BY image_id ASC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $productId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        //  Объявляем и заполняем массив с картинками
+        $images = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $images[] = $row['image_path'];
+        }
+
+        $stmt->close();
+
+        // если картинок нет - дефолтная
+        if ($images === []) {
+            $images[] = '/img/default.png';
+        }
+
+        return $images;
     }
 }

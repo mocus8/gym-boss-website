@@ -4,64 +4,66 @@
 // Получаем данные о товаре (потом вынести в сервис и контроллеры)
 
 // Получаем slug товара из URL
-$productSlug = $_GET['url'] ?? '';
-
-// Получаем данные товара
-$stmt = $db->prepare("SELECT * FROM products WHERE slug = ?");
-$stmt->bind_param("s", $productSlug);
-$stmt->execute();
-$result = $stmt->get_result();
-$product = $result->fetch_assoc();
-
-if (!$product) {
+if (!isset($_GET['url'])) {
     http_response_code(404);
     require __DIR__ . '/404.php';
-    exit();
+    exit;
 }
 
-$productId = $product['product_id'];
-$productName = $product['name'];
-$productPrice = $product['price'];
-$productDescription = $product['description'] ?? 'Описание отсутствует';
+$productSlug = (string)$_GET['url'];
 
-// Форматируем описание
-$paragraphs = preg_split("/\R{2,}/u", $productDescription);
+// Получаем данные товара через сервис
+$product = null;
+$images = [];
 $productDescriptionHtml = '';
 
-foreach ($paragraphs as $p) {
-    $p = trim($p);
-    if ($p === '') {
-        continue;
+try {
+    // Данные о товаре
+    $product = $productService->getProductBySlug($productSlug);
+
+    if ($product === null) {
+        http_response_code(404);
+        require __DIR__ . '/404.php';
+        exit;
     }
 
-    $safe = htmlspecialchars($p, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $safe = nl2br($safe);
+    // Форматируем описание
+    $productDescription = $product['description'] ?? 'Описание отсутствует';
+    $paragraphs = preg_split("/\R{2,}/u", $productDescription) ?: [];
 
-    $productDescriptionHtml .= "<p>{$safe}</p>";   // получаем отформатированное описание
-}
+    foreach ($paragraphs as $p) {
+        $p = trim($p);
+        if ($p === '') {
+            continue;
+        }
 
-// Получаем изображение товара из product_images
-$stmt_images = $db->prepare("SELECT image_path FROM product_images WHERE product_id = ? ORDER BY image_id ASC");
-$stmt_images->bind_param("i", $productId);
-$stmt_images->execute();
-$images_result = $stmt_images->get_result();
-$productImages = [];
+        $safe = htmlspecialchars($p, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $safe = nl2br($safe);
 
-if ($images_result && $images_result->num_rows > 0) {
-    while ($image = $images_result->fetch_assoc()) {
-        $productImages[] = $image['image_path'];
+        $productDescriptionHtml .= "<p>{$safe}</p>";   // получаем отформатированное описание
     }
+
+    // Картинки
+    $images = $productService->getProductImagesById((int)$product['product_id']);
+    
+} catch (\Throwable $e) {
+    // Тут потом нормально логировать
+    error_log(sprintf(
+        '[product] getProductBySlug/getProductImagesById failed: %s in %s:%d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+    
+    http_response_code(500);
+    require __DIR__ . '/500.php';
+    exit;
 }
 
-// Первое изображение считается главным
-if ($productImages) {
-    $mainImage = $productImages[0];
-} else {
-    $mainImage = '/img/default.png';
-}
+$productName = $product['name'] ?? 'Товар';
 
 $title  = "$productName - Gym Boss";
-$canonical = $baseUrl . "/$productSlug"; 
+$canonical = $baseUrl . '/product/' . rawurlencode($productSlug);
 $pageModuleScripts = ['/js/pages/product.js'];
 
 // Через буфер записываем в переменную контент страницы
