@@ -15,13 +15,16 @@ require_once __DIR__ . '/Product/ProductService.php';    // подключаем
 
 // Подключаем пространства имен
 use App\Db\Db;  // используем класс Db из пространства имен App\Db
+use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
 use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;   // используем класс CartService из пространства имен App\Cart
 use App\Api\CartController;    // используем класс CartController из пространства имен App\Api
-use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
 
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connectFromEnv();
+
+// Работаем с сервисом товара
+$productService = new ProductService($db);    // создаем экземпляр класса
 
 // Создаем экземпляр класса и получаем id сеанса корзины (не статически т.к. более гибко для будующего)
 $cartSession = new CartSession();
@@ -30,15 +33,12 @@ $cartSessionId = $cartSession->getId();
 $userId = getCurrentUserId();
 
 // Работаем с сервисом корзины
-$cartService = new CartService($db);    // создаем экземпляр класса
+$cartService = new CartService($db, $productService);    // создаем экземпляр класса
 $cartId = $cartService->getOrCreateCartId($cartSessionId, $userId);    // получаем id корзины из бд
 $cartCount = $cartService->getItemsCount($cartId);    // получаем кол-во товаров в корзине (для отображения в хедере)
 
 // Создаем экземпляр api-контроллера корзины
 $cartController = new CartController($cartSession, $cartService);
-
-// Работаем с сервисом товара
-$productService = new ProductService($db);    // создаем экземпляр класса
 
 // Получаем URL сайта из переменных окружения
 $appUrl = getenv('APP_URL');

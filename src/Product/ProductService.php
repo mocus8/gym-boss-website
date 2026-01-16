@@ -19,12 +19,6 @@ class ProductService {
         $this->db = $db;
     }
 
-    // Методы которые еще нужно реализовать:
-    // getById
-    // getByIds
-    // getPricesByIds
-    // search
-
     // Получение из бд всех категорий с товарами (для отображения каталога), либо его получение из кэша
     public function getCatalog(): array {
         $cacheFile = self::CATALOG_CACHE_FILE;
@@ -53,7 +47,7 @@ class ProductService {
                 prdct.name as prdct_name,
                 prdct.price as prdct_price,
                 img.image_id as img_id,
-                img.image_path as img_path
+                img.image_path as image_path
             FROM categories ctg
             INNER JOIN products prdct ON ctg.category_id = prdct.category_id
             LEFT JOIN product_images img ON prdct.product_id = img.product_id
@@ -105,7 +99,7 @@ class ProductService {
                 'slug' => $row['prdct_slug'],
                 'name' => $row['prdct_name'],
                 'price' => $row['prdct_price'],
-                'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/img/default.png'
+                'image_path' => !empty($row['image_path']) ? $row['image_path'] : '/img/default.png'
             ];
         }
     
@@ -123,7 +117,7 @@ class ProductService {
         return $catalog;
     }
 
-    // Получение бд товара по slug
+    // Получение товара из бд по slug
     public function getProductBySlug(string $slug): ?array {
         $sql = "SELECT * FROM products WHERE slug = ?";
 
@@ -157,6 +151,170 @@ class ProductService {
         }
 
         return $product;
+    }
+
+    // Получение товара из бд по id
+    public function getProductById(int $id): ?array {
+        $sql = "SELECT * FROM products WHERE product_id = ?";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $id);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $product = $result->fetch_assoc();
+        $stmt->close();
+
+        // Если ничего не нашли - возвращаем null
+        if (!$product) {
+            return null;
+        }
+
+        return $product;
+    }
+
+    // Получение товаров из бд по массиву из id
+    public function getProductsByIds(array $ids): array {
+        // Фильтруем и приводим к int:
+        // array_map('intval', $ids): array_map применяет функцию ко всем элементам массива, intval приводит значение к целому числу.
+        // array_unique: убирает дубликаты из массива
+        // array_values: переформировывает массив так, чтобы ключи стали 0, 1, 2, ... подряд.        
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+    
+        if ($ids === []) {
+            return [];
+        }
+
+        // Строим плейсхолдеры ?,?,?, ...
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $sql = "
+            SELECT 
+                p.*,
+                img.image_path
+            FROM products p
+            LEFT JOIN product_images img 
+                ON p.product_id = img.product_id
+                AND img.image_id = (
+                    SELECT MIN(img2.image_id)
+                    FROM product_images img2
+                    WHERE img2.product_id = p.product_id
+                )
+            WHERE p.product_id IN ($placeholders)
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        // Строка типов: столько же 'i', сколько id
+        $types = str_repeat('i', count($ids));
+
+        // Троеточие - оператор распаковки массива
+        $stmt->bind_param($types, ...$ids);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // Объявляем и заполняем массив с найденными товарами
+        // Сразу получается ассоциативный массив, где ключи - это product_id
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $row['image_path'] = $row['image_path'] ?: '/img/default.png';    // если нет картинки - дефолтную
+            $products[(int)$row['product_id']] = $row;
+        }
+    
+        $stmt->close();
+    
+        return $products;
+    }
+
+    // Получение цен товаров из бд по массиву из id
+    public function getPricesByIds(array $ids): array {
+        // Фильтруем и приводим к int:
+        // array_map('intval', $ids): array_map применяет функцию ко всем элементам массива, intval приводит значение к целому числу.
+        // array_unique: убирает дубликаты из массива
+        // array_values: переформировывает массив так, чтобы ключи стали 0, 1, 2, ... подряд.        
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+    
+        if ($ids === []) {
+            return [];
+        }
+
+        // Строим плейсхолдеры ?,?,?, ...
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $sql = "
+            SELECT 
+                product_id,
+                price
+            FROM products
+            WHERE products.product_id IN ($placeholders)
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        // Строка типов: столько же 'i', сколько id
+        $types = str_repeat('i', count($ids));
+
+        // Троеточие - оператор распаковки массива
+        $stmt->bind_param($types, ...$ids);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // Объявляем и заполняем массив с найденными ценами
+        // Сразу получается ассоциативный массив, где ключи - это product_id
+        $prices = [];
+        while ($row = $result->fetch_assoc()) {
+            $prices[(int)$row['product_id']] = $row['price'];
+        }
+    
+        $stmt->close();
+    
+        return $prices;
     }
 
     // Получение картинок товара по id
@@ -206,3 +364,6 @@ class ProductService {
         return $images;
     }
 }
+
+// Методы которые еще нужно реализовать:
+// search

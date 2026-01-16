@@ -6,14 +6,19 @@
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Cart;
+// Используем класс ProductService из пространства имен App\Product
+use App\Product\ProductService;
 
 // Класс для управления корзинами пользователей
 class CartService {
-    private \mysqli $db;    // приватное свойство (переменная класса), привязанная к объекту
+    // Приватное свойство (переменная класса), привязанная к объекту
+    private \mysqli $db;
+    private ProductService $productService;    // экземпляр сервиса для товаров (dependency injection)
 
     // Конструктор (магический метод), просто присваиваем внешюю $db в переменную создоваемого объекта
-    public function __construct(\mysqli $db) {
+    public function __construct(\mysqli $db, ProductService $productService) {
         $this->db = $db;
+        $this->productService = $productService;
     }
 
     // Поиск корзины по cart_session_id или user_id, нашли - возвращаем ее $cartId, нет - создаем и возвращаем $cartId новой
@@ -153,12 +158,13 @@ class CartService {
     }
 
     // Метод для подсчета общей стоимости корзины
-    public function getItemsTotal(int $cartId): int {
+    public function getItemsTotal(int $cartId): float {
         $sql = "
-            SELECT COALESCE(SUM(ci.amount * p.price), 0) AS total
-            FROM cart_items AS ci
-            JOIN products AS p ON ci.product_id = p.product_id
-            WHERE ci.cart_id = ?
+            SELECT
+                product_id,
+                amount
+            FROM cart_items
+            WHERE cart_items.cart_id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -181,35 +187,48 @@ class CartService {
             $stmt->close();
             throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
         }
-        
-        $row = $result->fetch_assoc();
 
+        $items = [];
+        $productIds = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $productId = (int)$row['product_id'];
+            $amount    = (int)$row['amount'];
+
+            $items[$productId] = $amount;
+            $productIds[] = $productId;
+        }
+        
         $stmt->close();
 
-        return (int)($row['total'] ?? 0);
+        if ($items === []) {
+            return 0;
+        }
+
+        $prices = $this->productService->getPricesByIds($productIds);
+
+        // Объявляем переменную с общей суммой и заполняем
+        $total = 0;
+        foreach ($items as $productId => $amount) {
+            // Если цены для товара нет то пропускаем итерацию
+            if (!isset($prices[$productId])) {
+                continue;
+            }
+
+            $total += (float)$prices[$productId] * $amount;
+        }
+
+        return (float)$total;
     }
 
     // Метод для получения всех товаров в корзине (с первой фотографией)
     public function getItems(int $cartId): array {
-        // Этот запрос возвращает по строчке на каждую позицию в корзине:
-        // product_id, slug, name, price, amount, image_path (первое по id фото, главное)
         $sql = "
-            SELECT
-                p.product_id,
-                p.slug,
-                p.name,
-                p.price,
-                ci.amount,
-                COALESCE((
-                    SELECT pi.image_path
-                    FROM product_images AS pi
-                    WHERE pi.product_id = p.product_id
-                    ORDER BY pi.image_id ASC
-                    LIMIT 1
-                ), '/img/default.png') AS image_path
-            FROM cart_items AS ci
-            JOIN products AS p ON ci.product_id = p.product_id
-            WHERE ci.cart_id = ?
+            SELECT 
+                product_id,
+                amount
+            FROM cart_items
+            WHERE cart_items.cart_id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -233,13 +252,33 @@ class CartService {
             throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
         }
 
-        // Объявляем и заполняем массив товаров в корзине ($items)
-        $items = [];
+        // Объявляем и заполняем массивы id => amount и id товаров из корзины
+        $amountByIds = [];
+        $ids = [];
         while ($row = $result->fetch_assoc()) {
-            $items[] = $row;
+            $productId = (int)$row['product_id'];
+            $amount = (int)$row['amount'];
+
+            $amountByIds[$productId] = $amount;
+            $ids[] = $productId;
+        }
+
+        if ($ids === []) {
+            $stmt->close();
+            return [];
         }
 
         $stmt->close();
+
+        // Получаем массив товаров через productService
+        $products = $this->productService->getProductsByIds($ids);
+
+        // Собираем итоговый массив позиций корзины: товар + amount
+        $items = [];
+        foreach ($products as $productId => $product) {
+            // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
+            $items[] = array_merge($product, ['amount' => $amountByIds[$productId] ?? 0]);
+        }
 
         return $items;
     }
