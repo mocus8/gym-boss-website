@@ -11,12 +11,14 @@ require_once __DIR__ . '/Db/Db.php';    // подключаем файл с кл
 require_once __DIR__ . '/Cart/CartSession.php';    // подключаем файл с классом для получения/установки cart id в куках
 require_once __DIR__ . '/Cart/CartService.php';    // подключаем файл с классом-сервисом для управления корзинами пользователей
 require_once __DIR__ . '/Api/CartController.php';    // подключаем файл с классом-контроллером для управления корзинами пользователей
+require_once __DIR__ . '/Product/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
 
 // Подключаем пространства имен
 use App\Db\Db;  // используем класс Db из пространства имен App\Db
 use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;   // используем класс CartService из пространства имен App\Cart
 use App\Api\CartController;    // используем класс CartController из пространства имен App\Api
+use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
 
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connectFromEnv();
@@ -34,6 +36,9 @@ $cartCount = $cartService->getItemsCount($cartId);    // получаем кол
 
 // Создаем экземпляр api-контроллера корзины
 $cartController = new CartController($cartSession, $cartService);
+
+// Работаем с сервисом товара
+$productService = new ProductService($db);    // создаем экземпляр класса
 
 // Получаем URL сайта из переменных окружения
 $appUrl = getenv('APP_URL');

@@ -1,7 +1,7 @@
 <!-- Контент главной страницы -->
 
 <div class="catalog">
-<?php foreach ($categoriesWithProducts as $categoryData) { ?>
+<?php foreach ($catalog as $categoryData) { ?>
     <div class="category_row">
         <div class="category_name">
             <?= htmlspecialchars($categoryData['category']['name'], ENT_QUOTES, 'UTF-8') ?>
