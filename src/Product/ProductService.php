@@ -363,7 +363,117 @@ class ProductService {
 
         return $images;
     }
-}
 
-// Методы которые еще нужно реализовать:
-// search
+    // Поиск товаров по query-выражению
+    public function search(string $query): array {
+        // Объявляем массив полученных значений
+        $queryProducts = [];
+
+        // Обрезаем до 150 символов
+        $query = substr($query, 0, 150);
+
+        // Пустой или состоящий из "мусора" query - отправляем пустой массив
+        if (trim($query) === '') {
+            return $queryProducts;
+        }
+
+        // разбиваем на слова для лучшего поиска
+        $words = explode(' ', $query);
+        $conditions = [];
+        $params = [];
+        $types = '';
+
+        // условия каждого слова для поиска
+        foreach ($words as $word) {
+            if (mb_strlen($word) >= 2) {
+                $baseWord = (mb_strlen($word) >= 5) ? mb_substr($word, 0, -2) : $word;
+                $conditions[] = "(prdct.name LIKE ? OR prdct.name LIKE ? OR prdct.description LIKE ? OR prdct.description LIKE ?)";
+                $params[] = '%' . $word . '%';
+                $params[] = '%' . $baseWord . '%';
+                $params[] = '%' . $word . '%';
+                $params[] = '%' . $baseWord . '%';
+                $types .= 'ssss';
+            }
+        }
+
+        // нет подходящих условий - пустой
+        if ($conditions === []) {
+            return $queryProducts;
+        }
+
+        // Ищем в бд схожие названия
+        $sql = "
+            SELECT 
+                prdct.product_id as prdct_id,
+                prdct.slug as prdct_slug,
+                prdct.name as prdct_name,
+                prdct.price as prdct_price,
+                prdct.description as prdct_description,
+                img.image_id as img_id,
+                img.image_path as img_path,
+                (CASE
+                    WHEN prdct.name LIKE ? THEN 40
+                    WHEN prdct.name LIKE ? THEN 30
+                    WHEN prdct.name LIKE ? THEN 20
+                    WHEN prdct.description LIKE ? THEN 1
+                    ELSE 0
+                END) as relevance
+            FROM products prdct
+            LEFT JOIN product_images img ON prdct.product_id = img.product_id
+                AND img.image_id = (
+                    SELECT MIN(img2.image_id) 
+                    FROM product_images img2 
+                    WHERE img2.product_id = prdct.product_id
+                )
+            WHERE " . implode(' OR ', $conditions) . "
+            HAVING relevance > 0
+            ORDER BY relevance DESC, prdct.name
+        ";
+
+        // оформляем параметры
+        $caseParams = array_slice($params, 0, 4);
+        $params = array_merge($caseParams, $params);
+        $types = 'ssss' . $types;
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param($types, ...$params);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        if ($result->num_rows == 0) {
+            $stmt->close();
+            return $queryProducts;
+        }
+            
+        // формируем массив полученных товаров
+        while ($row = $result->fetch_assoc()) {
+            $queryProducts[] = [
+                'id'         => (int)$row['prdct_id'],
+                'slug'       => $row['prdct_slug'],
+                'name'       => $row['prdct_name'],
+                'price'      => $row['prdct_price'],
+                'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/img/default.png',
+            ];
+        }
+
+        $stmt->close();
+
+        return $queryProducts;
+    }
+}
