@@ -8,14 +8,16 @@ require_once __DIR__ . '/../vendor/autoload.php';    // подключаем com
 require_once __DIR__ . '/envLoader.php';    // подключаем загрузчик .env файла
 require_once __DIR__ . '/support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
+require_once __DIR__ . '/Product/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
+require_once __DIR__ . '/Api/ProductController.php';    // подключаем файл с классом-контроллером для получения инфы о товарах
 require_once __DIR__ . '/Cart/CartSession.php';    // подключаем файл с классом для получения/установки cart id в куках
 require_once __DIR__ . '/Cart/CartService.php';    // подключаем файл с классом-сервисом для управления корзинами пользователей
 require_once __DIR__ . '/Api/CartController.php';    // подключаем файл с классом-контроллером для управления корзинами пользователей
-require_once __DIR__ . '/Product/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
 
 // Подключаем пространства имен
 use App\Db\Db;  // используем класс Db из пространства имен App\Db
 use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
+use App\Api\ProductController;    // используем класс ProductController из пространства имен App\Api
 use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;   // используем класс CartService из пространства имен App\Cart
 use App\Api\CartController;    // используем класс CartController из пространства имен App\Api
@@ -23,8 +25,9 @@ use App\Api\CartController;    // используем класс CartController
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connectFromEnv();
 
-// Работаем с сервисом товара
+// Работаем с сервисом и контроллером товара
 $productService = new ProductService($db);    // создаем экземпляр класса
+$productController = new ProductController($productService);    // создаем экземпляр класса
 
 // Создаем экземпляр класса и получаем id сеанса корзины (не статически т.к. более гибко для будующего)
 $cartSession = new CartSession();

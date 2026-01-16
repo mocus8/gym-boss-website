@@ -19,13 +19,14 @@ if (strpos($uri, '/api/') === 0) {
     // Определение api маршрутов
     $apiRoutes = [
         'GET' => [
-            '/cart'                => [$cartController, 'getCart'],
+            '/cart' => [$cartController, 'getCart'],
+            '/products' => [$productController, 'getCatalog'],
         ],
         'POST' => [
-            '/cart/add-item'       => [$cartController, 'addItem'],
-            '/cart/update-item-qty'=> [$cartController, 'updateItemQty'],
-            '/cart/remove-item'    => [$cartController, 'removeItem'],
-            '/cart/clear'          => [$cartController, 'clear'],
+            '/cart/add-item' => [$cartController, 'addItem'],
+            '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
+            '/cart/remove-item' => [$cartController, 'removeItem'],
+            '/cart/clear' => [$cartController, 'clear'],
         ],
     ];
 

@@ -24,7 +24,7 @@ class CartController {
         $this->cartService = $cartService;
     }
 
-    // Будующий онструктор (с логером)
+    // Будующий конструктор (с логером)
     // public function __construct(CartService $cartService, Logger $logger) {
     //     $this->cartSession = $cartSession;
     //     $this->cartService = $cartService;
