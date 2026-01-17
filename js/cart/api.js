@@ -1,46 +1,14 @@
 // Файл для взаимодействия с api-контроллером: отправкой запросов и получения ответов.
 // Всегда возвращается объект с полями: { success: true, data: { items, count, total } }
 
+// Импортируем общую функция для взаимодвействия с api
+import { requestApi } from "../utils.js";
+
 const CART_BASE_URL = "/api/cart/";
 
-// Функция запроса к api-контроллеру: добавляет baseUrl, парсит JSON, проверяет HTTP статус и флаг success, кидает осмысленную ошибку
-// Options - по умолчанию пустой объект {}, можеть быть таким: { method: 'POST', body: '...' }
-// ...options раскрывает содержимое объекта и вставляет его (убирает {} вокруг содержимого)
-// Credentials: "same-origin" — настройка для fetch, которая говорит: "отправлять данные только если запрос на тот же домен"
+// Оборачиваем общую функцию (добавляем базовый путь)
 async function requestCart(path, options = {}) {
-    const response = await fetch(CART_BASE_URL + path, {
-        // Всегда по умолчанию JSON.
-        headers: {
-            "Content-Type": "application/json",
-        },
-        credentials: "same-origin",
-        ...options,
-    });
-
-    // Пытаемся распарсить response как json
-    let data = null;
-    try {
-        data = await response.json();
-    } catch {
-        data = null;
-    }
-
-    // Если HTTP статус не 2xx или в data API вернул success: false то считаем это ошибкой.
-    if (!response.ok || (data && data.success === false)) {
-        const apiError = data && data.error;
-        const message =
-            apiError && apiError.message
-                ? apiError.message
-                : `Cart API error (${response.status})`;
-
-        const error = new Error(message); // понятное сообщение
-        error.status = response.status; // HTTP-код
-        error.code = apiError && apiError.code; // бизнес-код с бэка
-        error.payload = data; // весь ответ
-        throw error;
-    }
-
-    return data;
+    return requestApi(CART_BASE_URL, path, options);
 }
 
 // Функция для получения корзины
