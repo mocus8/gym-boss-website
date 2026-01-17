@@ -1,5 +1,5 @@
 // Файл для взаимодействия с api-контроллером: отправкой запросов и получения ответов.
-// Всегда озвращается объект с полями: { success: true, data: { items, count, total } }
+// Всегда возвращается объект с полями: { success: true, data: { items, count, total } }
 
 const CART_BASE_URL = "/api/cart/";
 

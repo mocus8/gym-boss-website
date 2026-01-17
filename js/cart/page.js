@@ -4,7 +4,7 @@ import {
     addCartItem,
     updateCartItemQty,
     removeCartItem,
-} from "../cart/api.js";
+} from "./api.js";
 import { updateHeaderCounter, getErrorMessage, formatPrice } from "../utils.js";
 import { notification } from "../ui/Notification.js";
 

@@ -64,7 +64,7 @@ $productName = $product['name'] ?? 'Товар';
 
 $title  = "$productName - Gym Boss";
 $canonical = $baseUrl . '/product/' . rawurlencode($productSlug);
-$pageModuleScripts = ['/js/pages/product.js'];
+$pageModuleScripts = ['/js/product/page.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();
