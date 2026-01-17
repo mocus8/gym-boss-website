@@ -15,7 +15,7 @@ class CartService {
     private \mysqli $db;
     private ProductService $productService;    // экземпляр сервиса для товаров (dependency injection)
 
-    // Конструктор (магический метод), просто присваиваем внешюю $db в переменную создоваемого объекта
+    // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(\mysqli $db, ProductService $productService) {
         $this->db = $db;
         $this->productService = $productService;
@@ -372,10 +372,35 @@ class CartService {
     }
 
     // Метод для очистки корзины
-    public function clearCart(int $cartId): void {
+    public function clear(int $cartId): void {
         $sql = "
             DELETE FROM cart_items
             WHERE cart_id = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('i', $cartId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
+
+    // Метод для пометки корзины как конвертированной
+    public function convert(int $cartId): void {
+        $sql = "
+            UPDATE carts
+            SET is_converted = 1
+            WHERE id = ?
         ";
     
         $stmt = $this->db->prepare($sql);

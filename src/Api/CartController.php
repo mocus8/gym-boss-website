@@ -253,7 +253,7 @@ class CartController {
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
             // Через метод класса CartService очищаем в бд корзину
-            $this->cartService->clearCart($cartId);
+            $this->cartService->clear($cartId);
 
             $data = $this->buildCartData($cartId);
 
