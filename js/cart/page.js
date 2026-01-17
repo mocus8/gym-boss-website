@@ -165,9 +165,9 @@ if (!productContainer || !startOrderBtn) {
     window.addEventListener("load", async function () {
         try {
             const cart = await getCart();
-            const cartItems = cart.data?.items ?? [];
+            const cartItems = cart.items ?? [];
 
-            updateCartInfo(cart.data);
+            updateCartInfo(cart);
 
             if (cartItems.length === 0) {
                 renderEmptyCart();
@@ -228,7 +228,7 @@ if (!productContainer || !startOrderBtn) {
             try {
                 const response = await updateCartItemQty(productId, newQty);
 
-                const { items, count } = response.data;
+                const { items, count } = response;
 
                 const itemInCart = items.find(
                     (el) => Number(el.product_id) === productId
@@ -239,7 +239,7 @@ if (!productContainer || !startOrderBtn) {
                 // Обновляем UI
                 updateHeaderCounter(count);
                 updateCartItemCounter(productId, qty);
-                updateCartInfo(response.data);
+                updateCartInfo(response);
                 if (count === 0) renderEmptyCart();
             } catch (e) {
                 // Логирование в консоль с полным контекстом
@@ -271,7 +271,7 @@ if (!productContainer || !startOrderBtn) {
             try {
                 const response = await addCartItem(productId, 1); // response = { success: true, data: { items, count, total } }
 
-                const { items, count } = response.data;
+                const { items, count } = response;
 
                 const itemInCart = items.find(
                     (el) => Number(el.product_id) === productId
@@ -282,7 +282,7 @@ if (!productContainer || !startOrderBtn) {
                 // Обновляем UI
                 updateHeaderCounter(count);
                 updateCartItemCounter(productId, qty);
-                updateCartInfo(response.data);
+                updateCartInfo(response);
             } catch (e) {
                 // Логирование в консоль с полным контекстом
                 console.error("[cart-page] Не удалось добавить товар", {
@@ -310,12 +310,12 @@ if (!productContainer || !startOrderBtn) {
             try {
                 const response = await removeCartItem(productId);
 
-                const { count } = response.data;
+                const { count } = response;
 
                 // Обновляем UI
                 updateHeaderCounter(count);
                 updateCartItemCounter(productId, 0);
-                updateCartInfo(response.data);
+                updateCartInfo(response);
                 if (count === 0) renderEmptyCart();
             } catch (e) {
                 // Логирование в консоль с полным контекстом

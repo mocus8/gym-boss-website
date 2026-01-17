@@ -35,6 +35,12 @@ export async function requestApi(baseUrl, path, options = {}) {
         throw error;
     }
 
+    // Если есть поле data то возвращаем его
+    if (data && Object.prototype.hasOwnProperty.call(data, "data")) {
+        return data.data;
+    }
+
+    // Если поле data нет, то возвращаем объект целиком
     return data;
 }
 

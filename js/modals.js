@@ -1,3 +1,8 @@
+/* global grecaptcha */
+/* global Inputmask */
+import { searchProducts } from "./product/api.js";
+import { getErrorMessage } from "./utils.js";
+
 // универсальная функция для распознавания ответа
 async function parseResponse(response) {
     const contentType = response.headers.get("content-type");
@@ -780,20 +785,9 @@ document.getElementById("header-search-input").addEventListener(
                 }, 200);
 
                 try {
-                    const response = await fetch(
-                        `/src/search.php?q=${encodeURIComponent(query)}`
-                    );
+                    const queryProducts = await searchProducts(query);
 
                     clearTimeout(loaderTimer);
-
-                    if (!response.ok) {
-                        const errorData = await parseResponse(response);
-                        const error = new Error(errorData.error);
-                        error.status = response.status;
-                        throw error;
-                    }
-
-                    const queryProducts = await parseResponse(response);
 
                     if (queryProducts.length == 0) {
                         queryProductsContainer.innerHTML = `<div class="search_empty">Ничего не найдено</div>`;
@@ -818,16 +812,21 @@ document.getElementById("header-search-input").addEventListener(
                             )
                             .join("");
                     }
-                } catch (error) {
+                } catch (e) {
                     clearTimeout(loaderTimer);
 
-                    if (error.status === 400) {
-                        queryProductsContainer.innerHTML = `<div class="search_empty">Ошибка, неверный запрос</div>`;
-                    } else if (error.status === 500) {
-                        queryProductsContainer.innerHTML = `<div class="search_empty">Ошибка сервера</div>`;
-                    } else {
-                        queryProductsContainer.innerHTML = `<div class="search_empty">Ошибка поиска</div>`;
-                    }
+                    // Логирование в консоль с полным контекстом
+                    console.error("[product-search] Ошибка при поиске товара", {
+                        message: e.message,
+                        code: e.code,
+                        status: e.status,
+                        payload: e.payload, // тот самый data
+                        query,
+                    });
+
+                    // Отображение ошибки в поле поисковика
+                    const message = getErrorMessage(e.code, e.status);
+                    queryProductsContainer.innerHTML = `<div class="search_empty">${message}</div>`;
                 }
             }, 300);
         };

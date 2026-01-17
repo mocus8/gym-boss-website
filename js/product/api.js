@@ -32,11 +32,11 @@ export function getBySlug(slug) {
 
 // Функция для получения каталога
 // Отправляет запрос GET /api/products/search?q={query}
-export function searchProducts(query) {
+export async function searchProducts(query) {
     let q = query.trim();
 
     if (!q) {
-        return Promise.resolve([]); // сразу «успешный» промис с пустым массивом
+        return []; // сразу «успешный» промис с пустым массивом
     }
 
     // Ограничиваем длину строки
@@ -47,7 +47,9 @@ export function searchProducts(query) {
     // URLSearchParams правильно собирает query‑строку и кодирует спецсимволы
     q = new URLSearchParams({ q }).toString();
 
-    return requestProduct(`search?q=${q}`, {
+    const products = requestProduct(`search?${q}`, {
         method: "GET",
     });
+
+    return products;
 }

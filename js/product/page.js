@@ -45,7 +45,7 @@ window.addEventListener("load", async function () {
 
     try {
         const cart = await getCart();
-        const cartItems = cart.data?.items ?? [];
+        const cartItems = cart.items ?? [];
 
         // Узнаем, есть ли товар в корзине, и сколько его там
         const itemInCart = cartItems.find(
@@ -82,10 +82,10 @@ document.addEventListener("click", async function (e) {
         try {
             const response = await addCartItem(productId, 1); // response = { success: true, data: { items, count, total } }
 
-            const { items, count } = response.data; // деструктуризация объекта
+            const { items, count } = response; // деструктуризация объекта
             // Тоже самое что это:
-            // const items = response.data.items;
-            // const count = response.data.count;
+            // const items = response.items;
+            // const count = response.count;
 
             // Узнаем, сколько там этого товара
             const itemInCart = items.find(
@@ -128,7 +128,7 @@ document.addEventListener("click", async function (e) {
         try {
             const response = await updateCartItemQty(productId, newQty);
 
-            const { items, count } = response.data;
+            const { items, count } = response;
 
             const itemInCart = items.find(
                 (el) => Number(el.product_id) === productId

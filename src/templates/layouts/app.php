@@ -54,7 +54,7 @@ $canonical = $canonical ?? $defaultCanonical;
 
         <!-- Обязательные для всех страниц -->
         <script defer src="/js/loader.js"></script>
-        <script defer src="/js/modals.js"></script>
+        <script type="module" src="/js/modals.js"></script>
         <script defer src="https://www.google.com/recaptcha/api.js?render=<?= getenv('GOOGLE_RECAPTCHA_SITE_KEY') ?>"></script>
         <script defer src="/js/inputmask.min.js"></script>
 
