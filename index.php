@@ -30,21 +30,34 @@ if (strpos($uri, '/api/') === 0) {
         ],
     ];
 
-    // Если маршрут есть в списке, подключаем соответствующий метод cartController
+    // Если маршрут есть в списке, подключаем соответствующий метод
     if (isset($apiRoutes[$method][$apiPath])) {
         $handler = $apiRoutes[$method][$apiPath];    // handler - массив [объект контроллера][строка с именем метода]
         call_user_func($handler);    // вызываем метод
         exit;
     }
-
+    // Поиск: GET /api/products/search?q=...
+    elseif ($method === 'GET' && $apiPath === '/products/search') {
+        $q = $_GET['q'] ?? '';
+        $productController->search($q);
+        exit;
+    }
+    // Товар по slug: GET /api/products/{slug}
+    elseif ($method === 'GET' && preg_match('#^/products/([a-zA-Z0-9-]+)$#', $apiPath, $matches)) {
+        $slug = $matches[1];
+        $productController->getBySlug($slug);
+        exit;
+    }
     // Любой другой путь - 404-й статус и json ответ с указанием
-    http_response_code(404);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'success' => false,
-        'error'   => 'API endpoint not found',
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
+    else {
+        http_response_code(404);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => 'API endpoint not found',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 }
 
 // Web-маршруты
