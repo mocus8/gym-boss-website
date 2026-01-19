@@ -255,12 +255,130 @@ class OrderService {
         }
     }
 
+    // Метод для получения инфы о заказе и всех товаров в нем (с первой фотографией) по его id
+    public function getById(int $orderId, int $userId): array {
+        // Базовые проверки id
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        $sql = "
+            SELECT *
+            FROM orders
+            WHERE order_id = ? AND user_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ii", $orderId, $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // order - ассоциативный массив с инфой о заказе (строка orders)
+        $order = $result->fetch_assoc();
+
+        if (!$order) {
+            $stmt->close();
+            throw new \InvalidArgumentException('Order not found');
+        }
+
+        $stmt->close();
+
+        $sql = "
+            SELECT 
+                product_id,
+                amount,
+                price
+            FROM order_items
+            WHERE order_items.order_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // Объявляем и заполняем массивы id => amount, id => price и id товаров из заказа
+        $amountByIds = [];
+        $priceByIds = [];
+        $ids = [];
+        while ($row = $result->fetch_assoc()) {
+            $productId = (int)$row['product_id'];
+            $amount = (int)$row['amount'];
+            $price = (float)$row['price'];
+
+            $amountByIds[$productId] = $amount;
+            $priceByIds[$productId] = $price;
+            $ids[] = $productId;
+        }
+
+        if ($ids === []) {
+            $stmt->close();
+            return [
+                'order' => $order,
+                'items' => []
+            ];
+        }
+
+        $stmt->close();
+
+        // Получаем массив товаров через productService
+        $products = $this->productService->getByIds($ids);
+
+        // Собираем итоговый массив позиций корзины: товар + amount
+        $items = [];
+        foreach ($products as $productId => $product) {
+            // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
+            $items[] = array_merge($product, [
+                'amount' => $amountByIds[$productId] ?? 0,
+                'price' => $priceByIds[$productId] ?? $product['price']
+            ]);
+        }
+
+        return [
+            'order' => $order,
+            'items' => $items
+        ];
+    }
+
     // Реализовать методы
-    // markPaid
-    // getById
     // getByPaymentId
     // getUserOrders
+    // markPaid
     // cancel
-
-
 }
