@@ -53,7 +53,7 @@ class CartController {
         return [
             'items' => $items,
             'count' => $count,
-            'total' => $total,
+            'total' => $total
         ];
     }
 
