@@ -596,7 +596,9 @@ class OrderService {
             // Обновляем статус заказа на cancelled
             $sql = "
                 UPDATE orders
-                SET status_id = ?
+                SET 
+                    status_id = ?,
+                    cancelled_at = NOW()
                 WHERE order_id = ? AND user_id = ?
             ";
 
