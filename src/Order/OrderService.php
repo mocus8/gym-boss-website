@@ -376,9 +376,52 @@ class OrderService {
         ];
     }
 
+    // Метод для получения инфы о всех заказах пользователя по userId
+    public function getUserOrders(int $userId): array {
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        $sql = "
+            SELECT *
+            FROM orders
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // orders - ассоциативный массив с инфой о заказах (подходящие строки из таблицы orders)
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+
+        $stmt->close();
+
+        return $orders;
+    }
+
     // Реализовать методы
-    // getByPaymentId
-    // getUserOrders
     // markPaid
     // cancel
 }
