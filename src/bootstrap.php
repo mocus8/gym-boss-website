@@ -13,6 +13,7 @@ require_once __DIR__ . '/Api/ProductController.php';    // подключаем 
 require_once __DIR__ . '/Cart/CartSession.php';    // подключаем файл с классом для получения/установки cart id в куках
 require_once __DIR__ . '/Cart/CartService.php';    // подключаем файл с классом-сервисом для управления корзинами пользователей
 require_once __DIR__ . '/Api/CartController.php';    // подключаем файл с классом-контроллером для управления корзинами пользователей
+require_once __DIR__ . '/Order/OrderService.php';    // подключаем файл с классом-сервисом для управления заказами
 
 // Подключаем пространства имен
 use App\Db\Db;  // используем класс Db из пространства имен App\Db
@@ -21,6 +22,7 @@ use App\Api\ProductController;    // используем класс ProductCont
 use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;   // используем класс CartService из пространства имен App\Cart
 use App\Api\CartController;    // используем класс CartController из пространства имен App\Api
+use App\Order\OrderService;   // используем класс OrderService из пространства имен App\Order
 
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connectFromEnv();
@@ -35,13 +37,14 @@ $cartSessionId = $cartSession->getId();
 
 $userId = getCurrentUserId();
 
-// Работаем с сервисом корзины
+// Работаем с сервисом и контроллером корзины
 $cartService = new CartService($db, $productService);    // создаем экземпляр класса
 $cartId = $cartService->getOrCreateCartId($cartSessionId, $userId);    // получаем id корзины из бд
 $cartCount = $cartService->getItemsCount($cartId);    // получаем кол-во товаров в корзине (для отображения в хедере)
-
-// Создаем экземпляр api-контроллера корзины
 $cartController = new CartController($cartSession, $cartService);
+
+// Работаем с сервисом заказов
+$orderService = new OrderService($db, $productService, $cartService);
 
 // Получаем URL сайта из переменных окружения
 $appUrl = getenv('APP_URL');

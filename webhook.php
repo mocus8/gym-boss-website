@@ -3,7 +3,8 @@ require_once __DIR__ . '/src/bootstrap.php';
 
 use YooKassa\Model\Notification\NotificationFactory;
 
-// Функция логирования вебхука (для финального сделать нормальное через redis или laravel)
+// Функция логирования вебхука
+// Логироание потом тут полностью заменить (нормальное через redis или laravel, правильные коды)
 function logWebhook($message) {
     $logFile = __DIR__ . '/webhook.log';
     
@@ -60,11 +61,13 @@ if (!$ipTrusted) {
 }
 
 try {
+    $orderId = null;
+
     $source = file_get_contents('php://input');
     $requestBody = json_decode($source, true);
 
-    if (!$requestBody) {
-        throw new Exception('INVALID_JSON');
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Invalid incoming JSON');
     }
 
     logWebhook('Event received: ' . ($requestBody['event'] ?? 'unknown'));
@@ -77,123 +80,67 @@ try {
     $yookassaPaymentId = $payment->getId();
     $yookassaPaymentStatus = $payment->getStatus();
     $metadata = $payment->getMetadata();
-    $orderId = $metadata['orderId'] ?? null;
+    $orderId = isset($metadata['orderId']) ? (int)$metadata['orderId'] : null;
     
     logWebhook("Payment ID: $yookassaPaymentId, Status: $yookassaPaymentStatus, Order: " . ($orderId ?? 'unknown'));
 
     // Если нет orderId в metadata - выходим
     if (!$orderId) {
-        throw new Exception('ORDER_NOT_FOUND');
+        throw new Exception('Order not found');
     }
 
-    // Транзакция для целостности данных
-    $db->begin_transaction();
+    // Обработка разных статусов платежа от юкассы
+    switch ($yookassaPaymentStatus) {
+        case 'succeeded':
+            // Обновляем статус в бд как оплаченный
+            $orderService->markPaid($orderId, $yookassaPaymentId);
 
-    try {
-        // Проверяем повторную обработку одного и того же заказа (блокируем запись и проверяем статус)
-        $checkStmt = $db->prepare("
-            SELECT status, yookassa_payment_id 
-            FROM orders 
-            WHERE order_id = ? 
-            FOR UPDATE
-        ");
-        $checkStmt->bind_param("i", $orderId);
-        $checkStmt->execute();
-        $result = $checkStmt->get_result();
-        $order = $result->fetch_assoc();
-        $checkStmt->close();
+            logWebhook("SUCCESS [Order: $orderId]: Marked as paid");
+            break;
 
-        if (!$order) {
-            throw new Exception('ORDER_NOT_FOUND');
-        }
+        case 'canceled':
+        case 'failed':
+            // Обновляем статус в бд как отмененный
+            $orderService->markCancelledFromWebhook($orderId, $yookassaPaymentId);
 
-        // Если заказ уже оплачен - выходим
-        if ($order['status'] === 'paid') {
-            throw new Exception('ORDER_ALREADY_PAID');
-        }
+            logWebhook("SUCCESS [Order: $orderId]: Marked as cancelled");
+            break;
 
-        // Обработка разных статусов платежа
-        switch ($yookassaPaymentStatus) {
-            case 'succeeded':
-                // Обновляем статус в бд как оплаченный
-                $updateStmt = $db->prepare("
-                    UPDATE orders
-                    SET paid_at = NOW(),   
-                        status = 'paid',
-                        yookassa_payment_id = ?
-                    WHERE order_id = ?
-                ");
-                $updateStmt->bind_param("si", $yookassaPaymentId, $orderId);
-                $success = $updateStmt->execute();
-                $updateStmt->close();
-
-                if (!$success) {
-                    throw new Exception('DATABASE_ERROR');
-                }
-
-                logWebhook("SUCCESS: Order $orderId marked as paid");
-                break;
-
-            case 'canceled':
-            case 'failed':
-                // Обновляем статус в бд как отмененный
-                $updateStmt = $db->prepare("
-                    UPDATE orders
-                    SET cancelled_at = NOW(),   
-                        status = 'cancelled',
-                        yookassa_payment_id = ?
-                    WHERE order_id = ?
-                ");
-                $updateStmt->bind_param("si", $yookassaPaymentId, $orderId);
-                $success = $updateStmt->execute();
-                $updateStmt->close();
-
-                if (!$success) {
-                    throw new Exception('DATABASE_ERROR');
-                }
-
-                logWebhook("SUCCESS: Order $orderId marked as cancelled");
-                break;
-
-            case 'pending':
-                // Ничего не делаем (платеж создан, но еще не оплачен)
-                logWebhook("Payment $yookassaPaymentId is pending for order $orderId");
-                break;
-            default:
-                logWebhook("Unknown payment status: $yookassaPaymentStatus for payment $yookassaPaymentId");
-        }
-
-        // При успехе коммитим транзакцию
-        $db->commit();
-    } catch (Exception $e) {
-        // При ошибке откатываем транзакцию 
-        $db->rollback();
-        throw $e; // Пробрасываем выше
+        case 'pending':
+            // Ничего не делаем (платеж создан, но еще не оплачен)
+            logWebhook("Payment $yookassaPaymentId is pending for order $orderId");
+            break;
+        default:
+            logWebhook("Unknown payment status: $yookassaPaymentStatus for payment $yookassaPaymentId");
     }
 
 } catch (Exception $e) {
-    // Сливаем в логи только безопасные ошибки (те что сами создали, отсальные могут содержать секреты)
-    $safeErrorCodes = [
-        'ORDER_NOT_FOUND',
-        'DATABASE_ERROR',
-        'INVALID_JSON',
-        'ORDER_ALREADY_PAID'
+    // Сливаем в логи только безопасные ошибки (те что сами создали, остальные могут содержать секреты)
+    $safeError = [
+        'Invalid incoming JSON',
+        'Invalid orderId',
+        'Empty yookassaPaymentId',
+        'Order not found',
+        'Order already paid',
+        'Order status is not pending_payment',
+        'Order cannot be cancelled from current status'
     ];
 
-    $errorCode = $e->getMessage();
+    $error = $e->getMessage();
 
-    if (in_array($errorCode, $safeErrorCodes)) {
-        $error = $errorCode;
+    if (in_array($error, $safeError)) {
+        $errorLog = $error;
     } else {
         // Системная ошибка - общее сообщение
-        $error = 'SYSTEM_ERROR';
+        $errorLog = 'System error';
     }
 
     // Логирование общих ошибок (в реальном проекте использовать логирование в отдельный файл)
-    logWebhook("Webhook error [Order: $orderId]: " . $error);
+    $orderIdForLog = isset($orderId) ? $orderId : 'unknown';
+    logWebhook("ERROR [Order: $orderIdForLog]: " . $errorLog);
+
 } finally {
     // Всегда возвращаем 200 ОК для юкассы
     http_response_code(200);
     echo 'OK';
 }
-?>
