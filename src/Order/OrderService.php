@@ -421,7 +421,112 @@ class OrderService {
         return $orders;
     }
 
+    // Метод для пометки заказа как оплаченного
+    public function markPaid(int $orderId, string $yookassaPaymentId): void {
+
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        $yookassaPaymentId = trim($yookassaPaymentId);
+
+        if ($yookassaPaymentId === '') {
+            throw new \InvalidArgumentException('Empty yookassaPaymentId');
+        }
+
+        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
+        $this->db->begin_transaction();
+        
+        try {
+
+            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
+            $sql = "
+                SELECT status_id
+                FROM orders
+                WHERE order_id = ?
+                FOR UPDATE
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $orderId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $result = $stmt->get_result();
+
+            if (!$result) {
+                $stmt->close();
+                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+            }
+
+            $row = $result->fetch_assoc();
+
+            $stmt->close();
+
+            if (!$row) {
+                throw new \InvalidArgumentException('Order not found');
+            }
+
+            $orderStatusId = (int)$row["status_id"];
+
+            $pendingStatusId = $this->getStatusIdByCode('pending_payment');
+            $paidStatusId    = $this->getStatusIdByCode('paid');
+
+            // Уже оплачен
+            if ((int)$orderStatusId === $paidStatusId) {
+                throw new \RuntimeException('Order already paid');
+            }
+
+            // Статус не pending_payment
+            if ((int)$orderStatusId !== $pendingStatusId) {
+                throw new \RuntimeException('Order status is not pending_payment');
+            }
+
+            // Обновляем статус заказа на paid и записываем yookassaPaymentId
+            $sql = "
+                UPDATE orders
+                SET 
+                    status_id = ?,
+                    paid_at = NOW(),
+                    yookassa_payment_id = ?
+                WHERE order_id = ?
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("isi", $paidStatusId, $yookassaPaymentId, $orderId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $stmt->close();
+
+            // Комитим транзакцию
+            $this->db->commit();
+
+        } catch (\Throwable $e) {
+            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
+            $this->db->rollback();
+            throw $e;
+        }
+    }
+
     // Реализовать методы
-    // markPaid
     // cancel
 }
