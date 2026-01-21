@@ -86,10 +86,6 @@ class OrderController {
             // Подготавливаем переменные для использования в методе createFromCart
             $cartSessionId = $this->cartSession->getId();
             $userId = getCurrentUserId();
-            if ($userId === null) {
-                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
-                return;
-            }
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -145,10 +141,6 @@ class OrderController {
     public function getById(int $orderId): void {
         try {
             $userId = getCurrentUserId();
-            if ($userId === null) {
-                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
-                return;
-            }
 
             $data = $this->orderService->getById($orderId, $userId);
 
@@ -182,10 +174,6 @@ class OrderController {
     public function getUserOrders(): void {
         try {
             $userId = getCurrentUserId();
-            if ($userId === null) {
-                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
-                return;
-            }
 
             $data = $this->orderService->getUserOrders($userId);
 
@@ -207,14 +195,10 @@ class OrderController {
     }
 
     // Метод для пометки заказа как отмененного
-    // Обработчик запроса POST /api/order/cancel/{id}
+    // Обработчик запроса POST /api/order/{id}/cancel
     public function markCancel(int $orderId): void {
         try {
             $userId = getCurrentUserId();
-            if ($userId === null) {
-                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
-                return;
-            }
 
             $this->orderService->markCancel($orderId, $userId);
 

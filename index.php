@@ -16,17 +16,35 @@ if (strpos($uri, '/api/') === 0) {
     // убираем префикс /api
     $apiPath = substr($uri, strlen('/api'));
 
+    // Api маршруты, требуещие авторизации
+    $protectedApiRoutes = [
+        'POST' => [
+            '/order/create-from-cart',
+        ],
+        'GET' => [
+            '/orders',
+        ],
+        // сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
+    ];
+
+    // Если маршрут требует авторизации - проверяем авторизацию
+    if ( isset($protectedApiRoutes[$method]) && in_array($apiPath, $protectedApiRoutes[$method], true)) {
+        requireApiAuth();
+    }
+
     // Определение api маршрутов
     $apiRoutes = [
         'GET' => [
             '/cart' => [$cartController, 'getCart'],
             '/products' => [$productController, 'getCatalog'],
+            '/orders' => [$orderController, 'getUserOrders'],
         ],
         'POST' => [
             '/cart/add-item' => [$cartController, 'addItem'],
             '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
             '/cart/remove-item' => [$cartController, 'removeItem'],
             '/cart/clear' => [$cartController, 'clear'],
+            '/order/create-from-cart' => [$orderController, 'createFromCart'],
         ],
     ];
 
@@ -48,6 +66,22 @@ if (strpos($uri, '/api/') === 0) {
         $productController->getBySlug($slug);
         exit;
     }
+    // Заказ по id: GET /api/order/{id}
+    elseif ($method === 'GET' && preg_match('#^/order/([0-9]+)$#', $apiPath, $matches)) {
+        requireApiAuth();
+
+        $orderId  = (int)$matches[1];
+        $orderController->getById($orderId );
+        exit;
+    }
+    // Отмена заказа по id: POST /api/order/{id}/cancel
+    elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/cancel$#', $apiPath, $matches)) {
+        requireApiAuth();
+
+        $orderId  = (int)$matches[1];
+        $orderController->markCancel($orderId );
+        exit;
+    }
     // Любой другой путь - 404-й статус и json ответ с указанием
     else {
         http_response_code(404);
@@ -63,16 +97,15 @@ if (strpos($uri, '/api/') === 0) {
 // Web-маршруты
 
 // Web маршруты, требуещие авторизации
-$protectedRoutes = [
+$protectedWebRoutes = [
     '/my-orders',
     '/order-making',
-    // сюда же можно добавить ещё маршрутов закрытых для неавторизированных пользователей
+    // сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
 ];
 
-// Если маршрут требует авторизации и пользователь не залогинен — на главную
-if (in_array($uri, $protectedRoutes, true) && $userId === null) {
-    header('Location: /');
-    exit;
+// Если маршрут требует авторизации - проверяем авторизацию
+if (in_array($uri, $protectedWebRoutes, true)) {
+    requireWebAuth();
 }
 
 // Определение web маршрутов
@@ -101,6 +134,8 @@ elseif (preg_match('#^/product/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
 }
 // Страница заказа: /order/123, также записываем в GET id
 elseif (preg_match('#^/order/([0-9]+)$#', $uri, $matches)) {
+    requireWebAuth();
+
     $_GET['orderId'] = $matches[1];
     require __DIR__ . '/src/pages/order.php';
     exit;

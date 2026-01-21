@@ -17,3 +17,32 @@ function getCurrentUserId(): ?int {
 function formatPrice(float $value): string {
     return number_format($value, 2, ',', ' ');
 }
+
+// Проверка авторизации для api запросов (с 401 ответом и json ответом)
+function requireApiAuth(): void {
+    $userId = getCurrentUserId();
+
+    // Если пользователь не залогинен - возвращаем 401-й статус и json ответ с указанием
+    if ($userId === null) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => [
+                'code'    => 'UNAUTHORIZED',
+                'message' => 'User is not authorized',
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Проверка авторизации для web маршрутов (с редиректом)
+function requireWebAuth(): void {
+    $userId = getCurrentUserId();
+
+    if ($userId === null) {
+        header('Location: /');
+        exit;
+    }
+}
