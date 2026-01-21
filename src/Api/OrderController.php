@@ -177,7 +177,35 @@ class OrderController {
         }
     }
 
+    // Метод для получения всех заказов пользователя, возвращает массив с инфой о заказах
+    // Обработчик запроса GET /api/orders
+    public function getUserOrders(): void {
+        try {
+            $userId = getCurrentUserId();
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
+                return;
+            }
+
+            $data = $this->orderService->getUserOrders($userId);
+
+            // Возвращаем успех через приватную функцию
+            $this->success(200, $data);
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Cart getCart failed', [
+            //     'exception' => $e,
+            // ]);
+
+            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
+            $this->error();
+        }
+    }
+
     // Реализовать методы:
-    // getUserOrders
     // markCancel
 }
