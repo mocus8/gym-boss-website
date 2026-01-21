@@ -79,13 +79,17 @@ class OrderController {
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    // Метод для создания заказа на основе корзины, корзину помечает как конертированную, возвращает id заказа
+    // Метод для создания заказа на основе корзины, корзину помечает как конвертированную, возвращает id заказа
     // Обработчик запроса POST /api/order/create-from-cart
     public function createFromCart(): void {
         try {
             // Подготавливаем переменные для использования в методе createFromCart
             $cartSessionId = $this->cartSession->getId();
             $userId = getCurrentUserId();
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
+                return;
+            }
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -136,8 +140,44 @@ class OrderController {
         }
     }
 
+    // Метод для получения заказа по его id, возвращает массив с инфой о заказе и товарах в нем
+    // Обработчик запроса GET /api/order/{id}
+    public function getById(int $orderId): void {
+        try {
+            $userId = getCurrentUserId();
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
+                return;
+            }
+
+            $data = $this->orderService->getById($orderId, $userId);
+
+            // Возвращаем успех через приватную функцию
+            $this->success(200, $data);
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
+        } catch (\RuntimeException $e) {
+            // Заказ не найден
+            $this->error(404, 'ORDER_NOT_FOUND', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Cart getCart failed', [
+            //     'exception' => $e,
+            // ]);
+
+            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
+            $this->error();
+        }
+    }
+
     // Реализовать методы:
-    // getById
     // getUserOrders
     // markCancel
 }
