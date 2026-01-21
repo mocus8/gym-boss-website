@@ -8,7 +8,7 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Order\OrderService;    // используем класс CartService из пространства имен App\Order
+use App\Order\OrderService;    // используем класс OrderService из пространства имен App\Order
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
@@ -206,6 +206,39 @@ class OrderController {
         }
     }
 
-    // Реализовать методы:
-    // markCancel
+    // Метод для пометки заказа как отмененного
+    // Обработчик запроса POST /api/order/cancel/{id}
+    public function markCancel(int $orderId): void {
+        try {
+            $userId = getCurrentUserId();
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHORIZED', 'User is not authorized');
+                return;
+            }
+
+            $this->orderService->markCancel($orderId, $userId);
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
+        } catch (\RuntimeException $e) {
+            $this->error(400, 'ORDER_CANCEL_ERROR', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Cart getCart failed', [
+            //     'exception' => $e,
+            // ]);
+
+            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
+            $this->error();
+        }
+    }
 }
