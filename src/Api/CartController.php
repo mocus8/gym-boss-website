@@ -131,11 +131,11 @@ class CartController {
                 return;
             }
 
-            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
+            $productId = isset($data['productId']) ? (int) $data['productId'] : 0;
             $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
 
             if ($productId <= 0 || $qty <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
+                $this->error(422, 'VALIDATION_ERROR', 'Invalid productId or qty');
                 return;
             }
 
@@ -176,10 +176,10 @@ class CartController {
                 return;
             }
 
-            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
+            $productId = isset($data['productId']) ? (int) $data['productId'] : 0;
 
             if ($productId <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id');
+                $this->error(422, 'VALIDATION_ERROR', 'Invalid productId');
                 return;
             }
 
@@ -216,11 +216,11 @@ class CartController {
                 return;
             }
 
-            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
+            $productId = isset($data['productId']) ? (int) $data['productId'] : 0;
             $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
 
             if ($productId <= 0 || $qty < 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
+                $this->error(422, 'VALIDATION_ERROR', 'Invalid productId or qty');
                 return;
             }
 

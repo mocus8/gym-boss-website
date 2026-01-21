@@ -27,7 +27,7 @@ export function addCartItem(productId, qty = 1) {
     return requestCart("add-item", {
         method: "POST",
         body: JSON.stringify({
-            product_id: Number(productId),
+            productId: Number(productId),
             qty: Number(qty),
         }),
     });
@@ -39,7 +39,7 @@ export function removeCartItem(productId) {
     return requestCart("remove-item", {
         method: "POST",
         body: JSON.stringify({
-            product_id: Number(productId),
+            productId: Number(productId),
         }),
     });
 }
@@ -51,7 +51,7 @@ export function updateCartItemQty(productId, qty) {
     return requestCart("update-item-qty", {
         method: "POST",
         body: JSON.stringify({
-            product_id: Number(productId),
+            productId: Number(productId),
             qty: Number(qty),
         }),
     });
