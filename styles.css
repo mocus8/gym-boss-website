@@ -1946,8 +1946,9 @@ button {
 
 .order_start_text {
     margin-left: 26%;
-    font-size: 2vw;
+    font-size: 1.3vw;
     font-family: "Jost", Arial;
+    white-space: nowrap;
 }
 
 .contacts {

@@ -99,7 +99,7 @@ if (strpos($uri, '/api/') === 0) {
 // Web маршруты, требуещие авторизации
 $protectedWebRoutes = [
     '/my-orders',
-    '/order-making',
+    '/checkout',
     // сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
 ];
 
@@ -116,7 +116,7 @@ $routes = [
     '/contacts'   => 'contacts.php',
     '/kwork-customers' => 'kwork_customers.php',
     '/my-orders'  => 'my_orders.php',
-    '/order-making' => 'order_making.php',
+    '/checkout' => 'checkout.php',
     '/privacy'    => 'privacy.php',
     '/stores'     => 'stores.php',
 ];

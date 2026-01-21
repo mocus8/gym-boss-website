@@ -19,7 +19,7 @@ echo "User-agent: *\n";
 echo "Disallow: /404\n";
 echo "Disallow: /cart\n";
 echo "Disallow: /my-orders\n";
-echo "Disallow: /order-making\n";
+echo "Disallow: /checkout\n";
 echo "Disallow: /db\n";
 echo "Disallow: /scripts\n";
 echo "Disallow: /src\n";

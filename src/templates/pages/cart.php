@@ -40,15 +40,15 @@
     </div>
     
     <?php if ($userId) { ?>
-        <a class="order_start hidden" id="start-order-btn" href="/order-making">
+        <a class="order_start hidden" id="start-order-btn" href="/checkout">
             <div class="order_start_text">
-                Оформить заказ
+                Перейти к оформлению
             </div>
         </a>
     <?php } else { ?>
         <a class="order_start hidden" id="start-order-btn" data-open-modal="registration">
             <div class="order_start_text">
-                Оформить заказ
+                Перейти к оформлению
             </div>
         </a>
     <?php } ?>
