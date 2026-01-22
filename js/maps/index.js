@@ -284,6 +284,11 @@ export class CourierMap {
             typeof isAddressSelected === "function" ? isAddressSelected : null;
         this.#onError = typeof onError === "function" ? onError : null;
 
+        // Если элементы не найдены - ошибку
+        if (!this.#addressInput || !this.#searchBtn) {
+            throw new Error("COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND");
+        }
+
         try {
             // Проверка API Яндекса
             if (!window.ymaps || typeof ymaps.Map !== "function") {
