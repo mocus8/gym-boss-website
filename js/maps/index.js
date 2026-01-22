@@ -60,7 +60,7 @@ export function loadYandexMapsScripts() {
 let daDataPromise = null;
 
 // Функция для загрузки скриптов DaData, возвращает промис
-export function loadDaDataScripts() {
+function loadDaDataScripts() {
     // Если промис уже создан, возвращаем его
     if (daDataPromise) return daDataPromise;
 
@@ -263,6 +263,7 @@ export class CourierMap {
     #addressInput = null; // input ввода адреса
     #searchBtn = null; // кнопка поиска
     #isInitialized = false; // флаг создания карты
+    #daDataInitialized = false; // флаг инициализации DaData
     #onError; // функция обработки ошибки, передается в конструкторе
     #onAddressSelected; // функция обработки выбора адреса, передается в конструкторе
     #isAddressSelected; // функция проверки сравенения адреса с выбраным
@@ -283,11 +284,6 @@ export class CourierMap {
         this.#isAddressSelected =
             typeof isAddressSelected === "function" ? isAddressSelected : null;
         this.#onError = typeof onError === "function" ? onError : null;
-
-        // Если элементы не найдены - ошибку
-        if (!this.#addressInput || !this.#searchBtn) {
-            throw new Error("COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND");
-        }
 
         try {
             // Проверка API Яндекса
@@ -312,9 +308,9 @@ export class CourierMap {
                 ? document.getElementById(searchButtonId)
                 : null;
 
-            // Проверяем что получены все элементы страницы
+            // Если элементы не найдены - ошибку
             if (!this.#addressInput || !this.#searchBtn) {
-                return;
+                throw new Error("COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND");
             }
 
             // Присваиваем полю карты значение новой карты
@@ -326,6 +322,8 @@ export class CourierMap {
 
             // Инициализируем
             this.#setupEvents();
+            // Запускаем асинхронный код и навешиваем на него .catch(...)
+            this.#initDaData().catch((error) => this.#handleError(error));
             this.#isInitialized = true;
         } catch (error) {
             this.#handleError(error);
@@ -371,6 +369,7 @@ export class CourierMap {
         this.#addressInput = null;
         this.#searchBtn = null;
         this.#isInitialized = false;
+        this.#daDataInitialized = false;
     }
 
     // Геттер для получения состояния карты (инициализирована ли)
@@ -569,6 +568,94 @@ export class CourierMap {
                 this.#searchBtn.textContent = "Найти";
             }
         }
+    }
+
+    // Инициализация подсказок DaData по адресу
+    async #initDaData() {
+        if (this.#daDataInitialized || !this.#addressInput) return;
+
+        try {
+            // Ждем загрузки скриптов DaData
+            await loadDaDataScripts();
+
+            // Проверяем доступность DaData
+            if (!window.Dadata) {
+                throw new Error("DADATA_API_NOT_AVAILABLE");
+            }
+
+            const response = await fetch("/src/serviceProxy.php");
+
+            if (!response.ok) {
+                console.error(`[DaData] HTTP error status: ${response.status}`);
+                throw new Error("DADATA_KEY_HTTP_ERROR");
+            }
+
+            const data = await response.json();
+            const token = data?.key;
+
+            if (!token) {
+                throw new Error("DADATA_KEY_NOT_FOUND");
+            }
+
+            // Используем стандартный виджет DaData для создания подсказок
+            window.Dadata.createSuggestions(this.#addressInput, {
+                token: token,
+                type: "address",
+                count: 5,
+                // Встроенный обработчик выбора подсказки от DaData
+                onSelect: (suggestion) => {
+                    this.#processAddress(suggestion.value);
+                },
+            });
+
+            // // Кастомный обработчик выбора подсказки
+            // const container = document.getElementById(containerId);
+            // if (!container) return;
+            // container.addEventListener('click', (e) => {
+            //     let target = e.target;
+            //     while (target && target !== document.body) {
+            //         if (target.classList && target.classList.contains('suggestions-suggestion')) {
+            //             setTimeout(() => {
+            //                 this.#processAddress(this.#addressInput.value);
+            //                 console.log("Обработчик по подсказке сработал");
+            //             }, 100);
+
+            //             break;
+            //         }
+
+            //         target = target.parentElement;
+            //     }
+            // });
+
+            this.#daDataInitialized = true;
+        } catch (error) {
+            this.#handleError(error);
+        }
+        // Cтарый код, кастомные подсказки без dadata:
+
+        // const suggestionsContainer = document.createElement('div');
+        // suggestionsContainer.className = 'address-suggestions';
+
+        // function showSuggestions(suggestions) {
+        //     clearSuggestions();
+
+        //     if (suggestions.length === 0) return;
+
+        //     suggestions.forEach((item, index) => {
+        //         const div = document.createElement('div');
+        //         div.className = 'suggestion-item';
+        //         div.textContent = formatAddress(item.getAddressLine());
+
+        //         div.addEventListener('click', function() {
+        //             selectSuggestion(item);
+        //         });
+
+        //         suggestionsContainer.appendChild(div);
+        //     });
+
+        //     suggestionsContainer.style.display = 'block';
+        //     addressInput.classList.add('has-suggestions');
+        // }
     }
 
     // Навешиваем обработчики на кнопки и поля
