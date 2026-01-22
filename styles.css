@@ -2170,6 +2170,18 @@ button {
     text-align: center;
 }
 
+.order_container {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 4.5vw;
+    margin-bottom: 1.5vw;
+    height: max-content;
+    display: flex;
+    align-items: flex-start;
+    gap: 2.5vw;
+}
+
 .order_types {
     position: absolute;
     margin-top: 0.7vw;
@@ -2212,12 +2224,8 @@ button {
     cursor: pointer;
 }
 
-.modal_order_type {
+.order_delivery_type {
     z-index: 2;
-    margin-top: 5vw;
-    margin-bottom: 0.7vw;
-    margin-left: 50%;
-    transform: translateX(-50%);
     display: flex;
     flex-direction: row;
     gap: 1.5vw;
@@ -2466,10 +2474,8 @@ button {
 }
 
 .order_right {
-    margin-top: 3.5vw;
-    left: 0vw;
-    width: max-content;
-    height: min-content;
+    position: relative;
+    margin-left: 0.25vw;
     display: flex;
     flex-direction: column;
 }
@@ -2478,7 +2484,6 @@ button {
     padding: 0vw 1vw 1.5vw 1vw;
     border-radius: 0.5vw;
     background: #bd1b1b;
-    height: min-content;
 }
 
 .order_right_order {
@@ -2504,6 +2509,7 @@ button {
     margin-top: 1vw;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 1vw;
     padding: 0.5vw 1vw 0.5vw 1vw;
     border: 0.15vw solid black;
     border-radius: 0.5vw;
@@ -2525,10 +2531,8 @@ button {
 }
 
 .order_rigth_notification {
-    position: absolute;
-    margin-top: 22.5%;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-left: auto;
+    margin-right: auto;
     width: min-content;
     height: 2.5vw;
     background-color: white;
@@ -2546,18 +2550,14 @@ button {
 }
 
 .payment_errors {
-    position: relative;
-    margin-top: -7.25vw;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
-    height: max-content;
 }
 
 .error_pay {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    margin-left: auto;
+    margin-right: auto;
     width: min-content;
     height: 2.5vw;
     background-color: white;
@@ -2572,8 +2572,6 @@ button {
     font-family: "Kolibri Light", "Kolibri-Light", "Kolibri", sans-serif;
     font-size: 0.9vw;
     font-weight: 100;
-    /* visibility: hidden;
-    opacity: 0; */
     transition:
         opacity 0.4s,
         visibility 0.4s;
