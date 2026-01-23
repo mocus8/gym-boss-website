@@ -503,7 +503,6 @@ export class CourierMap {
                         this.#onAddressSelected({
                             address: address,
                             postalCode,
-                            coords,
                         });
 
                         btn.textContent = "✅ Адрес выбран";
@@ -846,7 +845,10 @@ export class PickupMap {
                     btn.addEventListener(
                         "click",
                         () => {
-                            this.#onStoreSelected(store);
+                            this.#onStoreSelected({
+                                address: store.address,
+                                storeId: store.id,
+                            });
 
                             // Если уже выбран другой магазин - сбрасываем его иконку
                             if (this.#selectedStoreMarker) {
