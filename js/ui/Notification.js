@@ -4,6 +4,9 @@ class Notification {
     // static поля - общие для ВСЕХ объектов класса
     static #instance = null;
 
+    // Константа для времени закрытия уведомления
+    #NOTIFICATION_CLOSING_TIME = 5000;
+
     #closeTimer = null;
     #notification = null;
     #text = null;
@@ -66,7 +69,10 @@ class Notification {
         this.#progress.classList.add("shrinking");
 
         // Таймер автоскрытия
-        this.#closeTimer = setTimeout(() => this.close(), 5000);
+        this.#closeTimer = setTimeout(
+            () => this.close(),
+            this.#NOTIFICATION_CLOSING_TIME,
+        );
     }
 
     close() {
