@@ -177,10 +177,10 @@ if (!productContainer || !startOrderBtn) {
 
                 cartItems.forEach((item) => {
                     // Рендерим через функцию блок товара
-                    const itemDiv = createCartProductElement(item);
+                    const itemEl = createCartProductElement(item);
 
                     // Добавляем магазин в контейнер
-                    productContainer.appendChild(itemDiv);
+                    productContainer.appendChild(itemEl);
                 });
 
                 // Показываем кнопку "Оформить заказ"
