@@ -4,7 +4,7 @@ import {
     addCartItem,
     updateCartItemQty,
     removeCartItem,
-} from "./api.js";
+} from "./cart.api.js";
 import { updateHeaderCounter, getErrorMessage, formatPrice } from "../utils.js";
 import { notification } from "../ui/Notification.js";
 
@@ -103,19 +103,19 @@ function updateCartItemCounter(productId, qty) {
     const qtyNumber = Number(qty) || 0;
 
     const productElement = document.querySelector(
-        `[data-product-id="${productId}"]`
+        `[data-product-id="${productId}"]`,
     );
     if (!productElement) return;
 
     const itemPrice = Number(productElement.dataset.price) || 0;
 
     const productCounter = document.getElementById(
-        `cart-item-counter-${productId}`
+        `cart-item-counter-${productId}`,
     );
     if (!productCounter) return;
 
     const productTotal = document.getElementById(
-        `cart-item-total-${productId}`
+        `cart-item-total-${productId}`,
     );
     if (!productTotal) return;
 
@@ -131,7 +131,7 @@ function updateCartItemCounter(productId, qty) {
 function updateCartInfo(cartData) {
     const itemsTotalQty = document.getElementById("items-total-qty");
     const itemsTotalPrice = document.querySelectorAll(
-        "[data-items-total-price]"
+        "[data-items-total-price]",
     );
     if (!itemsTotalQty) return;
 
@@ -151,7 +151,7 @@ const startOrderBtn = document.getElementById("start-order-btn");
 // Если нашли контейнер, то навешиваем разные обработчики
 if (!productContainer || !startOrderBtn) {
     console.warn(
-        "[cart-page] product-container или start-order-btn не найдены"
+        "[cart-page] product-container или start-order-btn не найдены",
     );
 } else {
     // Функия для рендера пустой корзины
@@ -215,7 +215,7 @@ if (!productContainer || !startOrderBtn) {
             if (!productId) return;
 
             const counterEl = document.getElementById(
-                `cart-item-counter-${productId}`
+                `cart-item-counter-${productId}`,
             );
 
             // Если элемент есть, и если у него валидный textContent, то берем это, иначе 0
@@ -231,7 +231,7 @@ if (!productContainer || !startOrderBtn) {
                 const { items, count } = response;
 
                 const itemInCart = items.find(
-                    (el) => Number(el.product_id) === productId
+                    (el) => Number(el.product_id) === productId,
                 );
 
                 const qty = itemInCart ? Number(itemInCart.amount) : 0;
@@ -251,7 +251,7 @@ if (!productContainer || !startOrderBtn) {
                         status: e.status,
                         payload: e.payload, // тот самый data
                         productId,
-                    }
+                    },
                 );
 
                 // Показ ошибки пользователю
@@ -274,7 +274,7 @@ if (!productContainer || !startOrderBtn) {
                 const { items, count } = response;
 
                 const itemInCart = items.find(
-                    (el) => Number(el.product_id) === productId
+                    (el) => Number(el.product_id) === productId,
                 );
 
                 const qty = itemInCart ? Number(itemInCart.amount) : 0;
@@ -327,7 +327,7 @@ if (!productContainer || !startOrderBtn) {
                         status: e.status,
                         payload: e.payload, // тот самый data
                         productId,
-                    }
+                    },
                 );
 
                 // Показ ошибки пользователю

@@ -1,5 +1,5 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
-import { getCart, addCartItem, updateCartItemQty } from "../cart/api.js";
+import { getCart, addCartItem, updateCartItemQty } from "../cart/cart.api.js";
 import { getErrorMessage, updateHeaderCounter } from "../utils.js";
 import { notification } from "../ui/Notification.js";
 
@@ -49,7 +49,7 @@ window.addEventListener("load", async function () {
 
         // Узнаем, есть ли товар в корзине, и сколько его там
         const itemInCart = cartItems.find(
-            (el) => Number(el.product_id) === productId
+            (el) => Number(el.product_id) === productId,
         );
 
         const cartCount = itemInCart ? Number(itemInCart.amount) : 0;
@@ -66,7 +66,7 @@ window.addEventListener("load", async function () {
                 code: e.code,
                 status: e.status,
                 payload: e.payload,
-            }
+            },
         );
     }
 });
@@ -89,7 +89,7 @@ document.addEventListener("click", async function (e) {
 
             // Узнаем, сколько там этого товара
             const itemInCart = items.find(
-                (el) => Number(el.product_id) === productId
+                (el) => Number(el.product_id) === productId,
             );
 
             // Тернарный оператор, если item не null то левую часть, иначе правую
@@ -131,7 +131,7 @@ document.addEventListener("click", async function (e) {
             const { items, count } = response;
 
             const itemInCart = items.find(
-                (el) => Number(el.product_id) === productId
+                (el) => Number(el.product_id) === productId,
             );
 
             const qty = itemInCart ? Number(itemInCart.amount) : 0;

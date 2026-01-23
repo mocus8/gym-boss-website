@@ -1,6 +1,6 @@
 /* global grecaptcha */
 /* global Inputmask */
-import { searchProducts } from "./product/api.js";
+import { searchProducts } from "./product/product.api.js";
 import { getErrorMessage } from "./utils.js";
 
 // универсальная функция для распознавания ответа
@@ -15,7 +15,7 @@ async function parseResponse(response) {
         } catch (e) {
             console.error("JSON parse error:", e);
             throw new Error(
-                "Ошибка, некорректный JSON от сервера, попробуйте позже"
+                "Ошибка, некорректный JSON от сервера, попробуйте позже",
             );
         }
     }
@@ -27,7 +27,7 @@ async function parseResponse(response) {
     console.log("Raw response:", text); // Что пришло на самом деле
 
     throw new Error(
-        "Ошибка, сервер вернул некорректный ответ, попробуйте позже"
+        "Ошибка, сервер вернул некорректный ответ, попробуйте позже",
     );
 }
 
@@ -45,7 +45,7 @@ async function fetchWithRetry(url, options, retries = 2) {
         } catch (error) {
             if (attempt === retries) throw error;
             await new Promise((resolve) =>
-                setTimeout(resolve, 1000 * (attempt + 1))
+                setTimeout(resolve, 1000 * (attempt + 1)),
             );
         }
     }
@@ -88,37 +88,37 @@ function setupModal(modalId, openBtnId, closeBtnId) {
 setupModal(
     "authorization-modal",
     "open-authorization-modal",
-    "close-authorization-modal"
+    "close-authorization-modal",
 );
 setupModal(
     "authorization-modal",
     "open-my-orders-for-guest",
-    "close-authorization-modal"
+    "close-authorization-modal",
 );
 setupModal(
     "registration-modal",
     "open-registration-modal",
-    "close-registration-modal"
+    "close-registration-modal",
 );
 setupModal(
     "registration-modal",
     "open-registration-modal-from-cart",
-    "close-registration-modal"
+    "close-registration-modal",
 );
 setupModal(
     "account-edit-modal",
     "open-account-editior-modal",
-    "close-account-edit-modal"
+    "close-account-edit-modal",
 );
 setupModal(
     "account-delete-modal",
     "open-account-edit-modal",
-    "close-account-delete-modal"
+    "close-account-delete-modal",
 );
 setupModal(
     "account-exit-modal",
     "open-account-exit-modal",
-    "close-account-exit-modal"
+    "close-account-exit-modal",
 );
 
 // Отркытие по дата-атрибуту (все кнопки с ним открывают), делигирование событий. Потом переделать все модалки, сделав все не через
@@ -267,7 +267,7 @@ class SmsTimerManager {
         this.#smsFirstCodeButton = document.getElementById("first-sms-code");
         this.#smsRetryCodeButton = document.getElementById("retry-sms-code");
         this.#timerSpans = document.querySelectorAll(
-            `[data-action="retry-sms-code-timer"]`
+            `[data-action="retry-sms-code-timer"]`,
         );
 
         if (
@@ -422,7 +422,7 @@ const smsTimerManager = new SmsTimerManager();
 // проверка на блок по попыткам
 async function isAttemptsBlocked() {
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     try {
@@ -438,7 +438,7 @@ async function isAttemptsBlocked() {
             smsTimerManager.startUnlockTimer(result.blocked_until);
 
             incorrectSmsCodeModal.querySelector(
-                ".error_modal_text"
+                ".error_modal_text",
             ).textContent =
                 `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`;
             incorrectSmsCodeModal.classList.add("open");
@@ -459,10 +459,10 @@ async function isAttemptsBlocked() {
 // проверка наличия пользователя
 async function isUserAlreadyExist() {
     const userAlreadyExistsModal = document.getElementById(
-        "user-already-exists-modal"
+        "user-already-exists-modal",
     );
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     const phoneNumberInput = document
@@ -535,20 +535,20 @@ async function sendSmsCode() {
     const phoneValidation = validatePhoneNumber(phoneNumberInput.value);
 
     const incorrectPhoneModal = document.getElementById(
-        "incorrect-phone-number-modal"
+        "incorrect-phone-number-modal",
     );
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     const smsFirstCodeButton = document.getElementById("first-sms-code");
     const smsRetryCodeButton = document.getElementById("retry-sms-code");
 
     const smsFirstCodeButtonText = smsFirstCodeButton.querySelector(
-        ".first_sms_code_btn_text"
+        ".first_sms_code_btn_text",
     );
     const smsRetryCodeButtonText = smsRetryCodeButton.querySelector(
-        ".retry_sms_code_btn_text"
+        ".retry_sms_code_btn_text",
     );
 
     const smsFirstCodeButtonTextOrgnl = smsFirstCodeButtonText.textContent;
@@ -589,7 +589,7 @@ async function sendSmsCode() {
             throw new Error(
                 result.error ||
                     result.message ||
-                    `Ошибка ${response.status}! Попробуйте еще раз`
+                    `Ошибка ${response.status}! Попробуйте еще раз`,
             );
         }
 
@@ -601,7 +601,7 @@ async function sendSmsCode() {
 
         //это для теста без реальных sms, потом убрать!!!
         alert(
-            `смски дорогие, пока так (но функционал для реальных смс уже есть) Код подтверждения: ${result.debug_code}, был бы отправлен на номер ${result.debug_phone}`
+            `смски дорогие, пока так (но функционал для реальных смс уже есть) Код подтверждения: ${result.debug_code}, был бы отправлен на номер ${result.debug_phone}`,
         );
 
         headerModal.open("SMS-код был отправлен на указанный номер");
@@ -634,14 +634,14 @@ async function confirmSmsCode() {
         .querySelector(".registration_modal_form")
         .querySelector('input[name="sms_code"]');
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     const smsFirstCodeButton = document.getElementById("first-sms-code");
 
     const smsRetryCodeButton = document.getElementById("retry-sms-code");
     const smsRetryCodeButtonText = smsRetryCodeButton.querySelector(
-        ".retry_sms_code_btn_text"
+        ".retry_sms_code_btn_text",
     );
     const smsRetryCodeButtonTextOrgnl = smsRetryCodeButtonText.textContent;
 
@@ -671,7 +671,7 @@ async function confirmSmsCode() {
             smsFirstCodeButton.disabled = false;
             smsRetryCodeButton.disabled = false;
             throw new Error(
-                `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`
+                `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`,
             );
         }
 
@@ -679,14 +679,14 @@ async function confirmSmsCode() {
             throw new Error(
                 result.error ||
                     result.message ||
-                    `Ошибка ${response.status}! Попробуйте еще раз`
+                    `Ошибка ${response.status}! Попробуйте еще раз`,
             );
         }
 
         smsTimerManager.clearResendTimer();
 
         phoneNumberInput.value = validatePhoneNumber(
-            phoneNumberInput.value
+            phoneNumberInput.value,
         ).formatted;
         phoneNumberInput.readOnly = true;
 
@@ -769,10 +769,10 @@ document.getElementById("header-search-input").addEventListener(
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 const headerSearchCancelButton = document.getElementById(
-                    "header-search-cancel-button"
+                    "header-search-cancel-button",
                 );
                 const queryProductsContainer = document.getElementById(
-                    "query-products-container"
+                    "query-products-container",
                 );
 
                 queryProductsContainer.classList.toggle("hidden", !query);
@@ -808,7 +808,7 @@ document.getElementById("header-search-input").addEventListener(
                                     </div>
                                 </div>
                             </a>
-                    `
+                    `,
                             )
                             .join("");
                     }
@@ -830,7 +830,7 @@ document.getElementById("header-search-input").addEventListener(
                 }
             }, 300);
         };
-    })()
+    })(),
 );
 
 // очистка поля ввода
@@ -838,12 +838,12 @@ document
     .getElementById("header-search-cancel-button")
     .addEventListener("click", function () {
         const queryProductsContainer = document.getElementById(
-            "query-products-container"
+            "query-products-container",
         );
         queryProductsContainer.classList.add("hidden");
 
         const headerSearchInput = document.getElementById(
-            "header-search-input"
+            "header-search-input",
         );
         headerSearchInput.value = "";
 
@@ -869,24 +869,24 @@ document
 
         const password = this.querySelector('input[name="password"]').value;
         const confirmPassword = this.querySelector(
-            'input[name="confirm-password"]'
+            'input[name="confirm-password"]',
         ).value;
 
         const submitRegistrtionButton = document.getElementById(
-            "submit-registration"
+            "submit-registration",
         );
 
         const userAlreadyExistsModal = document.getElementById(
-            "user-already-exists-modal"
+            "user-already-exists-modal",
         );
         const mismatchModal = document.getElementById(
-            "password-mismatch-modal"
+            "password-mismatch-modal",
         );
         const incorrectPhoneModal = document.getElementById(
-            "incorrect-phone-number-modal"
+            "incorrect-phone-number-modal",
         );
         const incorrectSmsCodeModal = document.getElementById(
-            "incorrect-sms-code-modal"
+            "incorrect-sms-code-modal",
         );
 
         try {
@@ -933,17 +933,17 @@ document
                 incorrectPhoneModal.classList.add("open");
             } else if (errorMessages[error.message]) {
                 incorrectSmsCodeModal.querySelector(
-                    ".error_modal_text"
+                    ".error_modal_text",
                 ).textContent = errorMessages[error.message];
                 incorrectSmsCodeModal.classList.add("open");
             } else if (error.message) {
                 incorrectSmsCodeModal.querySelector(
-                    ".error_modal_text"
+                    ".error_modal_text",
                 ).textContent = error.message;
                 incorrectSmsCodeModal.classList.add("open");
             } else {
                 incorrectSmsCodeModal.querySelector(
-                    ".error_modal_text"
+                    ".error_modal_text",
                 ).textContent = "Произошла ошибка";
                 incorrectSmsCodeModal.classList.add("open");
             }
@@ -1046,10 +1046,10 @@ document.addEventListener("click", function (e) {
 
 function accountPasswordSwitch(nmbOfInpt) {
     const passwordInput = document.getElementById(
-        "password-input-" + nmbOfInpt
+        "password-input-" + nmbOfInpt,
     );
     const passwordButton = document.getElementById(
-        "account-edit-modal-password-button-" + nmbOfInpt
+        "account-edit-modal-password-button-" + nmbOfInpt,
     );
     if (passwordInput.type === "password") {
         passwordInput.type = "text";
@@ -1076,7 +1076,7 @@ document.addEventListener("click", function (e) {
     // Добавляем проверку на существование parentElement
     if (
         e.target.parentElement?.classList?.contains(
-            "product_minor_images_button"
+            "product_minor_images_button",
         )
     ) {
         document.querySelector(".product_main_img").src = e.target.src;
