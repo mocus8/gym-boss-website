@@ -265,7 +265,7 @@ export class CourierMap {
     #isInitialized = false; // флаг создания карты
     #daDataInitialized = false; // флаг инициализации DaData
     #onError; // функция обработки ошибки, передается в конструкторе
-    #onAddressSelected; // функция обработки выбора адреса, передается в конструкторе
+    #onCourierAddressSelected; // функция обработки выбора адреса, передается в конструкторе
     #isAddressSelected; // функция проверки сравенения адреса с выбраным
 
     // конструктор с параметром, в параметре id контейнера для карты и опции (например функцией для показа ошибки onError)
@@ -274,13 +274,15 @@ export class CourierMap {
             addressInputId,
             searchButtonId,
             onError,
-            onAddressSelected,
+            onCourierAddressSelected,
             isAddressSelected,
         } = options; // деструктуризация опций, можно добавить другие опции
 
         // Проверка что переданы имменно функции
-        this.#onAddressSelected =
-            typeof onAddressSelected === "function" ? onAddressSelected : null;
+        this.#onCourierAddressSelected =
+            typeof onCourierAddressSelected === "function"
+                ? onCourierAddressSelected
+                : null;
         this.#isAddressSelected =
             typeof isAddressSelected === "function" ? isAddressSelected : null;
         this.#onError = typeof onError === "function" ? onError : null;
@@ -470,7 +472,7 @@ export class CourierMap {
             setTimeout(() => {
                 // Находим кнопку выбора адреса из балуна
                 const btn = document.getElementById("select-courier-address");
-                if (!btn || !this.#onAddressSelected) return;
+                if (!btn || !this.#onCourierAddressSelected) return;
 
                 // Булева переменная - выбран ли уже этот адрес, в параметре объект с типом и адресом
                 const selectedAlready = this.#isAddressSelected
@@ -500,7 +502,7 @@ export class CourierMap {
                 btn.addEventListener(
                     "click",
                     () => {
-                        this.#onAddressSelected({
+                        this.#onCourierAddressSelected({
                             address: address,
                             postalCode,
                         });
@@ -683,15 +685,17 @@ export class PickupMap {
     #selectedStoreMarker = null; // текущий выбранный маркер магазина
     #isInitialized = false; // флаг создания карты
     #onError; // функция обработки ошибки, передается в конструкторе
-    #onStoreSelected; // функция обработки выбора магазина для самовывоза, передается в конструкторе
+    #onPickupStoreSelected; // функция обработки выбора магазина для самовывоза, передается в конструкторе
     #isAddressSelected; // функция проверки сравенения адреса с выбраным
 
     // Конструктор с параметром, в параметре id контейнера для карты (например 'pickup-map')
     constructor(containerId, options = {}) {
-        const { onError, onStoreSelected, isAddressSelected } = options;
+        const { onError, onPickupStoreSelected, isAddressSelected } = options;
         this.#onError = typeof onError === "function" ? onError : null;
-        this.#onStoreSelected =
-            typeof onStoreSelected === "function" ? onStoreSelected : null;
+        this.#onPickupStoreSelected =
+            typeof onPickupStoreSelected === "function"
+                ? onPickupStoreSelected
+                : null;
         this.#isAddressSelected =
             typeof isAddressSelected === "function" ? isAddressSelected : null;
 
@@ -809,7 +813,7 @@ export class PickupMap {
                     const btn = document.querySelector(
                         `button[data-pickup-index="${index}"]`,
                     );
-                    if (!btn || !this.#onStoreSelected) return;
+                    if (!btn || !this.#onPickupStoreSelected) return;
 
                     // Булева переменная - выбран ли уже этот адрес, в параметре объект с типом и адресом
                     const selectedAlready = this.#isAddressSelected
@@ -845,7 +849,7 @@ export class PickupMap {
                     btn.addEventListener(
                         "click",
                         () => {
-                            this.#onStoreSelected({
+                            this.#onPickupStoreSelected({
                                 address: store.address,
                                 storeId: store.id,
                             });
