@@ -23,7 +23,7 @@ $canonical = $canonical ?? $defaultCanonical;
 		<link rel="stylesheet" href="/styles.css">
 	</head>
 
-	<body class="body" data-yandex-maps-key="<?= getenv('YANDEX_MAPS_KEY') ?>">
+	<body class="body" data-yandex-maps-key="<?= $servicesConfig['yandex_maps']['key'] ?? '' ?>">
         <div class="loader-overlay" id="loader">
             <img class="loader" src="/img/loader.png" alt="Загрузка">
         </div>
@@ -55,7 +55,7 @@ $canonical = $canonical ?? $defaultCanonical;
         <!-- Обязательные для всех страниц -->
         <script defer src="/js/loader.js"></script>
         <script type="module" src="/js/modals.js"></script>
-        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= getenv('GOOGLE_RECAPTCHA_SITE_KEY') ?>"></script>
+        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"></script>
         <script defer src="/js/inputmask.min.js"></script>
 
         <!-- Внешние и обычные из контроллера -->

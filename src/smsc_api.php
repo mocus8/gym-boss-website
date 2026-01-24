@@ -1,17 +1,21 @@
 <?php
-require_once __DIR__ . '/envLoader.php';
 // SMSC.RU API (smsc.ru) версия 3.8 (03.07.2019)
 
-define("SMSC_LOGIN", getenv('SMSC_LOGIN'));                // логин клиента
-define("SMSC_PASSWORD", getenv('SMSC_PASSWORD'));            // пароль клиента. Если передан пустой логин, то SMSC_PASSWORD используется, как API ключ, вместо логина и пароля
-define("SMSC_POST", getenv('SMSC_POST'));                    // использовать метод POST
-define("SMSC_HTTPS", getenv('SMSC_HTTPS'));                // использовать HTTPS протокол
-define("SMSC_CHARSET", getenv('SMSC_CHARSET'));    // кодировка сообщения: utf-8, koi8-r или windows-1251 (по умолчанию)
-define("SMSC_DEBUG", getenv('SMSC_DEBUG'));                // флаг отладки
-define("SMTP_FROM", "api@smsc.ru");     // e-mail адрес отправителя
+require_once __DIR__ . '/bootstrap.php';
 
-define("SMSC_SENDER", getenv('SMSC_SENDER'));     // я вставил это поле для удобства (от кого смс)
-define("SMSC_TEST_MODE", getenv('SMSC_TEST_MODE'));     // я вставил это поле для удобства (тестовый режим работы api)
+$smscConfig = $servicesConfig['smsc'] ?? [];
+
+// Если нужно оставить define, то определяем на основе конфига:
+define('SMSC_LOGIN', $smscConfig['login'] ?? '');    // логин клиента
+define('SMSC_PASSWORD', $smscConfig['password'] ?? '');    // пароль клиента. Если передан пустой логин, то SMSC_PASSWORD используется, как API ключ, вместо логина и пароля
+define('SMSC_POST', $smscConfig['post'] ?? 0);    // использовать метод POST
+define('SMSC_HTTPS', $smscConfig['https'] ?? 1);    // использовать HTTPS протокол
+define('SMSC_CHARSET', $smscConfig['charset'] ?? 'utf-8');    // кодировка сообщения: utf-8, koi8-r или windows-1251 (по умолчанию)
+define('SMSC_DEBUG', $smscConfig['debug'] ?? 0);    // флаг отладки
+define('SMSC_SENDER', $smscConfig['sender'] ?? '');    // e-mail адрес отправителя
+define('SMSC_TEST_MODE', $smscConfig['test'] ?? true);    // я вставил это поле для удобства (тестовый режим работы api)
+
+define('SMTP_FROM', 'api@smsc.ru');
 
 // Функция отправки SMS
 //

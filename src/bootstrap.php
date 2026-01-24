@@ -3,20 +3,11 @@
 
 session_start();
 
-// Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
-require_once __DIR__ . '/../vendor/autoload.php';    // подключаем composer
-require_once __DIR__ . '/envLoader.php';    // подключаем загрузчик .env файла
-require_once __DIR__ . '/support/helpers.php';    // подключаем файл с вспомогательными утилитами
-require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
-require_once __DIR__ . '/Product/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
-require_once __DIR__ . '/Api/ProductController.php';    // подключаем файл с классом-контроллером для получения инфы о товарах
-require_once __DIR__ . '/Cart/CartSession.php';    // подключаем файл с классом для получения/установки cart id в куках
-require_once __DIR__ . '/Cart/CartService.php';    // подключаем файл с классом-сервисом для управления корзинами пользователей
-require_once __DIR__ . '/Api/CartController.php';    // подключаем файл с классом-контроллером для управления корзинами пользователей
-require_once __DIR__ . '/Order/OrderService.php';    // подключаем файл с классом-сервисом для управления заказами
-require_once __DIR__ . '/Api/OrderController.php';    // подключаем файл с классом-контроллером для управления заказами
+// Подключаем composer
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // Подключаем пространства имен
+use Dotenv\Dotenv; // библиотека для прочтения .env файла
 use App\Db\Db;  // используем класс Db из пространства имен App\Db
 use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
 use App\Api\ProductController;    // используем класс ProductController из пространства имен App\Api
@@ -26,8 +17,28 @@ use App\Api\CartController;    // используем класс CartController
 use App\Order\OrderService;   // используем класс OrderService из пространства имен App\Order
 use App\Api\OrderController;   // используем класс OrderController из пространства имен App\Api
 
+// Работаем с библиотекой Dotenv, загружаем .env файл
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->safeLoad();
+
+// Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
+require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
+require_once __DIR__ . '/support/helpers.php';    // подключаем файл с вспомогательными утилитами
+require_once __DIR__ . '/Product/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
+require_once __DIR__ . '/Api/ProductController.php';    // подключаем файл с классом-контроллером для получения инфы о товарах
+require_once __DIR__ . '/Cart/CartSession.php';    // подключаем файл с классом для получения/установки cart id в куках
+require_once __DIR__ . '/Cart/CartService.php';    // подключаем файл с классом-сервисом для управления корзинами пользователей
+require_once __DIR__ . '/Api/CartController.php';    // подключаем файл с классом-контроллером для управления корзинами пользователей
+require_once __DIR__ . '/Order/OrderService.php';    // подключаем файл с классом-сервисом для управления заказами
+require_once __DIR__ . '/Api/OrderController.php';    // подключаем файл с классом-контроллером для управления заказами
+
+// Подключаем конфиги (массивы из переменных с константами из .env)
+$appConfig = require __DIR__ . '/config/app.php';
+$servicesConfig = require __DIR__ . '/config/services.php';
+$deliveryConfig = require __DIR__ . '/config/delivery.php';
+
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
-$db = Db::connectFromEnv();
+$db = Db::connect($servicesConfig['database']);
 
 // Работаем с сервисом и контроллером товара
 $productService = new ProductService($db);    // создаем экземпляр класса
@@ -46,14 +57,20 @@ $cartCount = $cartService->getItemsCount($cartId);    // получаем кол
 $cartController = new CartController($cartSession, $cartService);
 
 // Работаем с сервисом и контроллером заказов
-$orderService = new OrderService($db, $productService, $cartService);
+$orderService = new OrderService(
+    $db,
+    $productService,
+    $cartService,
+    $deliveryConfig['courier_delivery_price'],
+    $deliveryConfig['free_delivery_threshold'],
+);
 $orderController = new OrderController($orderService, $cartSession, $cartService);
 
 // Получаем URL сайта из переменных окружения
-$appUrl = getenv('APP_URL');
+$appUrl = $appConfig['url'] ?? null;
 if (!$appUrl) {
     error_log('APP_URL is not set');    // логируем
     throw new RuntimeException('APP_URL is not set');   // и падаем
 }
 
-$baseUrl   = rtrim($appUrl, '/');
+$baseUrl = rtrim($appUrl, '/');

@@ -5,16 +5,16 @@ namespace App\Db;
 
 class Db {
     // Публичный статический (для класса в целом, а не для объекта) метод подключения к бд из файла .env
-    public static function connectFromEnv(): \mysqli { // \mysqli значит что connectFromEnv() возвращает объект mysqli
-        // Читаем переменные окружения для БД
-        $host = getenv('DB_HOST');
-        $name = getenv('DB_NAME');
-        $user = getenv('DB_USER');
-        $pass = getenv('DB_PASS');
+    public static function connect(array $config): \mysqli { // \mysqli значит что connectFromEnv() возвращает объект mysqli
+        // Берем переменные окружения для БД из конфига
+        $host = $config['host'] ?? null;
+        $name = $config['name'] ?? null;
+        $user = $config['user'] ?? null;
+        $pass = $config['pass'] ?? null;
 
         // Если переменных нет, то логируем и падаем 
-        if ($host === false || $name === false || $user === false || $pass === false) {
-            error_log('Database env variables are not set');
+        if (!$host || !$name || !$user) {
+            error_log('Database config is not set properly');
             throw new \RuntimeException('Database configuration error');
         }
 

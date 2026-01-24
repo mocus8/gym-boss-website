@@ -1,11 +1,17 @@
 <?php
-// Подключаем загрузчик .env
-require_once __DIR__ . '/envLoader.php';
+require_once __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
-// Получаем ключ из .env
-$dadataKey = getenv('DADATA_API_KEY');
+// Получаем ключ из конфига
+$dadataKey = $servicesConfig['dadata']['api_key'] ?? null;
+
+if ($dadataKey === null) {
+    echo json_encode([
+        'status' => 'false'
+    ]);
+}
+
 
 // Отдаем ключ клиенту
 echo json_encode([

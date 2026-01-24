@@ -66,6 +66,7 @@ const ERROR_CODE_MESSAGES = {
     PAYMENT_SERVICE_UNAVAILABLE:
         "Сервис оплаты временно недоступен. Попробуйте позже",
     PAYMENT_PROCESSING_ERROR: "Ошибка обработки платежа. Попробуйте позже",
+    PAYMENT_SERVICE_CONFIG_ERROR: "Ошибка данных на сервере. Попробуйте позже",
     ORDER_ALREADY_PAID:
         "Заказ уже оплачен. Обновите страницу для актуального статуса",
     ORDER_ALREADY_CANCELLED: "Заказ уже отменен. Обновите страницу",

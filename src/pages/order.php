@@ -64,7 +64,14 @@ try {
 
         try {
             $yookassa = new \YooKassa\Client();
-            $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
+            $yookassaShopId = $servicesConfig['yookassa']['shop_id'] ?? '';
+            $yookassaApiKey = $servicesConfig['yookassa']['api_key'] ?? '';
+        
+            if ($yookassaShopId === '' || $yookassaApiKey === '') {
+                throw new Exception('PAYMENT_SERVICE_CONFIG_ERROR');
+            }
+
+            $yookassa->setAuth($yookassaShopId, $yookassaApiKey);
             
             $yookassaPaymentStatus = $yookassa->getPaymentInfo($yookassaPaymentId)->getStatus();
             

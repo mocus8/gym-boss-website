@@ -4,16 +4,13 @@
 
 require_once __DIR__ . '/../src/bootstrap.php';
 
-// Получаем URL сайта из переменных окружения
-$appUrl = getenv('APP_URL');
-if (!$appUrl) {
+// Если из bootatrap не пришла appUrl или baseUrl
+if (!$appUrl || !$baseUrl) {
     // логируем
-    error_log('Sitemap generator error: APP_URL is not set');
+    error_log('[generate_sitemap.php] AppUrl or baseUrl is not set');
     // и падаем
     exit(1);
 }
-
-$baseUrl   = rtrim($appUrl, '/');
 
 // lastmod для статичных страниц не делаю
 $urls = [

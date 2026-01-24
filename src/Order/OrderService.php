@@ -20,14 +20,26 @@ class OrderService {
     private const DELIVERY_TYPE_COURIER = 1;
     private const DELIVERY_TYPE_PICKUP = 2;
 
+    // Константы для стоимости доставки и порога бесплатной доставки
+    private float $deliveryCourierPrice;
+    private float $deliveryFreeThreshold;
+
     // Актуальные id для статусов заказа (ассоциативный массив code => id), живет в течении одного запроса
     private array $statusIdCache = [];
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
-    public function __construct(\mysqli $db, ProductService $productService, CartService $cartService) {
+    public function __construct(
+        \mysqli $db,
+        ProductService $productService,
+        CartService $cartService,
+        float $deliveryCourierPrice,
+        float $deliveryFreeThreshold,
+    ) {
         $this->db = $db;
         $this->productService = $productService;
         $this->cartService = $cartService;
+        $this->deliveryCourierPrice = $deliveryCourierPrice;
+        $this->deliveryFreeThreshold = $deliveryFreeThreshold;
     }
 
     // Вспомогательный приватный метод для получения id статуса заказа по code (с кэшем)
@@ -76,13 +88,14 @@ class OrderService {
 
     // Вспомогательный приватный метод для получения цены доставки
     private function getDeliveryPrice(int $deliveryTypeId, float $totalPrice): float {
-        $deliveryCost = 0.00;
 
-        if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER && $totalPrice < 5000) {
-            $deliveryCost = 750.00;
+        // Если курьерский тип доставки и стоимость товаров меньше порога - возвращаем стоимость доставки
+        if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER && $totalPrice < $this->deliveryFreeThreshold) {
+            return $this->deliveryCourierPrice;
         }
 
-        return $deliveryCost;
+        // Иначе стоимость ноль
+        return 0.00;
     }
 
     // Метод создания order на основе cart (возвращает id созданного заказа)

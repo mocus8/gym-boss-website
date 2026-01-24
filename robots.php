@@ -1,17 +1,16 @@
 <?php
 
-require_once __DIR__ . '/src/envLoader.php';
+require_once __DIR__ . '/src/bootstrap.php';
 
-// Получаем URL сайта из переменных окружения
-$appUrl = getenv('APP_URL');
-if (!$appUrl) {
+header('Content-Type: text/plain; charset=UTF-8');
+
+// Если из bootatrap не пришла appUrl или baseUrl
+if (!$appUrl || !$baseUrl) {
     // логируем
-    error_log('Sitemap generator error: APP_URL is not set');
+    error_log('[robots.php] AppUrl or baseUrl is not set');
     // и падаем
     exit(1);
 }
-
-$baseUrl   = rtrim($appUrl, '/');
 
 header('Content-Type: text/plain; charset=UTF-8');
 

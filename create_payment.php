@@ -35,7 +35,15 @@ try {
     $db->begin_transaction();
 
     $yookassa = new \YooKassa\Client();
-    $yookassa->setAuth(getenv('YOOKASSA_SHOP_ID'), getenv('YOOKASSA_API_KEY'));
+    $yookassaShopId = $servicesConfig['yookassa']['shop_id'] ?? '';
+    $yookassaApiKey = $servicesConfig['yookassa']['api_key'] ?? '';
+
+    if ($yookassaShopId === '' || $yookassaApiKey === '') {
+        http_response_code(500);
+        throw new Exception('PAYMENT_SERVICE_CONFIG_ERROR');
+    }
+
+    $yookassa->setAuth($yookassaShopId, $yookassaApiKey);
 
     // получаем всю инфу о заказе и блокируем на время выполнения через FOR UPDATE на случай одновременно оплаты
     $stmt = $db->prepare("
