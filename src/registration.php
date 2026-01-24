@@ -10,7 +10,7 @@ $password = $_POST["password"];
 $name = $_POST["name"];
 
 // Если локальный режим окружения то не проверяем капчу
-$isLocal = $servicesConfig['env'] === 'local';
+$isLocal = $appConfig['env'] === 'local';
 if (!$isLocal){
     requireCaptcha();
 }

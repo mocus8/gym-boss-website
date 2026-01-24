@@ -4,10 +4,6 @@
 
 // Получение id юзера
 function getCurrentUserId(): ?int {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
-
     $userId = $_SESSION['user']['id'] ?? null;
 
     return $userId;
