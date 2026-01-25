@@ -14,7 +14,7 @@
 </div>
 
 <div class="order_types">
-    <div class="order_type chosen" id="order-type-delivery">
+    <div class="order_type" id="order-type-courier">
         Доставка
     </div>
 
@@ -24,7 +24,7 @@
 </div>
 
 <div class="order_container">
-    <div class="order_delivery_type" data-order-type="delivery">
+    <div class="order_delivery_type" data-order-type="courier">
         <div class="order_left">
             <div class="map_search_form">
                 <input type="text"
@@ -40,36 +40,23 @@
                     onfocus="this.removeAttribute('readonly')"
                 >
 
-                <button type="button" id="delivery-search-btn" class="map_search_btn">
+                <button type="button" id="addres-search-btn" class="map_search_btn">
                     Найти
                 </button>
             </div>
 
             <div class="map_container">
-                <div class="order_map_loader" id="delivery-map-loader"> 
+                <div class="checkout_map_loader" id="courier-map-loader"> 
                     <img class="loader" src="/img/loader.png" alt="Загрузка карты">
                 </div>
 
-                <div id="delivery-map"></div>
-            </div>
+                <div class="checkout_map" id="courier-map"></div>
 
-            <div class="error_delivery_map">
-                Карта временно недоступна :(
-            </div>
-
-            <div class="error_address_not_found" id="modal-error-address-not-found">
-                <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                Адрес не найден
-            </div>
-
-            <div class="error_address_not_found" id="modal-error-address-timeout">
-                <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                Проблемы с соединением. Попробуйте еще раз
-            </div>
-
-            <div class="error_address_not_found" id="modal-error-address-empty">
-                <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                Введите адрес
+                <div class="checkout_map_error hidden" id="courier-map-error">
+                    Карта временно недоступна :(
+                    <br>
+                    Попробуйте обновить страницу
+                </div>
             </div>
         </div>
     </div>
@@ -81,15 +68,17 @@
             </div>
 
             <div class="map_container">
-                <div class="order_map_loader" id="pickup-map-loader">
+                <div class="checkout_map_loader" id="pickup-map-loader">
                     <img class="loader" src="/img/loader.png" alt="Загрузка карты">
                 </div>
 
-                <div id="pickup-map"></div>
-            </div>
+                <div class="checkout_map" id="pickup-map"></div>
 
-            <div class="error_pickup_map">
-                Карта временно недоступна :(
+                <div class="checkout_map_error hidden" id="pickup-map-error">
+                    Карта временно недоступна :(
+                    <br>
+                    Попробуйте обновить страницу
+                </div>
             </div>
         </div>
     </div>
@@ -100,39 +89,34 @@
                 Ваш заказ
             </div>
 
-            <div id="order-products-container">
-                <!-- пример строки с товаром -->
-                <div class="order_right_products_row">
-                    имя товара (кол-во шт.) - цена * кол-во ₽
-                </div>
+            <div id="checkout-items-container"></div>
+
+            <div class="order_right_row">
+                Количество товаров: <span id="checkout-items-count">0</span>
             </div>
 
             <div class="order_right_row">
-                Количество товаров: <span id="order-items-count">0</span>
-            </div>
-
-            <div class="order_right_row">
-                Стоимость всех товаров: <span id="order-items-price">0</span> ₽
+                Стоимость всех товаров: <span id="checkout-items-price">0</span> ₽
             </div>
             
-            <div class="order_right_row" data-order-type="delivery">
-                Стоимость доставки: <span id="order-right-delivery-price">0</span> ₽ (бесплатно при заказе от 5000 ₽)
+            <div class="order_right_row hidden" data-order-type="courier">
+                Стоимость доставки: <span id="checkout-delivery-price">0</span> ₽ <span id="checkout-delivery-note"></span>
             </div>
 
             <div class="order_right_row">
-                Итого: <span id="order-total-price">0</span> ₽
+                Итого: <span id="checkout-total-price">0</span> ₽
             </div>
 
-            <div class="order_right_row" data-order-type="delivery">
-                Адрес доставки: <span id="order-right-delivery-address">не указан</span>
+            <div class="order_right_row hidden" data-order-type="courier">
+                Адрес доставки: <span id="courier-address" data-postal-code="">не указан</span>
             </div>
 
-            <div class="order_right_row" data-order-type="pickup">
-                Адрес магазина для самовывоза:<br><span id="order-right-pickup-address">не указан</span>
+            <div class="order_right_row hidden" data-order-type="pickup">
+                Адрес магазина для самовывоза:<span id="pickup-address" data-store-id="">не указан</span>
             </div>
         </div>
 
-        <button class="order_right_pay_button" id="create-order-button">
+        <button class="order_right_pay_button" id="create-order-btn">
             Оформить заказ
         </button>
 
@@ -142,11 +126,15 @@
                 Сайт работает в тестовом режиме, не используейте реальные карты. <br>
                 Карты для теста: 5555555555554444 (успех), 5555555555554535 (ошибка)
             </div>
-
-            <div class="error_pay hidden" id="error-pay-delivery">
-                <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                <div id="error-pay-delivery-text"></div>
-            </div>
         </div>
     </div>
 </div>
+
+<!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога через глобальный объект
+делаем это через навешивание объекта GYM_BOSS_DELIVERY на wondow -->
+<script>
+  window.GYM_BOSS_DELIVERY = {
+    courierFreeThreshold: <?= (int)$deliveryConfig['free_delivery_threshold'] ?>,
+    courierPrice: <?= (int)$deliveryConfig['courier_delivery_price'] ?>,
+  };
+</script>

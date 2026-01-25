@@ -1,141 +1,460 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
-import {
-    createOrderFromCart,
-    getOrderById,
-    getUserOrders,
-    markOrderAsCancelled,
-} from "./api.js";
-import { getErrorMessage, formatPrice } from "../utils.js";
+import { loadYandexMapsScripts, CourierMap, PickupMap } from "../maps/index.js";
 import { notification } from "../ui/Notification.js";
+import { getCart } from "../cart/cart.api.js";
+import { getErrorMessage, formatPrice } from "../utils.js";
+import { createOrderFromCart } from "./order.api.js";
+
+// Функция убирания лоадера
+function hideMapLoader(loaderId) {
+    const loader = document.getElementById(loaderId);
+    if (!loader) return;
+
+    // Из-за стилей переход плавный
+    loader.classList.add("checkout_map_loader_hidden");
+}
+
+// Функция для обработки ошибки курьерской карты
+function handleCourierMapError(error) {
+    console.error(
+        "[Checkout] Ошибка инициализации карты курьерской доставки",
+        error,
+    );
+
+    // Получаем код из ошибки
+    const code = error?.message;
+
+    switch (code) {
+        // Инициализация карты / скрипта
+        case "YMAPS_API_NOT_LOADED":
+        case "YMAPS_API_NOT_AVAILABLE":
+        case "YMAPS_SCRIPT_LOAD_FAILED":
+        case "YANDEX_MAPS_KEY_NOT_FOUND":
+        case "MAP_CONTAINER_NOT_FOUND":
+        case "COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND":
+        case "STORES_HTTP_ERROR":
+            hideMapLoader("courier-map-loader");
+            document
+                .getElementById("courier-map-error")
+                ?.classList.remove("hidden");
+            break;
+
+        // Пустой адресс при поиске
+        case "EMPTY_ADDRESS":
+            notification.open("Введите адрес для поиска");
+            break;
+
+        // Адрес не найден
+        case "ADDRESS_NOT_FOUND":
+            notification.open("Аддрес не найден");
+            break;
+
+        // Время для поиска вышло
+        case "GEOCODE_TIMEOUT":
+            notification.open(
+                "Поиск адреса занял слишком много времени, попробуйте ещё раз",
+            );
+            break;
+
+        // Ошибки DaData - карта работает, подсказок нет
+        case "DADATA_API_NOT_AVAILABLE":
+        case "DADATA_SCRIPT_LOAD_FAILED":
+        case "DADATA_KEY_HTTP_ERROR":
+        case "DADATA_KEY_NOT_FOUND":
+            notification.open("Подсказки по адресу временно не доступны");
+            break;
+
+        default:
+            hideMapLoader("courier-map-loader");
+            document
+                .getElementById("courier-map-error")
+                ?.classList.remove("hidden");
+    }
+}
+
+// Функция для обработки ошибки карты самовывоза
+function handlePickupMapError(error) {
+    console.error("[Checkout] Ошибка инициализации карты самовывоза", error);
+    hideMapLoader("pickup-map-loader");
+    document.getElementById("pickup-map-error")?.classList.remove("hidden");
+}
+
+// Функция для обработки выбранного адреса курьерской доставки
+function onCourierAddressSelected({ address, postalCode }) {
+    const addressEl = document.getElementById("courier-address");
+    if (!addressEl) return;
+
+    addressEl.textContent = String(address);
+    addressEl.dataset.postalCode = String(postalCode ?? "");
+}
+
+// Функция для обработки выбранного магазина для самовывоза
+function onPickupStoreSelected({ address, storeId }) {
+    const addressEl = document.getElementById("pickup-address");
+    if (!addressEl) return;
+
+    addressEl.textContent = String(address);
+    addressEl.dataset.storeId = String(storeId ?? "");
+}
+
+// Функция для сверки адреса с уже выбранным
+function isAddressSelected({ type, address, shopId }) {
+    if (type === "courier") {
+        const courierAddressEl = document.getElementById("courier-address");
+        if (!courierAddressEl) return false;
+
+        return courierAddressEl.textContent.trim() === String(address);
+    }
+
+    if (type === "pickup") {
+        const pickupAddressEl = document.getElementById("pickup-address");
+        if (!pickupAddressEl) return false;
+
+        return Number(pickupAddressEl.dataset.shopId) === Number(shopId);
+    }
+
+    // False если типы не подошли
+    return false;
+}
 
 // Инициализируем карты
-let deliveryMap = null;
+let yandexMapsPromise = null; // промис с загрузкой скриптов Яндекс.Карт
+let courierMap = null;
 let pickupMap = null;
 
-function initDeliveryMapOnce() {
-    if (!deliveryMap) {
-        deliveryMap = new DeliveryMap("delivery-map");
+// Загрузка скриптов для карт, возвращает промис
+function loadYandexMapsOnce() {
+    if (!yandexMapsPromise) {
+        // Передаем промис с загрузкой
+        yandexMapsPromise = loadYandexMapsScripts();
+    }
+
+    return yandexMapsPromise; // возвращаем промис
+}
+
+// Инициализация карты, возвращает объект карт который можно потом использовать
+async function initCourierMapOnce() {
+    if (courierMap) return courierMap;
+
+    try {
+        // Дожидаемся загрузки скриптов карт
+        await loadYandexMapsOnce();
+
+        // Создаем объект курьерской карты, в параметрах id элемента для вставки и объект с функциями
+        courierMap = new CourierMap("courier-map", {
+            onError: handleCourierMapError,
+            onCourierAddressSelected: onCourierAddressSelected,
+            isAddressSelected: isAddressSelected,
+        });
+
+        // Прячем лоадер и возвращаем объект курьерской карты
+        hideMapLoader("courier-map-loader");
+        return courierMap;
+    } catch (e) {
+        handleCourierMapError(e);
     }
 }
 
-function initPickupMapOnce() {
-    if (!pickupMap) {
-        pickupMap = new PickupMap("pickup-map");
+// Инициализация карты, возвращает объект карт который можно потом использовать
+async function initPickupMapOnce() {
+    if (pickupMap) return pickupMap;
+
+    try {
+        // Дожидаемся загрузки скриптов карт
+        await loadYandexMapsOnce();
+
+        // Создаем и возвращаем объект карты самовывоза
+        pickupMap = new PickupMap("pickup-map", {
+            onError: handlePickupMapError,
+            onPickupStoreSelected: onPickupStoreSelected,
+            isAddressSelected: isAddressSelected,
+        });
+
+        // Тут потом сделать через сервис, контроллер и api.js
+        // Загружаем список магазинов
+        const response = await fetch("/src/getStores.php");
+        if (!response.ok) {
+            throw new Error("STORES_HTTP_ERROR");
+        }
+        const stores = await response.json();
+
+        // Рендерим метки на карте самовывоза
+        pickupMap.renderStores(stores);
+
+        // Прячем лоадер и возвращаем объект карты самовывоза
+        hideMapLoader("pickup-map-loader");
+        return pickupMap;
+    } catch (e) {
+        handlePickupMapError(e);
     }
 }
 
-// Обработчик переключения типа доставки
-document.querySelector(".order_types").addEventListener("click", function (e) {
-    // e.target - элемент, на котором произошел клик
-    // e.currentTarget - элемент, на котором висит обработчик (.order_types)
+// Функция переключения типа доставки
+function setDeliveryMode(mode) {
+    // Булева переменная
+    const isCourier = mode === "courier";
 
-    // Проверяем, был ли клик по кнопке .order_type
-    const target = e.target.closest(".order_type");
-    if (!target) return; // если клик был не по кнопке - выходим
+    const selectCourierBtn = document.getElementById("order-type-courier");
+    const selectPickupBtn = document.getElementById("order-type-pickup");
 
-    // Дальше работаем с target (нажатой кнопкой)
-    const isDelivery = target.id === "order-type-delivery";
-    const previousType = document
-        .getElementById("order-type-delivery")
-        .classList.contains("chosen")
-        ? "delivery"
-        : "pickup";
+    // Переключаем состояние кнопок
+    // Toggle автоматически добавляет или удаляет класс
+    if (selectCourierBtn && selectPickupBtn) {
+        selectCourierBtn.classList.toggle("chosen", isCourier);
+        selectPickupBtn.classList.toggle("chosen", !isCourier);
+    }
 
-    // если кликаем на ту же кнопку
-    if (
-        (isDelivery && previousType === "delivery") ||
-        (!isDelivery && previousType === "pickup")
-    ) {
+    // Переключаем видимость элементов
+    document
+        .querySelectorAll('[data-order-type="courier"]')
+        .forEach((el) => el.classList.toggle("hidden", !isCourier));
+    document
+        .querySelectorAll('[data-order-type="pickup"]')
+        .forEach((el) => el.classList.toggle("hidden", isCourier));
+
+    if (checkoutCart) {
+        updateCheckoutInfo(checkoutCart);
+    }
+
+    if (isCourier) {
+        // Запускаем инициализацию нужной карты
+        initCourierMapOnce();
+    } else {
+        initPickupMapOnce();
+    }
+}
+
+// Функция для создания отдельного блока с товаром
+function createCheckoutItemEl(item) {
+    // Создаем блок товара
+    const itemDiv = document.createElement("div");
+    itemDiv.classList.add("checkout_item_row");
+
+    const name = String(item.name);
+    const amount = String(item.amount);
+    const totalPrice = String(
+        formatPrice(Number(item.amount) * Number(item.price)),
+    );
+
+    // Заполняем блок товара
+    itemDiv.textContent = `${name} (${amount} шт.) - ${totalPrice} ₽`;
+
+    return itemDiv;
+}
+
+// Функция для заполнения инф о всех товарах из корзины
+function fillCheckoutItems(cartItems) {
+    const itemsContainer = document.getElementById("checkout-items-container");
+    if (!itemsContainer || !cartItems.length) return;
+
+    // Очищаем содержимое контейнера
+    itemsContainer.innerHTML = "";
+
+    cartItems.forEach((item) => {
+        // Рендерим через функцию блок товара
+        const itemEl = createCheckoutItemEl(item);
+
+        // Добавляем магазин в контейнер
+        itemsContainer.appendChild(itemEl);
+    });
+}
+
+// Обновление отображения условий бесплатной доставки
+function updateCourierDeliveryNote() {
+    const deliveryNoteEl = document.getElementById("checkout-delivery-note");
+    if (!deliveryNoteEl) return;
+
+    const deliveryConfig = window.GYM_BOSS_DELIVERY ?? {};
+    const threshold = Number(deliveryConfig.courierFreeThreshold ?? 0);
+
+    if (threshold > 0) {
+        deliveryNoteEl.textContent = `(бесплатно при заказе от ${formatPrice(threshold)} ₽)`;
+    }
+}
+
+// Получение выбранного способа доставки: courier или pickup
+function getCurrentDeliveryType() {
+    const courierBtn = document.getElementById("order-type-courier");
+    if (!courierBtn) return "courier"; // значение по умолчанию
+
+    return courierBtn.classList.contains("chosen") ? "courier" : "pickup";
+}
+
+// Функция для подсчета стоимости доставки
+function calcDeliveryPrice(cartTotal, deliveryType) {
+    const deliveryConfig = window.GYM_BOSS_DELIVERY ?? {};
+    const threshold = Number(deliveryConfig.courierFreeThreshold ?? 0);
+    const deliveryPrice = Number(deliveryConfig.courierPrice ?? 0);
+
+    // Если доставка не курьрером - то бесплатная
+    if (deliveryType !== "courier") {
+        return 0;
+    }
+
+    // Если стоимость корзины меньше порога возвращаем стоимость доставки, иначе 0
+    return cartTotal < threshold ? deliveryPrice : 0;
+}
+
+// Функция для обновления общей инфы из корзины
+function updateCheckoutInfo(cart) {
+    const itemsAmountEl = document.getElementById("checkout-items-count");
+    const itemsPriceEl = document.getElementById("checkout-items-price");
+    const deliveryPriceEl = document.getElementById("checkout-delivery-price");
+    const totalPriceEl = document.getElementById("checkout-total-price");
+
+    if (!itemsAmountEl || !itemsPriceEl || !deliveryPriceEl || !totalPriceEl) {
         return;
     }
 
-    // Очищаем интерфейс перед переключением
-    clearOrderInterface(previousType);
+    const currentDeliveryType = getCurrentDeliveryType();
+    const cartItemsTotal = Number(cart.total ?? 0);
 
-    // Переключение модалок
-    // toggle автоматически добавляет или удаляет класс
-    document
-        .getElementById("modal-order-type-delivery")
-        .classList.toggle("hidden", !isDelivery);
-    document
-        .getElementById("modal-order-type-pickup")
-        .classList.toggle("hidden", isDelivery);
+    const deliveryPrice = calcDeliveryPrice(
+        cartItemsTotal,
+        currentDeliveryType,
+    );
 
-    // инициализируем карты
-    setTimeout(() => {
-        if (isDelivery && !deliveryMap) {
-            // создаем карту если ее нет
-            deliveryMap = new DeliveryMap("delivery-map");
-        } else if (!isDelivery && !pickupMap) {
-            pickupMap = new PickupMap("pickup-map");
-        }
-    }, 50);
+    const totalPrice = cartItemsTotal + deliveryPrice;
 
-    // Переключение стилей кнопок выбора типа доставки
-    document
-        .getElementById("order-type-delivery")
-        .classList.toggle("chosen", isDelivery);
-    document
-        .getElementById("order-type-pickup")
-        .classList.toggle("chosen", !isDelivery);
+    itemsAmountEl.textContent = String(cart.count);
+    itemsPriceEl.textContent = String(formatPrice(cartItemsTotal));
+    deliveryPriceEl.textContent = String(formatPrice(deliveryPrice));
+    totalPriceEl.textContent = String(formatPrice(totalPrice));
+}
 
-    // Обновляем тип доставки в бд
-    updateDeliveryTypeInDB(isDelivery ? "delivery" : "pickup");
+// Глобальная переменная с полной ифной о корзине, заполняется один раз при загрузке страницы
+let checkoutCart = null;
+
+// При загрузке страницы по умолчанию ставим доставку курьером, загружаем корзину и заполняем контейнер товарами
+window.addEventListener("load", async () => {
+    setDeliveryMode("courier");
+
+    const cart = await getCart();
+    const cartItems = cart.items ?? [];
+
+    // Если в корзине нет товаров на момент оформления заказа то перекидываем на страницу корзины
+    if (!cartItems.length || Number(cart.count ?? 0) === 0) {
+        window.location.href = "/cart";
+        return;
+    }
+
+    // Сохраняем полученную корзину в локальную переменную
+    checkoutCart = cart;
+
+    // Рендерим информацию о заказе и товарах
+    fillCheckoutItems(cartItems);
+    updateCourierDeliveryNote();
+    updateCheckoutInfo(cart);
 });
 
-// Показ ошибки карты (по параметру)
-function showMapError(type = "all") {
-    const VALID_TYPES = ["stores", "delivery", "pickup", "all"];
+// Обработчик кнопки переключения на курьерскую доставку
+document.getElementById("order-type-courier").addEventListener("click", () => {
+    // Если тип уже выбран - ничего не делаем
+    if (getCurrentDeliveryType() === "courier") return;
 
-    // Валидация
-    if (!VALID_TYPES.includes(type)) {
-        console.error(
-            `[MapError] Неверный тип: "${type}". Допустимо: ${VALID_TYPES.join(", ")}`,
-        );
-        type = "all"; // fallback (резервный вариант, откат)
-    }
+    setDeliveryMode("courier");
+});
 
-    console.error("Ошибка Яндекс.Карт:", type);
+// Обработчик кнопки переключения на самовывоз
+document.getElementById("order-type-pickup").addEventListener("click", () => {
+    // Если тип уже выбран - ничего не делаем
+    if (getCurrentDeliveryType() === "pickup") return;
 
-    if (type === "all") {
-        // Показываем все ошибки
-        document.querySelectorAll('[class*="error_"]').forEach((block) => {
-            block.classList.add("open");
-        });
-        return;
-    }
+    setDeliveryMode("pickup");
+});
 
-    const className = `error_${type}_map`;
-    const elements = document.querySelectorAll(`.${className}`);
+// Обработчик нажатия на кнопку "Оформить заказ"
+document
+    .getElementById("create-order-btn")
+    .addEventListener("click", async () => {
+        // Определяем переменные для использования метода создания заказа
+        const selectedDeliveryType = getCurrentDeliveryType(); // выбранный тип доставки
+        const checkoutTypeId = selectedDeliveryType === "courier" ? 1 : 2; // id выбранного типа доставки
 
-    if (elements.length === 0) {
-        console.warn(
-            `[MapError] Элемент .${className} не найден, показываю все ошибки`,
-        );
-        showMapError("all"); // рекурсивный вызов
-        return;
-    }
+        let checkoutAddressText = null;
+        let checkoutAddressPostCode = null;
+        let checkoutStoreId = null;
 
-    elements.forEach((block) => block.classList.add("open"));
-}
+        // Присваиваем адресу выбранное значение, если выбрана курьерская доставка
+        if (selectedDeliveryType === "courier") {
+            const courierAddressEl = document.getElementById("courier-address");
 
-// нужна будет функция isAddressSelected, на вход объект:
-// isAddressSelected({
-//     type,        // "delivery" | "pickup"
-//     address,     // для доставки
-//     shopId,      // для самовывоза
-// });
+            if (!courierAddressEl) {
+                console.error(
+                    "[checkout] Не удалось найти  courierAddressEl при оформлении заказа",
+                );
+                notification.open(
+                    "Не удалось оформить заказ, обновите страницу или попробуйте позже",
+                );
+                return;
+            }
 
-// Метод убирания лоадера, сделать общую функцию для всех карт
-#hideLoader() {
-    // Плавно убираем лоадер
-    const loader = document.getElementById("delivery-map-loader");
-    if (loader) {
-        loader.style.opacity = "0";
-        loader.style.visibility = "hidden";
-        // Через время завершения анимации - полностью убираем
-        setTimeout(() => {
-            loader.style.display = "none";
-        }, 200); // Время должно совпадать с transition (0.4s)
-    }
-}
+            checkoutAddressText = courierAddressEl.textContent?.trim() ?? null;
+            checkoutAddressPostCode =
+                courierAddressEl.dataset.postalCode ?? null;
+
+            if (!checkoutAddressText) {
+                notification.open("Укажите адрес доставки");
+                return;
+            }
+        }
+
+        // Присваиваем адресу выбранное значение, если выбран самовывоз
+        if (selectedDeliveryType === "pickup") {
+            const pickupAddressEl = document.getElementById("pickup-address");
+
+            if (!pickupAddressEl) {
+                console.error(
+                    "[checkout] Не удалось найти pickupAddressEl при оформлении заказа",
+                );
+                notification.open(
+                    "Не удалось оформить заказ, обновите страницу или попробуйте позже",
+                );
+                return;
+            }
+
+            checkoutStoreId = pickupAddressEl.dataset.storeId
+                ? Number(pickupAddressEl.dataset.storeId)
+                : null;
+
+            if (!checkoutStoreId) {
+                notification.open("Выберите магазин для самовывоза");
+                return;
+            }
+        }
+
+        try {
+            const result = await createOrderFromCart({
+                deliveryTypeId: checkoutTypeId,
+                deliveryAddressText: checkoutAddressText,
+                deliveryPostalCode: checkoutAddressPostCode,
+                storeId: checkoutStoreId,
+            });
+
+            const orderId = result?.orderId;
+
+            if (!orderId) {
+                console.error(
+                    "[checkout] Не удалось найти orderId в ответе от сервера",
+                );
+                notification.open("Не удалось создать заказ, попробуйте позже");
+                return;
+            }
+
+            const uriOrderId = encodeURI(String(orderId));
+
+            window.location.href = `/order/${uriOrderId}`;
+        } catch (e) {
+            // Логирование в консоль с полным контекстом
+            console.error("[checkout] Не удалось оформить заказ", {
+                message: e.message,
+                code: e.code,
+                status: e.status,
+                payload: e.payload, // тот самый data
+            });
+
+            // Показ ошибки пользователю
+            const message = getErrorMessage(e.code, e.status);
+            notification.open(message);
+        }
+    });

@@ -2340,6 +2340,7 @@ button {
 }
 
 .map_container {
+    position: relative; /* Все дочерние элементы теперь позиционируются относительно этого блока */
     width: 35vw;
     height: 35vw;
     border: 0.15vw solid black;
@@ -2347,9 +2348,11 @@ button {
     overflow: hidden;
 }
 
-.order_map_loader {
-    width: 35vw;
-    height: 35vw;
+.checkout_map_loader {
+    position: absolute; /* вынимается из потока, не занимает место. */
+    inset: 0; /* top/right/bottom/left: 0 */
+    width: 100%;
+    height: 100%;
     background-color: #bd1b1b;
     display: flex;
     align-items: center;
@@ -2359,6 +2362,36 @@ button {
     transition:
         opacity 0.2s,
         visibility 0.2s;
+}
+
+.checkout_map_loader_hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.checkout_map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.checkout_map_error {
+    z-index: 1000;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0.15vw solid black;
+    border-radius: 0.5vw;
+    background-color: #bd1b1b;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5vw;
+    font-family: "Jost", Arial;
 }
 
 .error_stores_map {
@@ -2387,101 +2420,19 @@ button {
     opacity: 1;
 }
 
-.error_delivery_map {
-    z-index: 1000;
-    position: absolute;
-    width: 35vw;
-    height: 100%;
-    border: 0.15vw solid black;
-    border-radius: 0.5vw;
-    background-color: #bd1b1b;
-    visibility: hidden;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5vw;
-    font-family: "Jost", Arial;
-    opacity: 0;
-    transition:
-        opacity 0.4s,
-        visibility 0.4s;
-}
-
-.error_delivery_map.open {
-    visibility: visible;
-    opacity: 1;
-}
-
-.error_pickup_map {
-    z-index: 1000;
-    position: absolute;
-    width: 35vw;
-    height: 100%;
-    border: 0.15vw solid black;
-    border-radius: 0.5vw;
-    background-color: #bd1b1b;
-    visibility: hidden;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5vw;
-    font-family: "Jost", Arial;
-    opacity: 0;
-    transition:
-        opacity 0.4s,
-        visibility 0.4s;
-}
-
-.error_pickup_map.open {
-    visibility: visible;
-    opacity: 1;
-}
-
-.error_address_not_found {
-    position: absolute;
-    margin-left: 36.6vw;
-    width: min-content;
-    height: 2.5vw;
-    background-color: white;
-    border-radius: 0.25vw;
-    border: 0.025vw solid black;
-    padding-right: 0.75vw;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5vw;
-    white-space: nowrap;
-    font-family: "Kolibri Light", "Kolibri-Light", "Kolibri", sans-serif;
-    font-size: 0.9vw;
-    font-weight: 100;
-    visibility: hidden;
-    opacity: 0;
-    transition:
-        opacity 0.4s,
-        visibility 0.4s;
-}
-
-.error_address_not_found.open {
-    visibility: visible;
-    opacity: 1;
-}
-
-#delivery-map {
-    width: 100%;
-    height: 100%;
-}
-
 .order_right {
     position: relative;
-    margin-left: 0.25vw;
+    max-width: min-content;
     display: flex;
     flex-direction: column;
 }
 
 .order_info {
+    position: relative;
     padding: 0vw 1vw 1.5vw 1vw;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75vw;
     border-radius: 0.5vw;
     background: #bd1b1b;
 }
@@ -2492,14 +2443,14 @@ button {
     font-family: "Jost", Arial;
 }
 
-.order_right_products_row {
+.checkout_item_row {
     font-size: 1.75vw;
     font-family: "Jost", Arial;
     white-space: nowrap;
 }
 
 .order_right_row {
-    max-width: 37.5vw;
+    max-width: 38vw;
     font-size: 1.75vw;
     font-family: "Jost", Arial;
 }
