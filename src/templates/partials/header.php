@@ -88,7 +88,7 @@ if ($userId != '') {
             </div>
         </a>
     </div>
-    <div class="header_search">
+    <div class="header_search" id="header-search">
         <div class="header_search_click">
             <img class="header_search_icon" src="/img/glass.png">
             <label for="header-search-input" class="header_search_text">
