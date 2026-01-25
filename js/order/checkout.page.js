@@ -98,7 +98,7 @@ function onPickupStoreSelected({ address, storeId }) {
 }
 
 // Функция для сверки адреса с уже выбранным
-function isAddressSelected({ type, address, shopId }) {
+function isAddressSelected({ type, address, storeId }) {
     if (type === "courier") {
         const courierAddressEl = document.getElementById("courier-address");
         if (!courierAddressEl) return false;
@@ -110,7 +110,7 @@ function isAddressSelected({ type, address, shopId }) {
         const pickupAddressEl = document.getElementById("pickup-address");
         if (!pickupAddressEl) return false;
 
-        return Number(pickupAddressEl.dataset.shopId) === Number(shopId);
+        return Number(pickupAddressEl.dataset.storeId) === Number(storeId);
     }
 
     // False если типы не подошли
@@ -142,6 +142,8 @@ async function initCourierMapOnce() {
 
         // Создаем объект курьерской карты, в параметрах id элемента для вставки и объект с функциями
         courierMap = new CourierMap("courier-map", {
+            addressInputId: "address-search-input",
+            searchButtonId: "address-search-btn",
             onError: handleCourierMapError,
             onCourierAddressSelected: onCourierAddressSelected,
             isAddressSelected: isAddressSelected,

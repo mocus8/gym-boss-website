@@ -26,7 +26,8 @@ if ($stmt && $stmt->execute()) {
         ];
 
         if ($lat !== null && $lng !== null) {
-            $store['coordinates'] = [$lat, $lng];
+            $store['latitude'] = $lat;
+            $store['longitude'] = $lng;
         }
 
         $stores[] = $store;

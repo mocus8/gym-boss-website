@@ -28,7 +28,7 @@
         <div class="order_left">
             <div class="map_search_form">
                 <input type="text"
-                    id="delivery-address"
+                    id="address-search-input"
                     name="delivery_address"
                     autocomplete="street-address"
                     autocorrect="off"
@@ -40,7 +40,7 @@
                     onfocus="this.removeAttribute('readonly')"
                 >
 
-                <button type="button" id="addres-search-btn" class="map_search_btn">
+                <button type="button" id="address-search-btn" class="map_search_btn">
                     Найти
                 </button>
             </div>
@@ -112,7 +112,7 @@
             </div>
 
             <div class="order_right_row hidden" data-order-type="pickup">
-                Адрес магазина для самовывоза:<span id="pickup-address" data-store-id="">не указан</span>
+                Адрес магазина для самовывоза: <span id="pickup-address" data-store-id="">не указан</span>
             </div>
         </div>
 
