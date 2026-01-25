@@ -251,7 +251,7 @@ export class StoresMap {
 
     // Приватный метод обработки ошибок
     #handleError(error) {
-        console.error("[StoresMap] error:", error);
+        console.error("[StoresMap]", error);
         if (this.#onError) this.#onError(error);
     }
 }
@@ -381,7 +381,7 @@ export class CourierMap {
 
     // Приватный метод обработки ошибок
     #handleError(error) {
-        console.error("[CourierMap] error:", error);
+        console.error("[CourierMap]", error);
         if (this.#onError) this.#onError(error);
     }
 
@@ -922,7 +922,7 @@ export class PickupMap {
 
     // Приватный метод обработки ошибок
     #handleError(error) {
-        console.error("[PickupMap] error:", error);
+        console.error("[PickupMap]", error);
         if (this.#onError) this.#onError(error);
     }
 
