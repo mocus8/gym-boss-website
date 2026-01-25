@@ -833,7 +833,22 @@ document.getElementById("header-search-input").addEventListener(
     })(),
 );
 
-// очистка поля ввода
+// Клик на поле ввода
+document
+    .getElementById("header-search-input")
+    .addEventListener("focus", function () {
+        const queryProductsContainer = document.getElementById(
+            "query-products-container",
+        );
+        if (!queryProductsContainer) return;
+
+        const query = this.value.trim();
+        if (!query) return;
+
+        queryProductsContainer.classList.remove("hidden");
+    });
+
+// Нажатие на крестик (закртие поля воода и очистка инпута)
 document
     .getElementById("header-search-cancel-button")
     .addEventListener("click", function () {
@@ -851,6 +866,22 @@ document
 
         headerSearchInput.focus();
     });
+
+// Клик не по поисковому блоку закрывает его
+window.addEventListener("click", function (e) {
+    const headerSearchBlock = document.getElementById("header-search");
+    if (!headerSearchBlock) return;
+
+    // Если клик был внутри headerSearchBlock - ничего не делаем
+    if (headerSearchBlock.contains(e.target)) return;
+
+    const queryProductsContainer = document.getElementById(
+        "query-products-container",
+    );
+    if (!queryProductsContainer) return;
+
+    queryProductsContainer.classList.add("hidden");
+});
 
 // потдтверждение формы регистрации
 document
