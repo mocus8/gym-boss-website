@@ -1,7 +1,32 @@
 <?php
 // bootstrap - общая инициализация окружения
 
+// Безопасный старт и управление сессией
+session_name('PHPSESSID');
 session_start();
+
+// Сохраниение текущего времени
+$now = time();
+
+// Разлогин после 60 минут неактивности
+if (isset($_SESSION['last_activity']) && ($now - $_SESSION['last_activity'] > 3600)) {
+    session_unset();
+    session_destroy();
+    // Отправляем на главную
+    header('Location: /');
+    exit;
+}
+
+// Регенерация ID сессии раз в 5 минут (защита от фиксации)
+if (!isset($_SESSION['created'])) {
+    $_SESSION['created'] = $now;
+} elseif ($now - $_SESSION['created'] > 300) {
+    session_regenerate_id(true);
+    $_SESSION['created'] = $now;
+}
+
+// Обновляем отметку активности
+$_SESSION['last_activity'] = $now;
 
 // Подключаем composer
 require_once __DIR__ . '/../vendor/autoload.php';

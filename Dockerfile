@@ -26,6 +26,10 @@ RUN apk update \
     && apk del .build-deps \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+RUN mkdir -p /tmp/php-sessions /var/log \
+    && chown www-data:www-data /tmp/php-sessions /var/log \
+    && chmod 700 /tmp/php-sessions
+
 WORKDIR /var/www/html
 COPY . .
 RUN composer install --no-dev --optimize-autoloader --no-interaction
