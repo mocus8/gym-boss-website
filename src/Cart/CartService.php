@@ -21,6 +21,32 @@ class CartService {
         $this->productService = $productService;
     }
 
+    // Метод для обновления поля updated_at при действиях с cart_items
+    private function touchCart(int $cartId): void {
+        $sql = "
+            UPDATE carts
+            SET updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $cartId);
+
+        // Выполняем
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
+    }
+
     // Поиск корзины по cart_session_id или user_id, нашли - возвращаем ее $cartId, нет - создаем и возвращаем $cartId новой
     public function getOrCreateCartId(string $cartSessionId, ?int $userId): int {
         // Проверяем аргументы 
@@ -122,7 +148,7 @@ class CartService {
     }
 
     // Метод для привязки гостевой корзины к пользователю (по cart_session_id и user_id)
-    public function attachGuestCartToUser(string $cartSessionId, int $userId) {
+    public function attachGuestCartToUser(string $cartSessionId, int $userId): void {
         // Проверяем аргументы 
         if ($userId <= 0 || $cartSessionId === '') {
             throw new \InvalidArgumentException('Empty cartSessionId or invalid userId');
@@ -380,6 +406,9 @@ class CartService {
         }
     
         $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
     }
 
     // Метод для удаления товара из корзины
@@ -404,6 +433,9 @@ class CartService {
         }
     
         $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
     }
 
     // Метод для жёсткого установления нового количества товара в корзине
@@ -438,6 +470,9 @@ class CartService {
         }
     
         $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
     }
 
     // Метод для очистки корзины
@@ -462,6 +497,9 @@ class CartService {
         }
     
         $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
     }
 
     // Метод для пометки корзины как конвертированной
