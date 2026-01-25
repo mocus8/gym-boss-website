@@ -74,18 +74,11 @@ if ($stmt->execute()) {
     // меняем id сессии для безопасности
     session_regenerate_id(true);
 
-    $new_user_id = $stmt->insert_id; // Сохраняем ID нового пользователя
+    $userId = $stmt->insert_id; // Сохраняем ID нового пользователя
     
-    $_SESSION['user'] = ['id' => $new_user_id];
+    $_SESSION['user'] = ['id' => $userId];
     
-    // 4. Обновляем существующие заказы с session_id на user_id
-    $update_stmt = $db->prepare("
-        UPDATE orders 
-        SET user_id = ?, session_id = NULL 
-        WHERE session_id = ?
-    ");
-    $update_stmt->bind_param("is", $new_user_id, $cartSessionId);
-    $update_stmt->execute();
+    $cartService->attachGuestCartToUser($cartSessionId, $userId);
     
     header('Content-Type: application/json');
     echo json_encode([
