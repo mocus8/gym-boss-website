@@ -1,4 +1,8 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
-unset($_SESSION['user']);
+
+// Чистим сессию
+$_SESSION = [];
+session_destroy();
+
 header("Location: /");
