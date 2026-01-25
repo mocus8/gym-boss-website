@@ -121,6 +121,75 @@ class CartService {
         return $cartId;
     }
 
+    // Метод для привязки гостевой корзины к пользователю (по cart_session_id и user_id)
+    public function attachGuestCartToUser(string $cartSessionId, int $userId) {
+        // Проверяем аргументы 
+        if ($userId <= 0 || $cartSessionId === '') {
+            throw new \InvalidArgumentException('Empty cartSessionId or invalid userId');
+        }
+
+        $sql = "
+            SELECT id
+            FROM carts
+            WHERE session_id = ? AND user_id IS NULL AND is_converted = 0
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $cartSessionId);
+
+        // Выполняем
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если строчка не нашлась - выходим
+        if (!$row) return;
+
+        $cartId = (int)$row['id'];
+
+        $sql = "
+            UPDATE carts
+            SET user_id = ?, session_id = NULL
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ii", $userId, $cartId);
+
+        // Выполняем
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
+    }
+
     // Метод получения кол-ва всех товаров в корзине
     public function getItemsCount(int $cartId): int {
         $sql = "
