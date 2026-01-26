@@ -27,6 +27,11 @@ class Db {
             throw new \RuntimeException('Database connection failed');
         }
 
+        // Настраиваем московское время
+        if (!$db->query("SET time_zone = 'Europe/Moscow'")) {
+            error_log('Error setting MySQL time_zone: ' . $db->error);
+        }
+
         // Возвращаем mysql объект подключения
         return $db;
     }
