@@ -180,7 +180,7 @@ $pageModuleScripts = ['/js/order.js'];
 
 // Через буфер записываем в переменную контент страницы (один из шаблонов по статусу)
 ob_start();
-require __DIR__ . "/../templates/order/{$templateSrc}";
+require __DIR__ . "/../templates/pages/order/{$templateSrc}";
 $content = ob_get_clean();
 
 // И подключаем главный шаблон сайта
