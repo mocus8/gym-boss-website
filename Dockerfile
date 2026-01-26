@@ -1,12 +1,6 @@
 FROM php:8.2-fpm-alpine3.18
 
 RUN apk update \
-    && apk add --no-cache --virtual .build-deps \
-        build-base \
-        autoconf \
-        gcc \
-        g++ \
-        make \
     && apk add --no-cache \
         libpng-dev \
         libjpeg-turbo-dev \
@@ -23,7 +17,7 @@ RUN apk update \
         gd \
         pcntl \
         opcache \
-    && apk del .build-deps \
+    && echo 'extension=mysqli' > /usr/local/etc/php/conf.d/docker-php-ext-mysqli.ini \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 RUN mkdir -p /tmp/php-sessions /var/log \

@@ -19,11 +19,11 @@ class Db {
         }
 
         // Подключение к БД
-        $db = mysqli_connect($host, $user, $pass, $name);
+        $db = \mysqli_connect($host, $user, $pass, $name);
 
         // Проверяем подключение
         if ($db === false) {
-            error_log('DB connection failed: ' . mysqli_connect_error());
+            error_log('DB connection failed: ' . \mysqli_connect_error());
             throw new \RuntimeException('Database connection failed');
         }
 

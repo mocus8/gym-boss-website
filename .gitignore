@@ -13,6 +13,7 @@ redis_data/
 volumes/
 docker-compose.override.yml
 .docker/
+docker-php-ext-mysqli.ini
 
 # =================================
 # PHP / Composer
