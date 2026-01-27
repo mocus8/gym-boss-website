@@ -303,7 +303,6 @@ function updateCheckoutInfo(cart) {
     const itemsPriceEl = document.getElementById("checkout-items-price");
     const deliveryPriceEl = document.getElementById("checkout-delivery-price");
     const totalPriceEl = document.getElementById("checkout-total-price");
-
     if (!itemsAmountEl || !itemsPriceEl || !deliveryPriceEl || !totalPriceEl) {
         return;
     }
@@ -333,7 +332,6 @@ window.addEventListener("load", async () => {
 
     const cart = await getCart();
     const cartItems = cart.items ?? [];
-
     // Если в корзине нет товаров на момент оформления заказа то перекидываем на страницу корзины
     if (!cartItems.length || Number(cart.count ?? 0) === 0) {
         window.location.href = "/cart";
@@ -380,10 +378,9 @@ document
         // Присваиваем адресу выбранное значение, если выбрана курьерская доставка
         if (selectedDeliveryType === "courier") {
             const courierAddressEl = document.getElementById("courier-address");
-
             if (!courierAddressEl) {
                 console.error(
-                    "[checkout] Не удалось найти  courierAddressEl при оформлении заказа",
+                    "[Checkout] Не удалось найти  courierAddressEl при оформлении заказа",
                 );
                 notification.open(
                     "Не удалось оформить заказ, обновите страницу или попробуйте позже",
@@ -394,7 +391,6 @@ document
             checkoutAddressText = courierAddressEl.textContent?.trim() ?? null;
             checkoutAddressPostCode =
                 courierAddressEl.dataset.postalCode ?? null;
-
             if (!checkoutAddressText) {
                 notification.open("Укажите адрес доставки");
                 return;
@@ -404,10 +400,9 @@ document
         // Присваиваем адресу выбранное значение, если выбран самовывоз
         if (selectedDeliveryType === "pickup") {
             const pickupAddressEl = document.getElementById("pickup-address");
-
             if (!pickupAddressEl) {
                 console.error(
-                    "[checkout] Не удалось найти pickupAddressEl при оформлении заказа",
+                    "[Checkout] Не удалось найти pickupAddressEl при оформлении заказа",
                 );
                 notification.open(
                     "Не удалось оформить заказ, обновите страницу или попробуйте позже",
@@ -418,7 +413,6 @@ document
             checkoutStoreId = pickupAddressEl.dataset.storeId
                 ? Number(pickupAddressEl.dataset.storeId)
                 : null;
-
             if (!checkoutStoreId) {
                 notification.open("Выберите магазин для самовывоза");
                 return;
@@ -434,10 +428,9 @@ document
             });
 
             const orderId = result?.orderId;
-
             if (!orderId) {
                 console.error(
-                    "[checkout] Не удалось найти orderId в ответе от сервера",
+                    "[Checkout] Не удалось найти orderId в ответе от сервера",
                 );
                 notification.open("Не удалось создать заказ, попробуйте позже");
                 return;
@@ -448,7 +441,7 @@ document
             window.location.href = `/order/${uriOrderId}`;
         } catch (e) {
             // Логирование в консоль с полным контекстом
-            console.error("[checkout] Не удалось оформить заказ", {
+            console.error("[Checkout] Не удалось оформить заказ", {
                 message: e.message,
                 code: e.code,
                 status: e.status,

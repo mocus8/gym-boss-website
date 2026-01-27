@@ -147,7 +147,6 @@ function updateCartInfo(cartData) {
 // Находим контейнер и кнопку "оформить заказ"
 const productContainer = document.getElementById("product-container");
 const startOrderBtn = document.getElementById("start-order-btn");
-
 // Если нашли контейнер, то навешиваем разные обработчики
 if (!productContainer || !startOrderBtn) {
     console.warn(
