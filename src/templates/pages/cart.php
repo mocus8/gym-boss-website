@@ -27,15 +27,15 @@
         </div>
 
         <div class="order_inf_amount">
-            Количество товаров: <span id="items-total-qty">0</span> шт.
+            Количество товаров: <span id="items-total-qty">загрузка...</span> шт.
         </div>
 
         <div class="order_inf_price_1" >
-            Стоимость всех товаров: <span data-items-total-price>0</span> ₽
+            Стоимость всех товаров: <span data-items-total-price>загрузка...</span> ₽
         </div>
 
         <div class="order_inf_price_2">
-            Итого: <span data-items-total-price>0</span> ₽
+            Итого: <span data-items-total-price>загрузка...</span> ₽
         </div>
     </div>
     

@@ -92,19 +92,19 @@
             <div id="checkout-items-container"></div>
 
             <div class="order_right_row">
-                Количество товаров: <span id="checkout-items-count">0</span>
+                Количество товаров: <span id="checkout-items-count">загрузка...</span>
             </div>
 
             <div class="order_right_row">
-                Стоимость всех товаров: <span id="checkout-items-price">0</span> ₽
+                Стоимость всех товаров: <span id="checkout-items-price">загрузка...</span> ₽
             </div>
             
             <div class="order_right_row hidden" data-order-type="courier">
-                Стоимость доставки: <span id="checkout-delivery-price">0</span> ₽ <span id="checkout-delivery-note"></span>
+                Стоимость доставки: <span id="checkout-delivery-price">загрузка...</span> ₽ <span id="checkout-delivery-note"></span>
             </div>
 
             <div class="order_right_row">
-                Итого: <span id="checkout-total-price">0</span> ₽
+                Итого: <span id="checkout-total-price">загрузка...</span> ₽
             </div>
 
             <div class="order_right_row hidden" data-order-type="courier">
