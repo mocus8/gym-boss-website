@@ -230,7 +230,7 @@ function setDeliveryMode(mode) {
 function createCheckoutItemEl(item) {
     // Создаем блок товара
     const itemDiv = document.createElement("div");
-    itemDiv.classList.add("checkout_item_row");
+    itemDiv.classList.add("item_row");
 
     const name = String(item.name);
     const amount = String(item.amount);

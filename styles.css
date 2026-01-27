@@ -2443,7 +2443,7 @@ button {
     font-family: "Jost", Arial;
 }
 
-.checkout_item_row {
+.item_row {
     font-size: 1.75vw;
     font-family: "Jost", Arial;
     white-space: nowrap;
