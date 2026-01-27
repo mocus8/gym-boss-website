@@ -1315,6 +1315,7 @@ button {
 
 .colour_href:hover {
     color: blue;
+    white-space: nowrap;
 }
 
 .catalog {
