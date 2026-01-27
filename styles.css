@@ -1313,6 +1313,10 @@ button {
     height: 2.75vw;
 }
 
+.colour_href {
+    white-space: nowrap;
+}
+
 .colour_href:hover {
     color: blue;
     white-space: nowrap;
