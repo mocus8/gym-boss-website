@@ -149,9 +149,7 @@ const productContainer = document.getElementById("product-container");
 const startOrderBtn = document.getElementById("start-order-btn");
 // Если нашли контейнер, то навешиваем разные обработчики
 if (!productContainer || !startOrderBtn) {
-    console.warn(
-        "[cart-page] product-container или start-order-btn не найдены",
-    );
+    console.warn("[Cart] product-container или start-order-btn не найдены");
 } else {
     // Функия для рендера пустой корзины
     function renderEmptyCart() {
@@ -186,7 +184,7 @@ if (!productContainer || !startOrderBtn) {
                 startOrderBtn.classList.remove("hidden");
             }
         } catch (e) {
-            console.error("[cart-page] Не удалось загрузить корзину", {
+            console.error("[Cart] Не удалось загрузить корзину", {
                 message: e.message,
                 code: e.code,
                 status: e.status,
@@ -242,16 +240,13 @@ if (!productContainer || !startOrderBtn) {
                 if (count === 0) renderEmptyCart();
             } catch (e) {
                 // Логирование в консоль с полным контекстом
-                console.error(
-                    "[cart-page] Не удалось убрать товар из корзины",
-                    {
-                        message: e.message,
-                        code: e.code,
-                        status: e.status,
-                        payload: e.payload, // тот самый data
-                        productId,
-                    },
-                );
+                console.error("[Cart] Не удалось убрать товар из корзины", {
+                    message: e.message,
+                    code: e.code,
+                    status: e.status,
+                    payload: e.payload, // тот самый data
+                    productId,
+                });
 
                 // Показ ошибки пользователю
                 const message = getErrorMessage(e.code, e.status);
@@ -284,7 +279,7 @@ if (!productContainer || !startOrderBtn) {
                 updateCartInfo(response);
             } catch (e) {
                 // Логирование в консоль с полным контекстом
-                console.error("[cart-page] Не удалось добавить товар", {
+                console.error("[Cart] Не удалось добавить товар", {
                     message: e.message,
                     code: e.code,
                     status: e.status,
@@ -318,16 +313,13 @@ if (!productContainer || !startOrderBtn) {
                 if (count === 0) renderEmptyCart();
             } catch (e) {
                 // Логирование в консоль с полным контекстом
-                console.error(
-                    "[cart-page] Не удалось удалить товар из корзины",
-                    {
-                        message: e.message,
-                        code: e.code,
-                        status: e.status,
-                        payload: e.payload, // тот самый data
-                        productId,
-                    },
-                );
+                console.error("[Cart] Не удалось удалить товар из корзины", {
+                    message: e.message,
+                    code: e.code,
+                    status: e.status,
+                    payload: e.payload, // тот самый data
+                    productId,
+                });
 
                 // Показ ошибки пользователю
                 const message = getErrorMessage(e.code, e.status);
