@@ -283,7 +283,7 @@ function fillCheckoutItems(cartItems) {
         // Рендерим через функцию блок товара
         const itemEl = createCheckoutItemEl(item);
 
-        // Добавляем магазин в контейнер
+        // Добавляем товар в контейнер
         itemsContainer.appendChild(itemEl);
     });
 }

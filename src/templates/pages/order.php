@@ -11,7 +11,7 @@
 
 <div class="order_back" id="order-container" data-order-id="<?= $orderId ?>">
     <div>
-        <div class="order_row" id="order-id-row">
+        <div class="order_row">
             Номер заказа: <span id="order-id">загрузка...</span>
         </div>
 
@@ -25,21 +25,21 @@
     </div>
 
     <div id="order-items-container" data-order-details></div>
-    
+
     <div data-order-details>
         <div class="order_row">
             Способ доставки: <span id="order-delivery-type">загрузка...</span>
         </div>
 
-        <div class="order_row" data-delivery-visible-type="courier">
+        <div class="order_row hidden" data-optional-row data-delivery-visible-type="courier">
             Адрес доставки: <span id="order-courier-address">загрузка...</span>
         </div>
 
-        <div class="order_row" data-delivery-visible-type="courier">
+        <div class="order_row hidden" data-optional-row data-delivery-visible-type="courier">
             Стоимость доставки: <span id="order-delivery-price">загрузка...</span> ₽
         </div>
 
-        <div class="order_row" data-delivery-visible-type="pickup">
+        <div class="order_row hidden" data-optional-row data-delivery-visible-type="pickup">
             Пункт выдачи: <span id="order-pickup-store">загрузка...</span>
         </div>
     </div>
@@ -49,11 +49,25 @@
     </div>
 
     <div class="order_pending_actions hidden" data-visible-status="pending_payment">
-        <button class="order_action_button" id="order-pay-btn">Оплатить</button>
         <button class="order_action_button" id="order-cancel-btn">Отменить</button>
+        <button class="order_action_button" id="order-pay-btn">Оплатить</button>
     </div>
 
-    <div class="order_row hidden" data-delivery-visible-type="pickup" data-visible-status="paid">
+    <div
+        class="order_row hidden"
+        data-optional-row
+        data-order-details
+        data-delivery-visible-type="courier"
+        data-visible-status="paid, shipped"
+    >
+        Ориентировочная дата доставки: с
+        <span id="order-courier-first-date">загрузка...</span>
+        до
+        <span id="order-courier-last-date">загрузка...</span>,
+        курьер свяжется с вами по прикрепленному к заказу номеру телефона
+    </div>
+
+    <div class="order_row hidden" data-optional-row data-delivery-visible-type="pickup" data-visible-status="paid">
         Заказ будет готов к получению с
         <span id="order-ready-for-pickup-first-date">загрузка...</span>
         до
@@ -63,14 +77,6 @@
 
     <div class="order_row hidden" data-delivery-visible-type="pickup" data-visible-status="ready_for_pickup">
         Заказ готов к получению, время работы магазина уточняйте на сайте
-    </div>
-
-    <div class="order_row hidden" data-delivery-visible-type="courier" data-visible-status="paid, shipped">
-        Ориентировочная дата доставки: с
-        <span id="order-courier-first-date">загрузка...</span>
-        до
-        <span id="order-courier-last-date">загрузка...</span>,
-        курьер свяжется с вами по прикрепленному к заказу номеру телефона
     </div>
 
     <div class="order_row hidden" data-visible-status="paid, shipped, ready_for_pickup, completed">
