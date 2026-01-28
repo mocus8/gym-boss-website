@@ -48,7 +48,7 @@ class Notification {
             !this.#closeBtn
         ) {
             // тут потом правильное логирование
-            console.error("[Notification] Elements not found");
+            console.error("[Notification] Необходимые элементы не найдены");
             return;
         }
 

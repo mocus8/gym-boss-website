@@ -100,13 +100,16 @@ document.addEventListener("click", async function (e) {
             toggleProductButtons(qty);
         } catch (e) {
             // Логирование в консоль с полным контекстом
-            console.error("[product] Не удалось добавить товар в корзину", {
-                message: e.message,
-                code: e.code,
-                status: e.status,
-                payload: e.payload, // тот самый data
-                productId,
-            });
+            console.error(
+                "[product-page] Не удалось добавить товар в корзину",
+                {
+                    message: e.message,
+                    code: e.code,
+                    status: e.status,
+                    payload: e.payload, // тот самый data
+                    productId,
+                },
+            );
 
             // Показ ошибки пользователю
             const message = getErrorMessage(e.code, e.status);
@@ -141,7 +144,7 @@ document.addEventListener("click", async function (e) {
             toggleProductButtons(qty);
         } catch (e) {
             // Логирование в консоль с полным контекстом
-            console.error("[product] Не удалось убрать товар из корзины", {
+            console.error("[product-page] Не удалось убрать товар из корзины", {
                 message: e.message,
                 code: e.code,
                 status: e.status,

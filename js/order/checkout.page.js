@@ -17,7 +17,7 @@ function hideMapLoader(loaderId) {
 // Функция для обработки ошибки курьерской карты
 function handleCourierMapError(error) {
     console.error(
-        "[Checkout] Ошибка инициализации карты курьерской доставки",
+        "[checkout-page] Ошибка инициализации карты курьерской доставки",
         error,
     );
 
@@ -74,7 +74,10 @@ function handleCourierMapError(error) {
 
 // Функция для обработки ошибки карты самовывоза
 function handlePickupMapError(error) {
-    console.error("[Checkout] Ошибка инициализации карты самовывоза", error);
+    console.error(
+        "[checkout-page] Ошибка инициализации карты самовывоза",
+        error,
+    );
     hideMapLoader("pickup-map-loader");
     document.getElementById("pickup-map-error")?.classList.remove("hidden");
 }
@@ -380,7 +383,7 @@ document
             const courierAddressEl = document.getElementById("courier-address");
             if (!courierAddressEl) {
                 console.error(
-                    "[Checkout] Не удалось найти  courierAddressEl при оформлении заказа",
+                    "[checkout-page] Не удалось найти  courierAddressEl при оформлении заказа",
                 );
                 notification.open(
                     "Не удалось оформить заказ, обновите страницу или попробуйте позже",
@@ -402,7 +405,7 @@ document
             const pickupAddressEl = document.getElementById("pickup-address");
             if (!pickupAddressEl) {
                 console.error(
-                    "[Checkout] Не удалось найти pickupAddressEl при оформлении заказа",
+                    "[checkout-page] Не удалось найти pickupAddressEl при оформлении заказа",
                 );
                 notification.open(
                     "Не удалось оформить заказ, обновите страницу или попробуйте позже",
@@ -430,7 +433,7 @@ document
             const orderId = result?.orderId;
             if (!orderId) {
                 console.error(
-                    "[Checkout] Не удалось найти orderId в ответе от сервера",
+                    "[checkout-page] Не удалось найти orderId в ответе от сервера",
                 );
                 notification.open("Не удалось создать заказ, попробуйте позже");
                 return;
@@ -441,7 +444,7 @@ document
             window.location.href = `/order/${uriOrderId}`;
         } catch (e) {
             // Логирование в консоль с полным контекстом
-            console.error("[Checkout] Не удалось оформить заказ", {
+            console.error("[checkout-page] Не удалось оформить заказ", {
                 message: e.message,
                 code: e.code,
                 status: e.status,
