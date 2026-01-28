@@ -6,7 +6,7 @@ import {
     removeCartItem,
 } from "./cart.api.js";
 import { updateHeaderCounter, getErrorMessage, formatPrice } from "../utils.js";
-import { notification } from "../ui/Notification.js";
+import { notification } from "../ui/notification.js";
 
 // Функция для рендера блока товара
 function createCartProductElement(item) {

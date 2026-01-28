@@ -1,6 +1,6 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
 import { loadYandexMapsScripts, CourierMap, PickupMap } from "../maps/index.js";
-import { notification } from "../ui/Notification.js";
+import { notification } from "../ui/notification.js";
 import { getCart } from "../cart/cart.api.js";
 import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
 import { createOrderFromCart } from "./order.api.js";

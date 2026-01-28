@@ -1,7 +1,7 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
 import { getCart, addCartItem, updateCartItemQty } from "../cart/cart.api.js";
 import { getErrorMessage, updateHeaderCounter } from "../utils.js";
-import { notification } from "../ui/Notification.js";
+import { notification } from "../ui/notification.js";
 
 // Получение id товара
 function getProductId() {
