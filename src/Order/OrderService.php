@@ -24,6 +24,12 @@ class OrderService {
     private float $deliveryCourierPrice;
     private float $deliveryFreeThreshold;
 
+    // Константы для времени доставки/сборки заказа
+    private int $pickupReadyFromHours;
+    private int $pickupReadyToHours;
+    private int $courierDeliveryFromHours;
+    private int $courierDeliveryToHours;
+
     // Актуальные id для статусов заказа (ассоциативный массив code => id), живет в течении одного запроса
     private array $statusIdCache = [];
 
@@ -34,12 +40,20 @@ class OrderService {
         CartService $cartService,
         float $deliveryCourierPrice,
         float $deliveryFreeThreshold,
+        int $pickupReadyFromHours,
+        int $pickupReadyToHours,
+        int $courierDeliveryFromHours,
+        int $courierDeliveryToHours,
     ) {
         $this->db = $db;
         $this->productService = $productService;
         $this->cartService = $cartService;
         $this->deliveryCourierPrice = $deliveryCourierPrice;
         $this->deliveryFreeThreshold = $deliveryFreeThreshold;
+        $this->pickupReadyFromHours = $pickupReadyFromHours;
+        $this->pickupReadyToHours = $pickupReadyToHours;
+        $this->courierDeliveryFromHours = $courierDeliveryFromHours;
+        $this->courierDeliveryToHours = $courierDeliveryToHours;
     }
 
     // Вспомогательный приватный метод для получения id статуса заказа по code (с кэшем)
@@ -294,15 +308,19 @@ class OrderService {
                 o.delivery_address_text,
                 o.delivery_postal_code,
                 o.store_id,
+                o.courier_delivery_from,
+                o.courier_delivery_to,
+                o.ready_for_pickup_from,
+                o.ready_for_pickup_to,
                 o.status_id,
                 os.code AS status_code,
                 os.name AS status_name,
                 o.created_at,
                 o.updated_at,
                 o.paid_at,
-                o.cancelled_at,
                 o.yookassa_payment_id,
-                o.payment_expires_at
+                o.payment_expires_at,
+                o.cancelled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
             LEFT JOIN order_statuses AS os ON o.status_id = os.id
@@ -340,6 +358,48 @@ class OrderService {
         }
 
         $stmt->close();
+
+        // Объявляем примерные/фактические сроки доставки/самовывоза
+        $deliveryFrom = null;
+        $deliveryTo = null;
+
+        $statusCode = $order["status_code"];
+        $deliveryTypeId = (int)$order["delivery_type_id"];
+
+        if ($statusCode === 'pending_payment') {
+            // Заказ не оплачен, считаем от now
+            $now = new \DateTimeImmutable('now');
+
+            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+                $deliveryFrom = $now->modify('+' . $this->courierDeliveryFromHours . ' hours')->format('Y-m-d H:i:s');
+                $deliveryTo = $now->modify('+' . $this->courierDeliveryToHours . ' hours')->format('Y-m-d H:i:s');
+            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
+                $deliveryFrom = $now->modify('+' . $this->pickupReadyFromHours . ' hours')->format('Y-m-d H:i:s');
+                $deliveryTo = $now->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
+            }
+
+        } elseif ($statusCode === 'paid' || $statusCode === 'shipped' || $statusCode === 'ready_for_pickup') {
+            // Заказ оплачен, используем значения из бд
+            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+                $deliveryFrom = $order["courier_delivery_from"];
+                $deliveryTo = $order["courier_delivery_to"];
+            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
+                $deliveryFrom = $order["ready_for_pickup_from"];
+                $deliveryTo = $order["ready_for_pickup_to"];
+            }
+        }
+
+        // Удаляем сырые значения из бд из массива order
+        unset(
+            $order['courier_delivery_from'],
+            $order['courier_delivery_to'],
+            $order['ready_for_pickup_from'],
+            $order['ready_for_pickup_to']
+        );
+
+        // Добавляем новые поля в массив order
+        $order['delivery_from'] = $deliveryFrom;
+        $order['delivery_to'] = $deliveryTo;
 
         $sql = "
             SELECT 
@@ -578,9 +638,12 @@ class OrderService {
         $this->db->begin_transaction();
         
         try {
-            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
+            // Получаем статус, тип доставкии и время оплаты заказа с блокировкой строки (FOR UPDATE)
             $sql = "
-                SELECT status_id
+                SELECT 
+                    status_id,
+                    delivery_type_id,
+                    paid_at
                 FROM orders
                 WHERE order_id = ?
                 FOR UPDATE
@@ -616,6 +679,8 @@ class OrderService {
             }
 
             $orderStatusId = (int)$row["status_id"];
+            $deliveryTypeId = (int)$row["delivery_type_id"];
+            $paidAtRow = $row["paid_at"];
 
             $pendingStatusId = $this->getStatusIdByCode('pending_payment');
             $paidStatusId = $this->getStatusIdByCode('paid');
@@ -630,12 +695,40 @@ class OrderService {
                 throw new \RuntimeException('Order status is not pending_payment');
             }
 
+            // Проверяем поле paid_at
+            if ($paidAtRow !== null) {
+                // Повторный вызов или особый кейс: используем уже сохранённое время
+                $paidAt = new \DateTimeImmutable($paidAtRow);
+            } else {
+                // Первый раз помечаем как оплаченный: берем текущее время
+                $paidAt = new \DateTimeImmutable('now');
+            }
+            $paidAtFormatted = $paidAt->format('Y-m-d H:i:s');
+
+            // Считаем время доставки/готовности
+            $courierFrom = null;
+            $courierTo = null;
+            $readyForPickupFrom = null;
+            $readyForPickupTo = null;
+
+            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+                $courierFrom = $paidAt->modify('+' . $this->courierDeliveryFromHours . ' hours')->format('Y-m-d H:i:s');
+                $courierTo = $paidAt->modify('+' . $this->courierDeliveryToHours . ' hours')->format('Y-m-d H:i:s');
+            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
+                $readyForPickupFrom = $paidAt->modify('+' . $this->pickupReadyFromHours . ' hours')->format('Y-m-d H:i:s');
+                $readyForPickupTo = $paidAt->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
+            }
+
             // Обновляем статус заказа на paid и записываем yookassaPaymentId
             $sql = "
                 UPDATE orders
                 SET 
                     status_id = ?,
-                    paid_at = NOW(),
+                    courier_delivery_from = ?,
+                    courier_delivery_to = ?,
+                    ready_for_pickup_from = ?,
+                    ready_for_pickup_to = ?,
+                    paid_at = ?,
                     yookassa_payment_id = ?
                 WHERE order_id = ?
             ";
@@ -646,7 +739,17 @@ class OrderService {
                 throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
             }
 
-            $stmt->bind_param("isi", $paidStatusId, $yookassaPaymentId, $orderId);
+            $stmt->bind_param(
+                "issssssi",
+                $paidStatusId,
+                $courierFrom,
+                $courierTo,
+                $readyForPickupFrom,
+                $readyForPickupTo,
+                $paidAtFormatted,
+                $yookassaPaymentId,
+                $orderId
+            );
 
             if (!$stmt->execute()) {
                 $error = $stmt->error ?: $this->db->error;
