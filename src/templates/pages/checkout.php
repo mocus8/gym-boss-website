@@ -114,6 +114,14 @@
             <div class="order_right_row hidden" data-order-type="pickup">
                 Адрес магазина для самовывоза: <span id="pickup-address" data-store-id="">не указан</span>
             </div>
+
+            <div class="order_right_row hidden" id="courier-date-row">
+                Примерная дата доставки: <span id="courier-date-text">загрузка...</span>
+            </div>
+
+            <div class="order_right_row hidden" id="pickup-date-row">
+                Примерная дата готовности заказа: <span id="pickup-date-text">загрузка...</span>
+            </div>
         </div>
 
         <button class="order_right_pay_button" id="create-order-btn">
@@ -130,11 +138,15 @@
     </div>
 </div>
 
-<!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога через глобальный объект
-делаем это через навешивание объекта GYM_BOSS_DELIVERY на wondow -->
+<!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога, времени доставки/самовывоза
+через глобальный объект, делаем это через навешивание объекта GYM_BOSS_DELIVERY на wondow -->
 <script>
   window.GYM_BOSS_DELIVERY = {
     courierFreeThreshold: <?= (int)$deliveryConfig['free_delivery_threshold'] ?>,
     courierPrice: <?= (int)$deliveryConfig['courier_delivery_price'] ?>,
+    courierDeliveryFromHours: <?= (int)$deliveryConfig['courier_delivery_from_hours'] ?>,
+    courierDeliveryToHours: <?= (int)$deliveryConfig['courier_delivery_to_hours'] ?>,
+    pickupReadyFromHours: <?= (int)$deliveryConfig['pickup_ready_from_hours'] ?>,
+    pickupReadyToHours: <?= (int)$deliveryConfig['pickup_ready_to_hours'] ?>,
   };
 </script>

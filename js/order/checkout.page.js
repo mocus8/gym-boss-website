@@ -2,7 +2,7 @@
 import { loadYandexMapsScripts, CourierMap, PickupMap } from "../maps/index.js";
 import { notification } from "../ui/Notification.js";
 import { getCart } from "../cart/cart.api.js";
-import { getErrorMessage, formatPrice } from "../utils.js";
+import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
 import { createOrderFromCart } from "./order.api.js";
 
 // Функция убирания лоадера
@@ -82,6 +82,24 @@ function handlePickupMapError(error) {
     document.getElementById("pickup-map-error")?.classList.remove("hidden");
 }
 
+// Функция для переключения видимости блоков с датой курьерской доставки/самовывоза
+function toggleDeliveryDate() {
+    const courierDateRow = document.getElementById("courier-date-row");
+    const pickupDateRow = document.getElementById("pickup-date-row");
+    const courierPostalCode =
+        document.getElementById("courier-address")?.dataset.postalCode;
+    const pickupStoreId =
+        document.getElementById("pickup-address")?.dataset.storeId;
+
+    if (!courierDateRow || !pickupDateRow) return;
+
+    const deliveryType = getCurrentDeliveryType();
+    const isCourier = deliveryType === "courier";
+
+    courierDateRow.classList.toggle("hidden", !isCourier || !courierPostalCode);
+    pickupDateRow.classList.toggle("hidden", isCourier || !pickupStoreId);
+}
+
 // Функция для обработки выбранного адреса курьерской доставки
 function onCourierAddressSelected({ address, postalCode }) {
     const addressEl = document.getElementById("courier-address");
@@ -89,6 +107,8 @@ function onCourierAddressSelected({ address, postalCode }) {
 
     addressEl.textContent = String(address);
     addressEl.dataset.postalCode = String(postalCode ?? "");
+
+    toggleDeliveryDate();
 }
 
 // Функция для обработки выбранного магазина для самовывоза
@@ -98,6 +118,8 @@ function onPickupStoreSelected({ address, storeId }) {
 
     addressEl.textContent = String(address);
     addressEl.dataset.storeId = String(storeId ?? "");
+
+    toggleDeliveryDate();
 }
 
 // Функция для сверки адреса с уже выбранным
@@ -227,6 +249,8 @@ function setDeliveryMode(mode) {
     } else {
         initPickupMapOnce();
     }
+
+    toggleDeliveryDate();
 }
 
 // Функция для создания отдельного блока с товаром
@@ -300,12 +324,67 @@ function calcDeliveryPrice(cartTotal, deliveryType) {
     return cartTotal < threshold ? deliveryPrice : 0;
 }
 
+// Функция для получения текста даты доставки (с ... до ...) по типу доставки (по переменным из конфига)
+function getDeliveryDateText(deliveryType) {
+    const now = new Date();
+    const deliveryConfig = window.GYM_BOSS_DELIVERY ?? {};
+
+    // Объявляем переменные окна времени доставки/готовности самовывоза
+    let fromHours = null;
+    let toHours = null;
+
+    // Заполняем переменные
+    if (deliveryType === "courier") {
+        fromHours = deliveryConfig.courierDeliveryFromHours
+            ? Number(deliveryConfig.courierDeliveryFromHours)
+            : null;
+
+        toHours = deliveryConfig.courierDeliveryToHours
+            ? Number(deliveryConfig.courierDeliveryToHours)
+            : null;
+    } else if (deliveryType === "pickup") {
+        fromHours = deliveryConfig.pickupReadyFromHours
+            ? Number(deliveryConfig.pickupReadyFromHours)
+            : null;
+
+        toHours = deliveryConfig.pickupReadyToHours
+            ? Number(deliveryConfig.pickupReadyToHours)
+            : null;
+    }
+
+    // Проверяем что часы заданы
+    if (!fromHours || !toHours) {
+        console.warn(
+            "[order-page] Часы доставки не заполнены для доставки типа:",
+            deliveryType,
+        );
+        return null;
+    }
+
+    // Вычисляем даты
+    const fromDate = new Date(now.getTime() + fromHours * 60 * 60 * 1000);
+    const toDate = new Date(now.getTime() + toHours * 60 * 60 * 1000);
+
+    // Форматируем даты
+    const fromText = formatDate(fromDate);
+    const toText = formatDate(toDate);
+
+    if (!fromText || !toText) {
+        console.error("[order-page] Не удалось форматировать даты");
+        return null;
+    }
+
+    return `с ${fromText} до ${toText}`;
+}
+
 // Функция для обновления общей инфы из корзины
 function updateCheckoutInfo(cart) {
     const itemsAmountEl = document.getElementById("checkout-items-count");
     const itemsPriceEl = document.getElementById("checkout-items-price");
     const deliveryPriceEl = document.getElementById("checkout-delivery-price");
     const totalPriceEl = document.getElementById("checkout-total-price");
+    const courierDateEl = document.getElementById("courier-date-text");
+    const pickupDateEl = document.getElementById("pickup-date-text");
     if (!itemsAmountEl || !itemsPriceEl || !deliveryPriceEl || !totalPriceEl) {
         return;
     }
@@ -324,6 +403,8 @@ function updateCheckoutInfo(cart) {
     itemsPriceEl.textContent = String(formatPrice(cartItemsTotal));
     deliveryPriceEl.textContent = String(formatPrice(deliveryPrice));
     totalPriceEl.textContent = String(formatPrice(totalPrice));
+    courierDateEl.textContent = getDeliveryDateText("courier");
+    pickupDateEl.textContent = getDeliveryDateText("pickup");
 }
 
 // Глобальная переменная с полной ифной о корзине, заполняется один раз при загрузке страницы

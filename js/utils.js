@@ -279,3 +279,27 @@ export function formatPrice(value) {
     const number = Number(value) || 0;
     return `${priceFormatter.format(number)}`;
 }
+
+// Функция для форматирования даты в формате 31.01 12:00
+export function formatDate(dateInput) {
+    if (!dateInput) {
+        console.error("[utils] formatDate: dateInput null или undefined");
+        return "";
+    }
+
+    // Преобразуем в Date объект (если пришла строка)
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+
+    // Проверка на валидность даты
+    if (isNaN(date.getTime())) {
+        console.error("[utils] formatDate: неправильная data:", dateInput);
+        return "";
+    }
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${day}.${month} ${hours}:${minutes}`;
+}
