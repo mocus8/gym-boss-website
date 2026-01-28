@@ -82,12 +82,17 @@ $cartCount = $cartService->getItemsCount($cartId);    // получаем кол
 $cartController = new CartController($cartSession, $cartService);
 
 // Работаем с сервисом и контроллером заказов
+// В параметры передаем бд, другие сервисы для взаимодействия и переменные доставки из конфига
 $orderService = new OrderService(
     $db,
     $productService,
     $cartService,
     $deliveryConfig['courier_delivery_price'],
     $deliveryConfig['free_delivery_threshold'],
+    $deliveryConfig['pickup_ready_from_hours'],
+    $deliveryConfig['pickup_ready_to_hours'],
+    $deliveryConfig['courier_delivery_from_hours'],
+    $deliveryConfig['courier_delivery_to_hours'],
 );
 $orderController = new OrderController($orderService, $cartSession, $cartService);
 
