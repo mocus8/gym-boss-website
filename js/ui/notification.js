@@ -1,24 +1,16 @@
-// крутой класс через ES6 для уведомления с текстом
-// Singleton паттерн - гарантируем один экземпляр (будет создан всего один объект класса)
+// крутой класс через ES6 для управленя уведомлением с текстом
 class Notification {
-    // static поля - общие для ВСЕХ объектов класса
-    static #instance = null;
-
     // Константа для времени закрытия уведомления
-    #NOTIFICATION_CLOSING_TIME = 5000;
+    // static поля - общие для ВСЕХ объектов класса
+    static #CLOSE_TIME = 5000;
 
-    #closeTimer = null;
     #notification = null;
+    #closeTimer = null;
     #text = null;
     #progress = null;
     #closeBtn = null;
 
     constructor() {
-        // если уже есть экземпляр класса то просто возвращаем его
-        if (Notification.#instance) {
-            return Notification.#instance;
-        }
-
         // Автоинициализация при загрузке
         if (document.readyState === "loading") {
             // стрелочная функция берет переменные (и this) и работает с ними для ЭТОГО созданного объекта
@@ -27,12 +19,8 @@ class Notification {
                 once: true,
             });
         } else {
-            // тут # т.к. init - приватный метод
             this.#init();
         }
-
-        // сохраняем единственный instance (экземпляр)
-        Notification.#instance = this;
     }
 
     #init() {
@@ -71,7 +59,7 @@ class Notification {
         // Таймер автоскрытия
         this.#closeTimer = setTimeout(
             () => this.close(),
-            this.#NOTIFICATION_CLOSING_TIME,
+            Notification.#CLOSE_TIME,
         );
     }
 
@@ -82,15 +70,15 @@ class Notification {
         this.#progress.classList.remove("shrinking");
 
         if (this.#text) this.#text.textContent = "";
-        if (this.#closeTimer) clearTimeout(this.#closeTimer);
 
+        if (this.#closeTimer !== null) clearTimeout(this.#closeTimer);
         this.#closeTimer = null;
     }
 }
 
 export const notification = new Notification();
 
-// Похожая модалка, но черех IIFE
+// Похожая модалка, но через IIFE
 // const HeaderModal = (function() {
 //     let closeTimer = null;
 //     let modal, text, progress, closeBtn;
