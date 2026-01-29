@@ -1,5 +1,7 @@
-import { getOrderById } from "./order.api.js";
+import { getOrderById, markOrderAsCancelled } from "./order.api.js";
 import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
+import { ConfirmationModal } from "../ui/confirmation-modal.js";
+import { notification } from "../ui/notification.js";
 
 // Функция для скрытия информационных блоков, заполнения и показа блоков ошибки
 function showOrderError(message) {
@@ -366,4 +368,43 @@ window.addEventListener("DOMContentLoaded", async () => {
         const message = getErrorMessage(e.code, e.status);
         showOrderError(message);
     }
+
+    // Если нет кнопки отмены - тихо выходим (она есть не для всех статусов)
+    const cancelButton = document.getElementById("order-cancel-btn");
+    if (!cancelButton) return;
+
+    // Настраиваем модалку подтверждения и навешиваем обработчик отмены
+    const confirmModal = new ConfirmationModal("confirmation-modal");
+
+    // Навешиваем открытие модалки на клик по кнопке "отменить"
+    cancelButton.addEventListener("click", () => {
+        confirmModal.open({
+            title: "Отмена заказа",
+            message: `Отменить заказ №${orderId}?`,
+            warning: "Это действие необратимо.",
+            confirmText: "Да, отменить заказ",
+            cancelText: "Нет, оставить",
+            onConfirm: async () => {
+                try {
+                    await markOrderAsCancelled(orderId);
+                    window.location.reload();
+                } catch (e) {
+                    // Логирование в консоль с полным контекстом
+                    console.error("[order-page] Не удалось отменить заказ", {
+                        message: e.message,
+                        code: e.code,
+                        status: e.status,
+                        payload: e.payload, // data
+                    });
+
+                    // Показ ошибки пользователю
+                    const message = getErrorMessage(e.code, e.status);
+                    notification.open(message);
+
+                    // Пробрасываем ошибку, при этом модалка не закрывается
+                    throw e;
+                }
+            },
+        });
+    });
 });

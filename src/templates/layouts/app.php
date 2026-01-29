@@ -71,5 +71,8 @@ $canonical = $canonical ?? $defaultCanonical;
                 <script type="module" src="<?= htmlspecialchars($script, ENT_QUOTES, 'UTF-8') ?>"></script>
             <?php } ?>
         <?php } ?>
+
+        <!-- универсальная модалка подтверждения -->
+        <?php require __DIR__ . '/../partials/modals/confirmation_modal.php' ?>
 	</body>
 </html>

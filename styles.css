@@ -43,13 +43,15 @@ input:autofill:active {
     top: -9999px !important;
     left: -9999px !important; */
 
-    position: absolute !important;
+    /* position: absolute !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
     width: 0 !important;
     height: 0 !important;
-    overflow: hidden !important;
+    overflow: hidden !important; */
+
+    display: none !important;
 }
 
 .processing {
@@ -2740,4 +2742,111 @@ button {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden !important;
+}
+
+/* Универсально: скрытие */
+.hidden {
+    display: none !important;
+}
+
+/* Контейнер модалки на весь экран */
+.modal {
+    position: fixed;
+    inset: 0; /* top/right/bottom/left: 0 */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* чтобы модалка могла скроллиться на маленьких экранах */
+    padding: 16px;
+    overflow: auto;
+}
+
+/* Затемнение фона */
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+/* Само окно */
+.modal-content {
+    position: relative; /* чтобы быть выше overlay */
+    z-index: 1;
+
+    width: min(520px, 100%);
+    background: #bd1b1b;
+    border-radius: 0.25vw;
+    box-shadow: 0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5);
+
+    padding: 16px;
+
+    font-family: "Jost", Arial;
+}
+
+/* Шапка */
+.modal-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+}
+
+/* Кнопка крестик */
+.modal-close {
+    position: absolute;
+    right: 16px;
+    cursor: pointer;
+}
+
+/* Тело */
+.modal-body {
+    margin-bottom: 16px;
+}
+
+.modal-message {
+    margin: 0 0 8px 0;
+}
+
+.modal-warning {
+    margin: 0;
+    color: #b42318; /* условно “красный” */
+    font-size: 14px;
+}
+
+/* Низ с кнопками */
+.modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.btn {
+    padding: 0.5vw 1vw 0.5vw 1vw;
+    border: 0.15vw solid black;
+    border-radius: 0.5vw;
+    background-color: #4b4b4b;
+    text-align: center;
+    transition:
+        transform 0.2s ease,
+        filter 0.2s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
+    cursor: pointer;
+}
+
+.btn:active {
+    transform: scale(1);
+    filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
 }

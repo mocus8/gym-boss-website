@@ -109,23 +109,3 @@
         Вернуть можно только заказ с момента получения которого прошло менее 14 дней
     </div>
 </div>
-
-<div class="registration_modal_blur" id="order-cancel-modal">
-    <div class="account_delete_modal">
-        <div class="account_delete_modal_entry_text">
-            Вы уверены что хотите отменить заказ?
-        </div>
-
-        <div class="registration_modal_form">
-            <div class="registration_modal_buttons">
-                <button class="registration_modal_button" id="order-cancel-modal-exit">
-                    Вернуться
-                </button>
-
-                <button class="registration_modal_button" id="order-cancel-modal-submit">
-                    Отменить заказ
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
