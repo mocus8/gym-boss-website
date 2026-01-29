@@ -1,3 +1,4 @@
+import { escapeHtml } from "../utils.js";
 /* global ymaps */
 
 // Кешируемый промис для загрузки скриптов для Яндекс.Карт
@@ -167,9 +168,14 @@ export class StoresMap {
 
             const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address)}`;
 
+            // Валидируем поля перед выводом
+            const workHours = escapeHtml(store.workHours);
+            const address = escapeHtml(store.address);
+            const phone = escapeHtml(store.phone);
+
             // Разбиваем часы работы по переносам строк
-            const workHoursHtml = store.workHours
-                ? store.workHours
+            const workHoursHtml = workHours
+                ? workHours
                       .split("\n")
                       .map((line) => line.trim())
                       .filter((line) => line !== "")
@@ -184,7 +190,7 @@ export class StoresMap {
                         <div style="min-width: 250px; font-family: 'Jost', Arial; font-size: 16px; color: black;">
                             <div style="margin-bottom: 15px;">
                                 <strong>
-                                    ${store.address}
+                                    ${address}
                                 </strong>
 
                                 <br>
@@ -192,9 +198,9 @@ export class StoresMap {
                                 <div style="margin-top: 10px;">
                                     ${workHoursHtml}
                                 </div>
-                                <a href='tel:${store.phone}' class="colour_href">
+                                <a href='tel:${phone}' class="colour_href">
                                     <div style="margin-top: 10px;">
-                                        ${store.phone}
+                                        ${phone}
                                     </div>
                                 </a>
                             </div>
@@ -261,6 +267,7 @@ export class CourierMap {
     #map = null; // объект Яндекс.Карты
     #marker = null; // текущий маркер адреса
     #addressInput = null; // input ввода адреса
+    #geocodeRequestId = 0; // счетчик и id запросов геокодинга
     #searchBtn = null; // кнопка поиска
     #isInitialized = false; // флаг создания карты
     #daDataInitialized = false; // флаг инициализации DaData
@@ -431,7 +438,7 @@ export class CourierMap {
 
                     <br>
 
-                    ${address}
+                    ${escapeHtml(address)}
 
                     <div style="
                         margin-top: 5%;
@@ -538,20 +545,24 @@ export class CourierMap {
                 this.#searchBtn.textContent = "Поиск...";
             }
 
-            // Добавляем таймаут на поиск адреса
-            let isGeocodeTimedOut = false;
+            // Прибавляем номер запроса
+            const requestId = ++this.#geocodeRequestId;
+
             const geocodeTimeout = setTimeout(() => {
-                isGeocodeTimedOut = true; // устанавливаем флаг таймаута
+                // Если запрос уже не актуальный - ничего не делаем
+                if (requestId !== this.#geocodeRequestId) return;
+
+                this.#geocodeRequestId++; // протухаем текущий запрос
                 this.#handleError(new Error("GEOCODE_TIMEOUT"));
-            }, 10000); // время таймаута - 10 сек
+            }, 10000);
 
             const res = await ymaps.geocode(normalizedAddressQuery);
 
-            // Если таймаут сработал то выходим
-            if (isGeocodeTimedOut) return;
-
-            // Дошли сюда, таймаут не сработал - очищаем таймаут
+            // таймер лучше очистить сразу после await
             clearTimeout(geocodeTimeout);
+
+            // если пока ждали ответ, стартовал новый поиск - игнорируем этот
+            if (requestId !== this.#geocodeRequestId) return;
 
             // Получаем первый результат, если его нет - ошибку
             const firstResult = res.geoObjects.get(0);
@@ -692,10 +703,11 @@ export class CourierMap {
 
         // Обработчик кнопки Enter на input адреса
         if (this.#addressInput) {
-            this.#addressInput.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") {
-                    this.#processAddress(this.#addressInput.value);
-                }
+            this.#addressInput.addEventListener("keydown", (e) => {
+                if (e.key !== "Enter") return;
+
+                e.preventDefault(); // отменить submit формы по Enter
+                this.#processAddress(this.#addressInput.value);
             });
         }
     }
@@ -764,9 +776,14 @@ export class PickupMap {
             // Соеденяем широту и долготу в массив кординат
             const coords = [store.latitude, store.longitude];
 
+            // Валидируем поля перед выводом
+            const workHours = escapeHtml(store.workHours);
+            const address = escapeHtml(store.address);
+            const phone = escapeHtml(store.phone);
+
             // Разбиваем часы работы по переносам строк
-            const workHoursHtml = store.workHours
-                ? store.workHours
+            const workHoursHtml = workHours
+                ? workHours
                       .split("\n")
                       .map((line) => line.trim())
                       .filter((line) => line !== "")
@@ -786,7 +803,7 @@ export class PickupMap {
                         ">
                             <div style="margin-bottom: 15px;">
                                 <strong>
-                                    ${store.address}
+                                    ${address}
                                 </strong>
                                 
                                 <br>
@@ -795,9 +812,9 @@ export class PickupMap {
                                     ${workHoursHtml}
                                 </div>
 
-                                <a href='tel: ${store.phone}' class="colour_href">
+                                <a href='tel:${phone}' class="colour_href">
                                     <div style="margin-top: 10px;">
-                                        ${store.phone}
+                                        ${phone}
                                     </div>
                                 </a>
                             </div>

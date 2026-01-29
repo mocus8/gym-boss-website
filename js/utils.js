@@ -268,6 +268,16 @@ export async function updateHeaderCounter(qty) {
     headerCounter.textContent = Number(qty);
 }
 
+// Функция для экранирования html перед выводом
+export function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 // Создаем объект для форматирования цены (два знака после запятой)
 const priceFormatter = new Intl.NumberFormat("ru-RU", {
     minimumFractionDigits: 2,
