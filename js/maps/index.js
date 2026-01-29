@@ -559,6 +559,28 @@ export class CourierMap {
                 throw new Error("ADDRESS_NOT_FOUND");
             }
 
+            // Достаем данные найденного адреса
+            const meta = firstResult.properties.get(
+                "metaDataProperty.GeocoderMetaData",
+            );
+            const precision = meta?.precision;
+
+            // Вытаскиваем регион
+            const region =
+                meta?.AddressDetails?.Country?.AdministrativeArea
+                    ?.AdministrativeAreaName;
+            if (!region) throw new Error("ADDRESS_REGION_NOT_DETECTED");
+
+            // Если регион не Москва или область - ошибку
+            const isValidRegion =
+                region === "Москва" || region === "Московская область";
+            if (!isValidRegion) throw new Error("INVALID_ADDRESS_REGION");
+
+            // Если нет дома/номера - ошибку
+            if (precision !== "exact" && precision !== "number") {
+                throw new Error("ADDRESS_TOO_IMPRECISE");
+            }
+
             // Показываем на карте
             this.#showAddressOnMap(firstResult);
         } catch (error) {

@@ -46,7 +46,19 @@ function handleCourierMapError(error) {
 
         // Адрес не найден
         case "ADDRESS_NOT_FOUND":
-            notification.open("Аддрес не найден");
+            notification.open("Адрес не найден");
+            break;
+
+        // Адрес не точный (только улица, только дом и тп)
+        case "ADDRESS_TOO_IMPRECISE":
+            notification.open("Уточните адрес");
+            break;
+
+        // Регион не москва или область
+        case "INVALID_ADDRESS_REGION":
+            notification.open(
+                "Доставка осуществляется только по Москве и области",
+            );
             break;
 
         // Время для поиска вышло
