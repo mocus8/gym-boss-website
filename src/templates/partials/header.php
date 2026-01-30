@@ -52,7 +52,7 @@ if ($userId != '') {
         <?php
         } else {
         ?>
-        <a href="/my-orders">
+        <a href="/account/orders">
             <div class="header_button">
                 <img class="header_button_icon" src="/img/box.png">
                 <div class="header_button_text">

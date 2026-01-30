@@ -47,7 +47,7 @@ $robots = 'noindex,nofollow';
 
 // Через буфер записываем в переменную контент страницы
 ob_start();
-require __DIR__ . '/../templates/pages/my_orders.php';
+require __DIR__ . '/../templates/pages/orders.php';
 $content = ob_get_clean();
 
 // И подключаем главный шаблон сайта
