@@ -21,7 +21,7 @@ if (!is_numeric($orderId) || $orderId <= 0) {
     exit();
 }
 
-require_once __DIR__ . '/src/getOrderData.php';
+// require_once __DIR__ . '/src/getOrderData.php'; Вместо этого использовать новый api-endpoint OrderService
 
 try {
     if (empty($orderItems)) {
