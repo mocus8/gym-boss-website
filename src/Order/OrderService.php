@@ -480,9 +480,37 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid userId');
         }
 
+        // Получаем всю инфу о заказах (таблицы order, delivery_types, order_statuses)
+        // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
         $sql = "
-            SELECT *
-            FROM orders
+            SELECT
+                o.order_id,
+                o.user_id,
+                o.total_qty,
+                o.total_price,
+                o.delivery_type_id,
+                dt.code AS delivery_type_code,
+                dt.name AS delivery_type_name,
+                o.delivery_cost,
+                o.delivery_address_text,
+                o.delivery_postal_code,
+                o.store_id,
+                o.courier_delivery_from,
+                o.courier_delivery_to,
+                o.ready_for_pickup_from,
+                o.ready_for_pickup_to,
+                o.status_id,
+                os.code AS status_code,
+                os.name AS status_name,
+                o.created_at,
+                o.updated_at,
+                o.paid_at,
+                o.yookassa_payment_id,
+                o.payment_expires_at,
+                o.cancelled_at
+            FROM orders AS o
+            LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
+            LEFT JOIN order_statuses AS os ON o.status_id = os.id
             WHERE user_id = ?
             ORDER BY created_at DESC
         ";
