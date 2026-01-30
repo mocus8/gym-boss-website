@@ -99,7 +99,7 @@
     </div>
 
     <div class="order_last_actions">
-        <a href="/my-orders" class="order_action_button">История заказов</a>
+        <a href="/account/my-orders" class="order_action_button">История заказов</a>
         <a href="/" class="order_action_button">Продолжить покупки</a>
     </div>
 
