@@ -308,6 +308,7 @@ class OrderService {
                 o.delivery_address_text,
                 o.delivery_postal_code,
                 o.store_id,
+                s.address AS store_address,
                 o.courier_delivery_from,
                 o.courier_delivery_to,
                 o.ready_for_pickup_from,
@@ -323,6 +324,7 @@ class OrderService {
                 o.cancelled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
+            LEFT JOIN stores AS s ON o.store_id = s.id
             LEFT JOIN order_statuses AS os ON o.status_id = os.id
             WHERE o.order_id = ? AND o.user_id = ?
             LIMIT 1
@@ -495,6 +497,7 @@ class OrderService {
                 o.delivery_address_text,
                 o.delivery_postal_code,
                 o.store_id,
+                s.address AS store_address,
                 o.courier_delivery_from,
                 o.courier_delivery_to,
                 o.ready_for_pickup_from,
@@ -510,8 +513,9 @@ class OrderService {
                 o.cancelled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
+            LEFT JOIN stores AS s ON o.store_id = s.id
             LEFT JOIN order_statuses AS os ON o.status_id = os.id
-            WHERE user_id = ?
+            WHERE o.user_id = ?
             ORDER BY created_at DESC
         ";
 

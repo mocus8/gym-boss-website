@@ -22,56 +22,6 @@ function showOrderError(message) {
     errorElements.forEach((el) => el.classList.remove("hidden"));
 }
 
-// // Заполняем все блоки с инфой о заказе и все товары в заказе (даже если null/"")
-// function fillOrderInfo(order) {
-//     const courierAddressEl = document.getElementById("order-courier-address");
-//     const deliveryPriceEl = document.getElementById("order-delivery-price");
-//     const pickupStoreEl = document.getElementById("order-pickup-store");
-//     const readyForPickupFirstDateEl = document.getElementById(
-//         "order-ready-for-pickup-first-date",
-//     );
-//     const readyForPickupLastDateEl = document.getElementById(
-//         "order-ready-for-pickup-last-date",
-//     );
-//     const courierFirstDateEl = document.getElementById(
-//         "order-courier-first-date",
-//     );
-//     const courierLastDateEl = document.getElementById(
-//         "order-courier-last-date",
-//     );
-
-//     if (
-//         !courierAddressEl ||
-//         !deliveryPriceEl ||
-//         !pickupStoreEl ||
-//         !courierFirstDateEl ||
-//         !courierLastDateEl ||
-//         !readyForPickupFirstDateEl ||
-//         !readyForPickupLastDateEl
-//     ) {
-//         console.error(
-//             "[order-page] Не найдены блоки для заполнения информацией о заказе",
-//         );
-//         return;
-//     }
-
-//     // Деструкторизация объекта order (вытаскиваем из него все нужные поля в перемменные)
-//     const {
-//         status_name: statusName,
-//         created_at: createdAt,
-//         delivery_type_name: deliveryTypeName,
-//         delivery_address_text: deliveryAddressText,
-//         delivery_cost: deliveryCost,
-//         store_id: storeName, // тут потом поменять на name вместо id
-//         total_price: itemsPrice, // стоимость товаров, к ней нужно прибавлять deliveryCost
-//         delivery_from: deliveryFrom,
-//         delivery_to: deliveryTo,
-//     } = order;
-// }
-
-// // Обновляем видимость у соответствующих блоков
-// function ShowOrderInfo({ status_code, delivery_type_code }) {}
-
 // Функция для валидации базовых полей заказа
 function validateOrderData(data) {
     const order = data?.order;
@@ -232,7 +182,7 @@ function fillDeliveryInfo(order) {
 
         setTextOrHide(
             pickupStoreEl,
-            order.store_id ? `Магазин #${order.store_id}` : null,
+            order.store_id ? `${order.store_address}` : null,
         );
     }
 
