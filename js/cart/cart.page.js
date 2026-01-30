@@ -171,7 +171,7 @@ async function initCartPage(productContainer, startOrderBtn) {
                 // Рендерим через функцию блок товара
                 const itemEl = createCartProductElement(item);
 
-                // Добавляем магазин в контейнер
+                // Добавляем товар в контейнер
                 productContainer.appendChild(itemEl);
             });
 
