@@ -1,15 +1,13 @@
 // Функция запроса к API: добавляет baseUrl, парсит JSON, проверяет HTTP статус и флаг success, кидает осмысленную ошибку
 // Options - по умолчанию пустой объект {}, можеть быть таким: { method: 'POST', body: '...' }
-// ...options раскрывает содержимое объекта и вставляет его (убирает {} вокруг содержимого)
-// Credentials: "same-origin" — настройка для fetch, которая говорит: "отправлять данные только если запрос на тот же домен"
 export async function requestApi(baseUrl, path, options = {}) {
     const response = await fetch(baseUrl + path, {
         // Всегда по умолчанию JSON.
         headers: {
             "Content-Type": "application/json",
         },
-        credentials: "same-origin",
-        ...options,
+        credentials: "same-origin", // настройка для fetch, которая говорит: "отправлять данные только если запрос на тот же домен"
+        ...options, // ...options раскрывает содержимое объекта и вставляет его (убирает {} вокруг содержимого)
     });
 
     // Пытаемся распарсить response как json
