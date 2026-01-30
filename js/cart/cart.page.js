@@ -144,64 +144,56 @@ function updateCartInfo(cartData) {
     });
 }
 
-// Находим контейнер и кнопку "оформить заказ"
-const productContainer = document.getElementById("product-container");
-const startOrderBtn = document.getElementById("start-order-btn");
-// Если нашли контейнер, то навешиваем разные обработчики
-if (!productContainer || !startOrderBtn) {
-    console.warn(
-        "[cart-page] Не найдены product-container или start-order-btn",
-    );
-} else {
-    // Функия для рендера пустой корзины
+// Функция для инициализации страницы (рендер инфы и навешивание обработчиков)
+async function initCartPage(productContainer, startOrderBtn) {
+    // Функция для рендера пустой корзины
     function renderEmptyCart() {
         productContainer.innerHTML =
             '<div class="cart_empty">Корзина пуста</div>';
         startOrderBtn.classList.add("hidden");
     }
 
-    // Находим и заполняем корзину при прогрузке страницы, либо показываем пустую
-    window.addEventListener("load", async function () {
-        try {
-            const cart = await getCart();
-            const cartItems = cart.items ?? [];
+    // Находим и заполняем корзину, либо показываем пустую
+    try {
+        const cart = await getCart();
+        const cartItems = cart.items ?? [];
 
-            updateCartInfo(cart);
+        updateCartInfo(cart);
 
-            if (cartItems.length === 0) {
-                renderEmptyCart();
-            } else {
-                // Очищаем содержимое контейнера
-                productContainer.innerHTML = "";
+        if (cartItems.length === 0) {
+            // Рендерим пустую корзину
+            renderEmptyCart();
+        } else {
+            // Очищаем содержимое контейнера
+            productContainer.innerHTML = "";
 
-                cartItems.forEach((item) => {
-                    // Рендерим через функцию блок товара
-                    const itemEl = createCartProductElement(item);
+            cartItems.forEach((item) => {
+                // Рендерим через функцию блок товара
+                const itemEl = createCartProductElement(item);
 
-                    // Добавляем магазин в контейнер
-                    productContainer.appendChild(itemEl);
-                });
-
-                // Показываем кнопку "Оформить заказ"
-                startOrderBtn.classList.remove("hidden");
-            }
-        } catch (e) {
-            console.error("[cart-page] Не удалось загрузить корзину", {
-                message: e.message,
-                code: e.code,
-                status: e.status,
-                payload: e.payload,
+                // Добавляем магазин в контейнер
+                productContainer.appendChild(itemEl);
             });
 
-            // Кладем ошибку в верстку
-            productContainer.innerHTML =
-                '<div class="cart_empty">Не удалось загрузить корзину</div>';
-
-            // Показ ошибки пользователю
-            const message = getErrorMessage(e.code, e.status);
-            notification.open(message);
+            // Показываем кнопку "Оформить заказ"
+            startOrderBtn.classList.remove("hidden");
         }
-    });
+    } catch (e) {
+        console.error("[cart-page] Не удалось загрузить корзину", {
+            message: e.message,
+            code: e.code,
+            status: e.status,
+            payload: e.payload,
+        });
+
+        // Кладем ошибку в верстку
+        productContainer.innerHTML =
+            '<div class="cart_empty">Не удалось загрузить корзину</div>';
+
+        // Показ ошибки пользователю
+        const message = getErrorMessage(e.code, e.status);
+        notification.open(message);
+    }
 
     // Делигирование событий для взаимодествия с товарами в корзине
     productContainer.addEventListener("click", async (e) => {
@@ -337,4 +329,17 @@ if (!productContainer || !startOrderBtn) {
             return;
         }
     });
+}
+
+// Находим контейнер и кнопку "оформить заказ"
+const productContainer = document.getElementById("product-container");
+const startOrderBtn = document.getElementById("start-order-btn");
+
+// Если нашлись элементы - рендерим инфу и вешаем обработчики
+if (!productContainer || !startOrderBtn) {
+    console.error(
+        "[cart-page] Не найдены product-container или start-order-btn",
+    );
+} else {
+    initCartPage(productContainer, startOrderBtn);
 }
