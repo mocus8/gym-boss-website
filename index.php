@@ -20,6 +20,7 @@ if (strpos($uri, '/api/') === 0) {
     $protectedApiRoutes = [
         'POST' => [
             '/order/create-from-cart',
+            '/dadata/suggest/address',
         ],
         'GET' => [
             '/orders',
@@ -45,6 +46,7 @@ if (strpos($uri, '/api/') === 0) {
             '/cart/remove-item' => [$cartController, 'removeItem'],
             '/cart/clear' => [$cartController, 'clear'],
             '/order/create-from-cart' => [$orderController, 'createFromCart'],
+            '/dadata/suggest/address' => [$dadataController, 'suggestAddress'],
         ],
     ];
 
