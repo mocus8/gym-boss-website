@@ -69,10 +69,8 @@ function handleCourierMapError(error) {
             break;
 
         // Ошибки DaData - карта работает, подсказок нет
-        case "DADATA_API_NOT_AVAILABLE":
-        case "DADATA_SCRIPT_LOAD_FAILED":
-        case "DADATA_KEY_HTTP_ERROR":
-        case "DADATA_KEY_NOT_FOUND":
+        case "DADATA_ERROR":
+        case "VALIDATION_ERROR":
             notification.open("Подсказки по адресу временно не доступны");
             break;
 
@@ -180,6 +178,7 @@ async function initCourierMapOnce() {
         // Создаем объект курьерской карты, в параметрах id элемента для вставки и объект с функциями
         courierMap = new CourierMap("courier-map", {
             addressInputId: "address-search-input",
+            suggestionsContainerId: "suggestions-container",
             searchButtonId: "address-search-btn",
             onError: handleCourierMapError,
             onCourierAddressSelected: onCourierAddressSelected,

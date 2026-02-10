@@ -43,6 +43,8 @@
                 <button type="button" id="address-search-btn" class="map_search_btn">
                     Найти
                 </button>
+
+                <div class="suggestions_container" id="suggestions-container" hidden></div>
             </div>
 
             <div class="map_container">

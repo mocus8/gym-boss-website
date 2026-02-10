@@ -1,4 +1,5 @@
 import { escapeHtml } from "../utils.js";
+import { suggestAddress } from "./dadata.api.js";
 /* global ymaps */
 
 // Кешируемый промис для загрузки скриптов для Яндекс.Карт
@@ -54,54 +55,6 @@ export function loadYandexMapsScripts() {
     });
 
     return yandexMapsPromise;
-}
-
-// Кешируемый промис для загрузки скриптов для DaData
-// Типа флага, но асинхронный, его можно ожидать await
-let daDataPromise = null;
-
-// Функция для загрузки скриптов DaData, возвращает промис
-function loadDaDataScripts() {
-    // Если промис уже создан, возвращаем его
-    if (daDataPromise) return daDataPromise;
-
-    // Присваиваем промису значение функции
-    daDataPromise = new Promise((resolve, reject) => {
-        // Если скрипт уже загружен, резолвим промис (делаем его готовым)
-        if (window.Dadata) {
-            resolve();
-            return;
-        }
-
-        // Создаем тег <script> в памяти (не реально в документе)
-        const script = document.createElement("script");
-
-        // URL для скрипта
-        const url = `https://cdn.jsdelivr.net/npm/@dadata/suggestions@25.4.1/dist/suggestions.min.js`;
-
-        // Вставляем в скрипт URL
-        script.src = url;
-        script.async = true;
-
-        // Обработчик на загрузку скрипта
-        script.onload = () => {
-            if (!window.Dadata) {
-                reject(new Error("DADATA_API_NOT_AVAILABLE"));
-                return;
-            }
-            resolve(); // промис выполнен успешно
-        };
-
-        // Обработчик на ошибку скрипта
-        script.onerror = () => {
-            reject(new Error("DADATA_SCRIPT_LOAD_FAILED"));
-        };
-
-        // Вставляем скрипт в DOM
-        document.head.appendChild(script);
-    });
-
-    return daDataPromise;
 }
 
 // Класс StoresMap
@@ -267,6 +220,8 @@ export class CourierMap {
     #map = null; // объект Яндекс.Карты
     #marker = null; // текущий маркер адреса
     #addressInput = null; // input ввода адреса
+    #suggestionsContainer = null; // контейнер подсказок
+    #onOutsideMouseDown = null; // функция клика вне подсказок и input-а, для закрытия подсказок
     #geocodeRequestId = 0; // счетчик и id запросов геокодинга
     #searchBtn = null; // кнопка поиска
     #isInitialized = false; // флаг создания карты
@@ -279,6 +234,7 @@ export class CourierMap {
     constructor(containerId, options = {}) {
         const {
             addressInputId,
+            suggestionsContainerId,
             searchButtonId,
             onError,
             onCourierAddressSelected,
@@ -313,12 +269,19 @@ export class CourierMap {
             this.#addressInput = addressInputId
                 ? document.getElementById(addressInputId)
                 : null;
+            this.#suggestionsContainer = suggestionsContainerId
+                ? document.getElementById(suggestionsContainerId)
+                : null;
             this.#searchBtn = searchButtonId
                 ? document.getElementById(searchButtonId)
                 : null;
 
             // Если элементы не найдены - ошибку
-            if (!this.#addressInput || !this.#searchBtn) {
+            if (
+                !this.#addressInput ||
+                !this.#suggestionsContainer ||
+                !this.#searchBtn
+            ) {
                 throw new Error("COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND");
             }
 
@@ -331,8 +294,7 @@ export class CourierMap {
 
             // Инициализируем
             this.#setupEvents();
-            // Запускаем асинхронный код и навешиваем на него .catch(...)
-            this.#initDaData().catch((error) => this.#handleError(error));
+            this.#initDaData();
             this.#isInitialized = true;
         } catch (error) {
             this.#handleError(error);
@@ -374,8 +336,22 @@ export class CourierMap {
             this.#addressInput.replaceWith(this.#addressInput.cloneNode(true));
         }
 
+        // Удаляем обработчик с контйнера подсказок
+        if (this.#suggestionsContainer) {
+            this.#suggestionsContainer.replaceWith(
+                this.#suggestionsContainer.cloneNode(true),
+            );
+        }
+
+        // Удаляем обработчик клика по документу (закрытие подсказок)
+        if (this.#onOutsideMouseDown) {
+            document.removeEventListener("mousedown", this.#onOutsideMouseDown);
+            this.#onOutsideMouseDown = null;
+        }
+
         this.#marker = null;
         this.#addressInput = null;
+        this.#suggestionsContainer = null;
         this.#searchBtn = null;
         this.#isInitialized = false;
         this.#daDataInitialized = false;
@@ -604,67 +580,125 @@ export class CourierMap {
         }
     }
 
-    // Инициализация подсказок DaData по адресу
-    async #initDaData() {
-        if (this.#daDataInitialized || !this.#addressInput) return;
+    // Функция для показа подсказок
+    #showSuggestions() {
+        if (!this.#suggestionsContainer) return;
+        this.#suggestionsContainer.hidden = false;
+    }
 
-        try {
-            // Ждем загрузки скриптов DaData
-            await loadDaDataScripts();
+    // Функция для скрытия подсказок
+    #hideSuggestions() {
+        if (!this.#suggestionsContainer) return;
+        this.#suggestionsContainer.hidden = true;
+        this.#suggestionsContainer.innerHTML = "";
 
-            // Проверяем доступность DaData
-            if (!window.Dadata) {
-                throw new Error("DADATA_API_NOT_AVAILABLE");
-            }
+        console.log("hideSuggestions", this.#suggestionsContainer);
+    }
 
-            const response = await fetch("/src/serviceProxy.php");
+    // Функция для создания элемента подсказки
+    #createSuggestionElement(suggestion) {
+        const suggestionValue = String(suggestion.value);
 
-            if (!response.ok) {
-                console.error(`[DaData] HTTP error status: ${response.status}`);
-                throw new Error("DADATA_KEY_HTTP_ERROR");
-            }
+        const suggestionDiv = document.createElement("div");
+        suggestionDiv.classList.add("suggestion");
+        suggestionDiv.dataset.suggestionValue = suggestionValue;
+        suggestionDiv.innerText = suggestionValue;
 
-            const data = await response.json();
-            const token = data?.key;
+        return suggestionDiv;
+    }
 
-            if (!token) {
-                throw new Error("DADATA_KEY_NOT_FOUND");
-            }
+    // Функция для рендера и показа подсказок
+    #renderSuggestions(suggestions) {
+        if (!this.#suggestionsContainer) return;
 
-            // Используем стандартный виджет DaData для создания подсказок
-            window.Dadata.createSuggestions(this.#addressInput, {
-                token: token,
-                type: "address",
-                count: 5,
-                // Встроенный обработчик выбора подсказки от DaData
-                onSelect: (suggestion) => {
-                    this.#processAddress(suggestion.value);
-                },
-            });
-
-            // // Кастомный обработчик выбора подсказки
-            // const container = document.getElementById(containerId);
-            // if (!container) return;
-            // container.addEventListener('click', (e) => {
-            //     let target = e.target;
-            //     while (target && target !== document.body) {
-            //         if (target.classList && target.classList.contains('suggestions-suggestion')) {
-            //             setTimeout(() => {
-            //                 this.#processAddress(this.#addressInput.value);
-            //                 console.log("Обработчик по подсказке сработал");
-            //             }, 100);
-
-            //             break;
-            //         }
-
-            //         target = target.parentElement;
-            //     }
-            // });
-
-            this.#daDataInitialized = true;
-        } catch (error) {
-            this.#handleError(error);
+        if (!suggestions?.length) {
+            this.#hideSuggestions();
+            return;
         }
+
+        // Очищаем содержимое контейнера
+        this.#suggestionsContainer.innerHTML = "";
+
+        // Заполняем контейнер
+        suggestions.forEach((suggestion) => {
+            // Рендерим через функцию блок товара
+            const suggestionEl = this.#createSuggestionElement(suggestion);
+
+            // Добавляем подсказку в контейнер
+            this.#suggestionsContainer.appendChild(suggestionEl);
+        });
+
+        // Показываем контейнер
+        this.#showSuggestions();
+    }
+
+    // Инициализация подсказок DaData по адресу
+    #initDaData() {
+        if (
+            this.#daDataInitialized ||
+            !this.#addressInput ||
+            !this.#suggestionsContainer
+        )
+            return;
+
+        // Сохраняем в переменную функцию для получения подсказок
+        const suggestionsOnInput = async () => {
+            const q = this.#addressInput.value.trim();
+            if (q.length < 3) {
+                this.#hideSuggestions();
+                return;
+            }
+
+            try {
+                // Получаем массив подсказок через запрос
+                const res = await suggestAddress(q, 5);
+                const suggestions = res?.suggestions ?? [];
+
+                this.#renderSuggestions(suggestions);
+            } catch (error) {
+                this.#hideSuggestions();
+                this.#handleError(error);
+            }
+        };
+
+        // Функция для обработки клика по подсказкам (делегирование внутренних подсказок по дата-атрибутам)
+        const suggestionOnClick = async (e) => {
+            const suggestion = e.target.closest("[data-suggestion-value]");
+            if (!suggestion) return;
+
+            const value = suggestion.dataset.suggestionValue;
+            if (!value) return;
+
+            this.#hideSuggestions();
+            this.#addressInput.value = value;
+
+            try {
+                await this.#processAddress(value);
+            } catch (error) {
+                this.#hideSuggestions();
+                this.#handleError(error);
+            }
+        };
+
+        // Навешиваем на ввод адреса
+        this.#addressInput.addEventListener("input", suggestionsOnInput);
+
+        // Навешиваем обработчик на контейнер подсказок
+        this.#suggestionsContainer.addEventListener("click", suggestionOnClick);
+
+        // Закрытие подсказок при клике вне контейнера/input-а
+        this.#onOutsideMouseDown = (e) => {
+            const target = e.target;
+            if (this.#addressInput.contains(target)) return;
+            if (this.#suggestionsContainer.contains(target)) return;
+            this.#hideSuggestions();
+        };
+        // Навешиваем обработчик клика на функцию
+        document.addEventListener("mousedown", this.#onOutsideMouseDown);
+
+        // Ставим флаг инициализации DaData
+        this.#daDataInitialized = true;
+
         // Cтарый код, кастомные подсказки без dadata:
 
         // const suggestionsContainer = document.createElement('div');
