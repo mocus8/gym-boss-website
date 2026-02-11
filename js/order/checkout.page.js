@@ -1,9 +1,10 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
+import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
 import { loadYandexMapsScripts, CourierMap, PickupMap } from "../maps/index.js";
 import { notification } from "../ui/notification.js";
 import { getCart } from "../cart/cart.api.js";
-import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
 import { createOrderFromCart } from "./order.api.js";
+import { getStores } from "../store/store.api.js";
 
 // Функция убирания лоадера
 function hideMapLoader(loaderId) {
@@ -32,7 +33,6 @@ function handleCourierMapError(error) {
         case "YANDEX_MAPS_KEY_NOT_FOUND":
         case "MAP_CONTAINER_NOT_FOUND":
         case "COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND":
-        case "STORES_HTTP_ERROR":
             hideMapLoader("courier-map-loader");
             document
                 .getElementById("courier-map-error")
@@ -208,13 +208,8 @@ async function initPickupMapOnce() {
             isAddressSelected: isAddressSelected,
         });
 
-        // Тут потом сделать через сервис, контроллер и api.js
         // Загружаем список магазинов
-        const response = await fetch("/src/getStores.php");
-        if (!response.ok) {
-            throw new Error("STORES_HTTP_ERROR");
-        }
-        const stores = await response.json();
+        const stores = getStores();
 
         // Рендерим метки на карте самовывоза
         pickupMap.renderStores(stores);
