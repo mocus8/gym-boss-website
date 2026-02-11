@@ -12,7 +12,7 @@ async function requestDadata(path, options = {}) {
 
 // Функция для получения подсказок
 // Отправляет запрос POST /api/dadata/suggest/address
-export function suggestAddress(query, count = 5) {
+export function suggestAddress(query, count = 5, options = {}) {
     const q = query == null ? "" : String(query).trim();
 
     return requestDadata("dadata/suggest/address", {
@@ -21,5 +21,6 @@ export function suggestAddress(query, count = 5) {
             query: q,
             count: Number(count),
         }),
+        ...options,
     });
 }
