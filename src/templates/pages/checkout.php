@@ -29,7 +29,6 @@
             <div class="map_search_form">
                 <input type="text"
                     id="address-search-input"
-                    name="delivery_address"
                     autocomplete="street-address"
                     autocorrect="off"
                     autocapitalize="off"
