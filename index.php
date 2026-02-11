@@ -39,6 +39,7 @@ if (strpos($uri, '/api/') === 0) {
             '/cart' => [$cartController, 'getCart'],
             '/products' => [$productController, 'getCatalog'],
             '/orders' => [$orderController, 'getUserOrders'],
+            '/stores' => [$storeController, 'getAll']
         ],
         'POST' => [
             '/cart/add-item' => [$cartController, 'addItem'],
@@ -56,7 +57,7 @@ if (strpos($uri, '/api/') === 0) {
         call_user_func($handler);    // вызываем метод
         exit;
     }
-    // Поиск: GET /api/products/search?q=...
+    // Поиск товара: GET /api/products/search?q=...
     elseif ($method === 'GET' && $apiPath === '/products/search') {
         $q = $_GET['q'] ?? '';
         $productController->search($q);
@@ -82,6 +83,12 @@ if (strpos($uri, '/api/') === 0) {
 
         $orderId  = (int)$matches[1];
         $orderController->markCancel($orderId );
+        exit;
+    }
+    // Получение магазина по id: GET /api/stores/{id}
+    elseif ($method === 'GET' && preg_match('#^/stores/([0-9]+)$#', $apiPath, $matches)) {
+        $storeId  = (int)$matches[1];
+        $storeController->getById($storeId);
         exit;
     }
     // Любой другой путь - 404-й статус и json ответ с указанием
