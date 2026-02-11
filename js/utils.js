@@ -2,12 +2,13 @@
 // Options - по умолчанию пустой объект {}, можеть быть таким: { method: 'POST', body: '...' }
 export async function requestApi(baseUrl, path, options = {}) {
     const response = await fetch(baseUrl + path, {
+        credentials: "same-origin", // настройка для fetch, которая говорит: "отправлять данные только если запрос на тот же домен"
+        ...options, // ...options раскрывает содержимое объекта и вставляет его (убирает {} вокруг содержимого)
         // Всегда по умолчанию JSON.
         headers: {
             "Content-Type": "application/json",
+            ...(options.headers || {}),
         },
-        credentials: "same-origin", // настройка для fetch, которая говорит: "отправлять данные только если запрос на тот же домен"
-        ...options, // ...options раскрывает содержимое объекта и вставляет его (убирает {} вокруг содержимого)
     });
 
     // Пытаемся распарсить response как json
