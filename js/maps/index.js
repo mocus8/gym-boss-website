@@ -222,6 +222,7 @@ export class CourierMap {
     #addressInput = null; // input ввода адреса
     #suggestionsContainer = null; // контейнер подсказок
     #onOutsideMouseDown = null; // функция клика вне подсказок и input-а, для закрытия подсказок
+    #suggestionsAbortController = null; // AbortController для прерывания запросов получения подсказок
     #geocodeRequestId = 0; // счетчик и id запросов геокодинга
     #searchBtn = null; // кнопка поиска
     #isInitialized = false; // флаг создания карты
@@ -348,6 +349,10 @@ export class CourierMap {
             document.removeEventListener("mousedown", this.#onOutsideMouseDown);
             this.#onOutsideMouseDown = null;
         }
+
+        // Отменем запрос на получение подсказок если можем и обнулем контроллер отмены запросов
+        this.suggestionsAbortController?.abort();
+        this.suggestionsAbortController = null;
 
         this.#marker = null;
         this.#addressInput = null;
@@ -644,16 +649,26 @@ export class CourierMap {
             const q = this.#addressInput.value.trim();
             if (q.length < 3) {
                 this.#hideSuggestions();
+
+                this.#suggestionsAbortController?.abort(); // если можем - прерываем запрос
+                this.#suggestionsAbortController = null; // обнуляем контроллер отмены
+
                 return;
             }
 
+            this.#suggestionsAbortController?.abort(); // если можем - прерываем запрос
+            this.#suggestionsAbortController = new AbortController(); // создаем новый контроллер отмены
+
             try {
                 // Получаем массив подсказок через запрос
-                const res = await suggestAddress(q, 5);
+                const res = await suggestAddress(q, 5, {
+                    signal: this.#suggestionsAbortController.signal,
+                });
                 const suggestions = res?.suggestions ?? [];
 
                 this.#renderSuggestions(suggestions);
             } catch (error) {
+                if (error?.name === "AbortError") return; // если прервано из-за контроллера - тихо выходим
                 this.#hideSuggestions();
                 this.#handleError(error);
             }
@@ -671,7 +686,9 @@ export class CourierMap {
             if (!value) return;
 
             // Отменяем отложенный вызов если он есть
-            debouncedSuggestionsOnInput.cancel();
+            debouncedSuggestionsOnInput.cancel(); // через дебаунс-функцию
+            this.suggestionsAbortController?.abort(); // и через контроллер отмены запроса
+            this.suggestionsAbortController = null;
 
             this.#hideSuggestions();
             this.#addressInput.value = value;
