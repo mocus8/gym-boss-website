@@ -1993,7 +1993,7 @@ button {
     font-family: "Jost", Arial;
 }
 
-.stores_list {
+.stores_container {
     position: relative;
     margin-top: 8.4vw;
     margin-bottom: 0.85vw;
@@ -2106,8 +2106,14 @@ button {
     opacity: 1;
     visibility: visible;
     transition:
-        opacity 0.4s ease,
-        visibility 0.4s ease;
+        opacity 0.2s,
+        visibility 0.2s;
+}
+
+.stores_map_loader_hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 #stores-map {
@@ -2400,22 +2406,12 @@ button {
     width: 60.5vw;
     height: 42.7vw;
     background-color: #bd1b1b;
-    visibility: hidden;
     pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2.5vw;
     font-family: "Jost", Arial;
-    opacity: 0;
-    transition:
-        opacity 0.4s,
-        visibility 0.4s;
-}
-
-.error_stores_map.open {
-    visibility: visible;
-    opacity: 1;
 }
 
 .order_right {

@@ -147,5 +147,3 @@ async function initStoresList() {
         showStoresListError(error);
     }
 }
-
-// нужно инициализировать карту магазинов, после этого скрывать лоадер
