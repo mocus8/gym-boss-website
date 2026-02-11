@@ -22,7 +22,7 @@ class ProductController {
     }
 
     // Будущий конструктор (с логером)
-    // public function __construct(ProductService $productService) {
+    // public function __construct(ProductService $productService, Logger $logger) {
     //     $this->productService = $productService;
     //     $this->logger = $logger;
     // }
