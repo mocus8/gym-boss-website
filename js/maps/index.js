@@ -1,4 +1,4 @@
-import { escapeHtml } from "../utils.js";
+import { debounce, escapeHtml } from "../utils.js";
 import { suggestAddress } from "./dadata.api.js";
 /* global ymaps */
 
@@ -591,8 +591,6 @@ export class CourierMap {
         if (!this.#suggestionsContainer) return;
         this.#suggestionsContainer.hidden = true;
         this.#suggestionsContainer.innerHTML = "";
-
-        console.log("hideSuggestions", this.#suggestionsContainer);
     }
 
     // Функция для создания элемента подсказки
@@ -661,6 +659,9 @@ export class CourierMap {
             }
         };
 
+        // Оборачиваем функцию suggestionsOnInput в debounce-обертку
+        const debouncedSuggestionsOnInput = debounce(suggestionsOnInput, 300);
+
         // Функция для обработки клика по подсказкам (делегирование внутренних подсказок по дата-атрибутам)
         const suggestionOnClick = async (e) => {
             const suggestion = e.target.closest("[data-suggestion-value]");
@@ -668,6 +669,9 @@ export class CourierMap {
 
             const value = suggestion.dataset.suggestionValue;
             if (!value) return;
+
+            // Отменяем отложенный вызов если он есть
+            debouncedSuggestionsOnInput.cancel();
 
             this.#hideSuggestions();
             this.#addressInput.value = value;
@@ -680,11 +684,17 @@ export class CourierMap {
             }
         };
 
-        // Навешиваем на ввод адреса
-        this.#addressInput.addEventListener("input", suggestionsOnInput);
+        // Навешиваем на ввод адреса debounced-обертку функции suggestionsOnInput
+        this.#addressInput.addEventListener(
+            "input",
+            debouncedSuggestionsOnInput,
+        );
 
         // Навешиваем обработчик на контейнер подсказок
-        this.#suggestionsContainer.addEventListener("click", suggestionOnClick);
+        this.#suggestionsContainer.addEventListener(
+            "mousedown",
+            suggestionOnClick,
+        );
 
         // Закрытие подсказок при клике вне контейнера/input-а
         this.#onOutsideMouseDown = (e) => {
