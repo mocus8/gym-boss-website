@@ -209,7 +209,7 @@ async function initPickupMapOnce() {
         });
 
         // Загружаем список магазинов
-        const stores = getStores();
+        const stores = await getStores();
 
         // Рендерим метки на карте самовывоза
         pickupMap.renderStores(stores);
@@ -417,7 +417,7 @@ function updateCheckoutInfo(cart) {
 let checkoutCart = null;
 
 // При загрузке страницы по умолчанию ставим доставку курьером, загружаем корзину и заполняем контейнер товарами
-window.addEventListener("load", async () => {
+window.addEventListener("DOMContentLoaded", async () => {
     setDeliveryMode("courier");
 
     const cart = await getCart();

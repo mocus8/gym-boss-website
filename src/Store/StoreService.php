@@ -42,6 +42,10 @@ class StoreService {
         // stores - ассоциативный массив с инфой о магазинах
         $stores = [];
         while ($row = $result->fetch_assoc()) {
+            // В результатах преобразовываем типы широты и долготы из string в float
+            $row['latitude'] = isset($row['latitude'])  ? (float)$row['latitude']  : null;
+            $row['longitude'] = isset($row['longitude'])  ? (float)$row['longitude']  : null;
+
             $stores[] = $row;
         }
 
