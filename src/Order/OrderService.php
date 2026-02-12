@@ -319,8 +319,6 @@ class OrderService {
                 o.created_at,
                 o.updated_at,
                 o.paid_at,
-                o.yookassa_payment_id,
-                o.payment_expires_at,
                 o.cancelled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
@@ -508,8 +506,6 @@ class OrderService {
                 o.created_at,
                 o.updated_at,
                 o.paid_at,
-                o.yookassa_payment_id,
-                o.payment_expires_at,
                 o.cancelled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
@@ -608,9 +604,10 @@ class OrderService {
             $cancelledStatusId = $this->getStatusIdByCode('cancelled');
             $pendingStatusId = $this->getStatusIdByCode('pending_payment');
 
-            // Уже отменен
+            // Уже отменен (тихо выходим из метода)
             if ($orderStatusId === $cancelledStatusId) {
-                throw new \RuntimeException('Order already cancelled');
+                $this->db->commit();
+                return;
             }
 
             // Статус не pending_payment
@@ -654,16 +651,10 @@ class OrderService {
     }
 
     // Метод для пометки заказа как оплаченного (для вебхука и страницы успеха)
-    public function markPaid(int $orderId, string $yookassaPaymentId): void {
+    public function markPaid(int $orderId): void {
 
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
-        }
-
-        $yookassaPaymentId = trim($yookassaPaymentId);
-
-        if ($yookassaPaymentId === '') {
-            throw new \InvalidArgumentException('Empty yookassaPaymentId');
         }
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
@@ -717,9 +708,10 @@ class OrderService {
             $pendingStatusId = $this->getStatusIdByCode('pending_payment');
             $paidStatusId = $this->getStatusIdByCode('paid');
 
-            // Уже оплачен
+            // Уже оплачен (тихо выходим из метода)
             if ($orderStatusId === $paidStatusId) {
-                throw new \RuntimeException('Order already paid');
+                $this->db->commit();
+                return;
             }
 
             // Статус не pending_payment
@@ -751,7 +743,7 @@ class OrderService {
                 $readyForPickupTo = $paidAt->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
             }
 
-            // Обновляем статус заказа на paid и записываем yookassaPaymentId
+            // Обновляем статус заказа на paid
             $sql = "
                 UPDATE orders
                 SET 
@@ -760,8 +752,7 @@ class OrderService {
                     courier_delivery_to = ?,
                     ready_for_pickup_from = ?,
                     ready_for_pickup_to = ?,
-                    paid_at = ?,
-                    yookassa_payment_id = ?
+                    paid_at = ?
                 WHERE order_id = ?
             ";
 
@@ -772,14 +763,13 @@ class OrderService {
             }
 
             $stmt->bind_param(
-                "issssssi",
+                "isssssi",
                 $paidStatusId,
                 $courierFrom,
                 $courierTo,
                 $readyForPickupFrom,
                 $readyForPickupTo,
                 $paidAtFormatted,
-                $yookassaPaymentId,
                 $orderId
             );
 
@@ -801,17 +791,11 @@ class OrderService {
         }
     }
 
-    // Метод для пометки заказа как отменненого (для вебхука)
-    public function markCancelledFromWebhook(int $orderId, string $yookassaPaymentId): void {
+    // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
+    public function markCancelFromPaymentProvider(int $orderId): void {
 
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
-        }
-
-        $yookassaPaymentId = trim($yookassaPaymentId);
-
-        if ($yookassaPaymentId === '') {
-            throw new \InvalidArgumentException('Empty yookassaPaymentId');
         }
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
@@ -876,8 +860,7 @@ class OrderService {
                 UPDATE orders
                 SET 
                     status_id = ?,
-                    cancelled_at = NOW(),
-                    yookassa_payment_id = ?
+                    cancelled_at = NOW()
                 WHERE order_id = ?
             ";
 
@@ -887,7 +870,7 @@ class OrderService {
                 throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
             }
 
-            $stmt->bind_param("isi", $cancelledStatusId, $yookassaPaymentId, $orderId);
+            $stmt->bind_param("ii", $cancelledStatusId, $orderId);
 
             if (!$stmt->execute()) {
                 $error = $stmt->error ?: $this->db->error;

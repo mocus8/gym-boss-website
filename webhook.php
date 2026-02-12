@@ -101,7 +101,7 @@ try {
         case 'canceled':
         case 'failed':
             // Обновляем статус в бд как отмененный
-            $orderService->markCancelledFromWebhook($orderId, $yookassaPaymentId);
+            $orderService->markCancelFromPaymentProvider($orderId, $yookassaPaymentId);
 
             logWebhook("SUCCESS [Order: $orderId]: Marked as cancelled");
             break;
