@@ -357,4 +357,6 @@ window.addEventListener("DOMContentLoaded", async () => {
             },
         });
     });
+
+    // TODO тут сделать обработчик кнопки оплаты
 });
