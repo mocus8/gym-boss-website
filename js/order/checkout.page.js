@@ -420,21 +420,38 @@ let checkoutCart = null;
 window.addEventListener("DOMContentLoaded", async () => {
     setDeliveryMode("courier");
 
-    const cart = await getCart();
-    const cartItems = cart.items ?? [];
-    // Если в корзине нет товаров на момент оформления заказа то перекидываем на страницу корзины
-    if (!cartItems.length || Number(cart.count ?? 0) === 0) {
-        window.location.href = "/cart";
-        return;
+    try {
+        const cart = await getCart();
+        const cartItems = cart.items ?? [];
+        // Если в корзине нет товаров на момент оформления заказа то перекидываем на страницу корзины
+        if (!cartItems.length || Number(cart.count ?? 0) === 0) {
+            window.location.href = "/cart";
+            return;
+        }
+
+        // Сохраняем полученную корзину в локальную переменную
+        checkoutCart = cart;
+
+        // Рендерим информацию о заказе и товарах
+        fillCheckoutItems(cartItems);
+        updateCourierDeliveryNote();
+        updateCheckoutInfo(cart);
+    } catch (e) {
+        // Логирование в консоль с полным контекстом
+        console.error(
+            "[checkout-page] Не удалось получить корзину пользователя",
+            {
+                message: e.message,
+                code: e.code,
+                status: e.status,
+                payload: e.payload, // тот самый data
+            },
+        );
+
+        // Показ ошибки пользователю
+        const message = getErrorMessage(e.code, e.status);
+        notification.open(message);
     }
-
-    // Сохраняем полученную корзину в локальную переменную
-    checkoutCart = cart;
-
-    // Рендерим информацию о заказе и товарах
-    fillCheckoutItems(cartItems);
-    updateCourierDeliveryNote();
-    updateCheckoutInfo(cart);
 });
 
 // Обработчик кнопки переключения на курьерскую доставку
