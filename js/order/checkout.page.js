@@ -23,7 +23,7 @@ function handleCourierMapError(error) {
     );
 
     // Получаем код из ошибки
-    const code = error?.code;
+    const code = error?.message;
 
     switch (code) {
         // Инициализация карты / скрипта
