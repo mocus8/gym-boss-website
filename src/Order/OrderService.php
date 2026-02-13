@@ -791,6 +791,61 @@ class OrderService {
         }
     }
 
+    // Метод для получения базовой инфы о заказе и блокировки строки заказа на момент создания оплаты
+    public function lockOrderForPayment(int $orderId, int $userId): array {
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        // Получаем базовую инфу о заказе с блокировкой строки (FOR UPDATE)
+        $sql = "
+            SELECT
+                order_id,
+                user_id,
+                total_price,
+                delivery_cost,
+                status_id
+            FROM orders
+            WHERE order_id = ? AND user_id = ?
+            FOR UPDATE
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ii", $orderId, $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $order = $result->fetch_assoc();
+
+        $stmt->close();
+
+        if (!$order) {
+            throw new \InvalidArgumentException('Order not found');
+        }
+
+        return $order;
+    }
+
     // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
     public function markCancelFromPaymentProvider(int $orderId): void {
 
