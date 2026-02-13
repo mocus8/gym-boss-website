@@ -223,12 +223,14 @@ class OrderService {
             $params = [];
 
             foreach ($items as $item) {
-                $placeholders[] = '(?, ?, ?, ?)';
+                $placeholders[] = '(?, ?, ?, ?, ?, ?)';
 
                 $params[] = $orderId;
                 $params[] = $item["product_id"];
+                $params[] = $item["name"];
                 $params[] = $item["amount"];
                 $params[] = $item["price"];
+                $params[] = $item["vat_code"];
             }
 
             if ($placeholders === []) {
@@ -236,7 +238,7 @@ class OrderService {
             }
 
             // Собираем строку типов для вставки params
-            $types = str_repeat('iiid', count($placeholders));
+            $types = str_repeat('iisidi', count($placeholders));
 
             // Конвертируем массив placeholders в строку, разделяем запятыми
             $placeholders = implode(',', $placeholders);
@@ -245,8 +247,10 @@ class OrderService {
                 INSERT INTO order_items (
                     order_id,
                     product_id,
+                    product_name,
                     amount,
-                    price
+                    price,
+                    vat_code
                 )
                 VALUES" . $placeholders
             ;
@@ -844,6 +848,11 @@ class OrderService {
         }
 
         return $order;
+    }
+
+    // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
+    public function getOrderItemsForReceipt(int $orderId): array {
+        
     }
 
     // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
