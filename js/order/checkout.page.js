@@ -37,6 +37,7 @@ function handleCourierMapError(error) {
             document
                 .getElementById("courier-map-error")
                 ?.classList.remove("hidden");
+            courierMap?.disableSuggestions();
             break;
 
         // Пустой адресс при поиске
@@ -72,6 +73,7 @@ function handleCourierMapError(error) {
         case "DADATA_ERROR":
         case "VALIDATION_ERROR":
             notification.open("Подсказки по адресу временно не доступны");
+            courierMap?.disableSuggestions();
             break;
 
         default:
@@ -79,6 +81,7 @@ function handleCourierMapError(error) {
             document
                 .getElementById("courier-map-error")
                 ?.classList.remove("hidden");
+            courierMap?.disableSuggestions();
     }
 }
 

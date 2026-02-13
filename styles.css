@@ -2390,7 +2390,6 @@ button {
     border: 0.15vw solid black;
     border-radius: 0.5vw;
     background-color: #bd1b1b;
-    pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;

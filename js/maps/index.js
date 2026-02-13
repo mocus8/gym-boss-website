@@ -303,6 +303,19 @@ export class CourierMap {
         }
     }
 
+    // Функция для отключения подсказок
+    disableSuggestions() {
+        this.suggestionsAbortController?.abort();
+        this.suggestionsAbortController = null;
+
+        this.#hideSuggestions();
+        if (this.#suggestionsContainer)
+            this.#suggestionsContainer.innerHTML = "";
+
+        if (this.#addressInput) this.#addressInput.disabled = true;
+        if (this.#searchBtn) this.#searchBtn.disabled = true;
+    }
+
     // Очистка карты
     clear() {
         if (!this.#isInitialized) return;
