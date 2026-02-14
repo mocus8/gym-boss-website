@@ -796,7 +796,7 @@ class OrderService {
     }
 
     // Метод для получения базовой инфы о заказе и блокировки строки заказа на момент создания оплаты
-    public function lockOrderForPayment(int $orderId, int $userId): array {
+    public function lockForPayment(int $orderId, int $userId): array {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
@@ -850,9 +850,58 @@ class OrderService {
         return $order;
     }
 
-    // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
-    public function getOrderItemsForReceipt(int $orderId): array {
-        
+    // Метод для получения позиций заказа 
+    public function getItemsForReceipt(int $orderId): array {
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Получаем инфу о составе заказа
+        $sql = "
+            SELECT
+                order_id,
+                product_id,
+                product_name,
+                amount,
+                price,
+                vat_code
+            FROM order_items
+            WHERE order_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $items = [];
+        while ($row = $result->fetch_assoc()) {
+            $items[] = $row;
+        }
+
+        $stmt->close();
+
+        if (empty($items)) {
+            throw new \InvalidArgumentException('Empty order items');
+        }
+
+        return $items;
     }
 
     // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
