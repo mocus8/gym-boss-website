@@ -654,7 +654,129 @@ class OrderService {
         }
     }
 
-    // Метод для пометки заказа как оплаченного (для вебхука и страницы успеха)
+    // Метод пометки заказа как оплаченного: только логика, должен вызываться только внутри открытой транзакции
+    public function markPaidInTx(int $orderId): void {
+        // Получаем статус, тип доставкии и время оплаты заказа с блокировкой строки (FOR UPDATE)
+        $sql = "
+            SELECT 
+                status_id,
+                delivery_type_id,
+                paid_at
+            FROM orders
+            WHERE order_id = ?
+            FOR UPDATE
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        if (!$row) {
+            throw new \InvalidArgumentException('Order not found');
+        }
+
+        $orderStatusId = (int)$row["status_id"];
+        $deliveryTypeId = (int)$row["delivery_type_id"];
+        $paidAtRow = $row["paid_at"];
+
+        $pendingStatusId = $this->getStatusIdByCode('pending_payment');
+        $paidStatusId = $this->getStatusIdByCode('paid');
+
+        // Уже оплачен (тихо выходим из метода)
+        if ($orderStatusId === $paidStatusId) {
+            return;
+        }
+
+        // Статус не pending_payment
+        if ($orderStatusId !== $pendingStatusId) {
+            throw new \RuntimeException('Order status is not pending_payment');
+        }
+
+        // Проверяем поле paid_at
+        if ($paidAtRow !== null) {
+            // Повторный вызов или особый кейс: используем уже сохранённое время
+            $paidAt = new \DateTimeImmutable($paidAtRow);
+        } else {
+            // Первый раз помечаем как оплаченный: берем текущее время
+            $paidAt = new \DateTimeImmutable('now');
+        }
+        $paidAtFormatted = $paidAt->format('Y-m-d H:i:s');
+
+        // Считаем время доставки/готовности
+        $courierFrom = null;
+        $courierTo = null;
+        $readyForPickupFrom = null;
+        $readyForPickupTo = null;
+
+        if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+            $courierFrom = $paidAt->modify('+' . $this->courierDeliveryFromHours . ' hours')->format('Y-m-d H:i:s');
+            $courierTo = $paidAt->modify('+' . $this->courierDeliveryToHours . ' hours')->format('Y-m-d H:i:s');
+        } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
+            $readyForPickupFrom = $paidAt->modify('+' . $this->pickupReadyFromHours . ' hours')->format('Y-m-d H:i:s');
+            $readyForPickupTo = $paidAt->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
+        }
+
+        // Обновляем статус заказа на paid
+        $sql = "
+            UPDATE orders
+            SET 
+                status_id = ?,
+                courier_delivery_from = ?,
+                courier_delivery_to = ?,
+                ready_for_pickup_from = ?,
+                ready_for_pickup_to = ?,
+                paid_at = ?
+            WHERE order_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param(
+            "isssssi",
+            $paidStatusId,
+            $courierFrom,
+            $courierTo,
+            $readyForPickupFrom,
+            $readyForPickupTo,
+            $paidAtFormatted,
+            $orderId
+        );
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
+    }
+
+    // Метод пометки заказа как оплаченного (оболочка метода markPaidInTx с транзакцией)
     public function markPaid(int $orderId): void {
 
         if ($orderId <= 0) {
@@ -665,125 +787,7 @@ class OrderService {
         $this->db->begin_transaction();
         
         try {
-            // Получаем статус, тип доставкии и время оплаты заказа с блокировкой строки (FOR UPDATE)
-            $sql = "
-                SELECT 
-                    status_id,
-                    delivery_type_id,
-                    paid_at
-                FROM orders
-                WHERE order_id = ?
-                FOR UPDATE
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("i", $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $result = $stmt->get_result();
-
-            if (!$result) {
-                $stmt->close();
-                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-            }
-
-            $row = $result->fetch_assoc();
-
-            $stmt->close();
-
-            if (!$row) {
-                throw new \InvalidArgumentException('Order not found');
-            }
-
-            $orderStatusId = (int)$row["status_id"];
-            $deliveryTypeId = (int)$row["delivery_type_id"];
-            $paidAtRow = $row["paid_at"];
-
-            $pendingStatusId = $this->getStatusIdByCode('pending_payment');
-            $paidStatusId = $this->getStatusIdByCode('paid');
-
-            // Уже оплачен (тихо выходим из метода)
-            if ($orderStatusId === $paidStatusId) {
-                $this->db->commit();
-                return;
-            }
-
-            // Статус не pending_payment
-            if ($orderStatusId !== $pendingStatusId) {
-                throw new \RuntimeException('Order status is not pending_payment');
-            }
-
-            // Проверяем поле paid_at
-            if ($paidAtRow !== null) {
-                // Повторный вызов или особый кейс: используем уже сохранённое время
-                $paidAt = new \DateTimeImmutable($paidAtRow);
-            } else {
-                // Первый раз помечаем как оплаченный: берем текущее время
-                $paidAt = new \DateTimeImmutable('now');
-            }
-            $paidAtFormatted = $paidAt->format('Y-m-d H:i:s');
-
-            // Считаем время доставки/готовности
-            $courierFrom = null;
-            $courierTo = null;
-            $readyForPickupFrom = null;
-            $readyForPickupTo = null;
-
-            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
-                $courierFrom = $paidAt->modify('+' . $this->courierDeliveryFromHours . ' hours')->format('Y-m-d H:i:s');
-                $courierTo = $paidAt->modify('+' . $this->courierDeliveryToHours . ' hours')->format('Y-m-d H:i:s');
-            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
-                $readyForPickupFrom = $paidAt->modify('+' . $this->pickupReadyFromHours . ' hours')->format('Y-m-d H:i:s');
-                $readyForPickupTo = $paidAt->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
-            }
-
-            // Обновляем статус заказа на paid
-            $sql = "
-                UPDATE orders
-                SET 
-                    status_id = ?,
-                    courier_delivery_from = ?,
-                    courier_delivery_to = ?,
-                    ready_for_pickup_from = ?,
-                    ready_for_pickup_to = ?,
-                    paid_at = ?
-                WHERE order_id = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param(
-                "isssssi",
-                $paidStatusId,
-                $courierFrom,
-                $courierTo,
-                $readyForPickupFrom,
-                $readyForPickupTo,
-                $paidAtFormatted,
-                $orderId
-            );
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $stmt->close();
+            $this->markPaidInTx($orderId);
 
             // Комитим транзакцию
             $this->db->commit();
