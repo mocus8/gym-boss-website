@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'vat_code' => 11,   // НДС 22%
     'courier_delivery_price'  => 750.00,
     'free_delivery_threshold' => 5000.00,
     'courier_delivery_from_hours'    => 48,
