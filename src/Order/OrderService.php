@@ -815,6 +815,7 @@ class OrderService {
                 order_id,
                 user_id,
                 total_price,
+                delivery_type_id,
                 delivery_cost,
                 status_id
             FROM orders
