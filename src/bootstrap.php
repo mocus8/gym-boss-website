@@ -45,7 +45,6 @@ use App\Integrations\Dadata\DadataClient;   // используем класс D
 use App\Api\DadataController;   // используем класс DadataController из пространства имен App\Api
 use App\Store\StoreService;   // используем класс StoreService из пространства имен App\Store
 use App\Api\StoreController;   // используем класс StoreController из пространства имен App\Api
-use App\Integrations\Yookassa\CreatedPaymentDto;
 use App\Integrations\Yookassa\YookassaGateway;
 use App\Payment\PaymentService;
 use App\Payment\PaymentStatusSyncService;
