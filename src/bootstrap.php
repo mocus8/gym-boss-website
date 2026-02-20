@@ -45,6 +45,10 @@ use App\Integrations\Dadata\DadataClient;   // используем класс D
 use App\Api\DadataController;   // используем класс DadataController из пространства имен App\Api
 use App\Store\StoreService;   // используем класс StoreService из пространства имен App\Store
 use App\Api\StoreController;   // используем класс StoreController из пространства имен App\Api
+use App\Integrations\Yookassa\CreatedPaymentDto;
+use App\Integrations\Yookassa\YookassaGateway;
+use App\Payment\PaymentService;
+use App\Payment\PaymentStatusSyncService;
 
 // Работаем с библиотекой Dotenv, загружаем .env файл
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
@@ -64,6 +68,10 @@ require_once __DIR__ . '/Integrations/Dadata/DadataClient.php';    // подкл
 require_once __DIR__ . '/Api/DadataController.php';    // подключаем файл с классом-контроллером для получения подсказок
 require_once __DIR__ . '/Store/StoreService.php';    // подключаем файл с классом-сервисом для получения данных о магазинах
 require_once __DIR__ . '/Api/StoreController.php';    // подключаем файл с классом-контроллером для получения магазинов
+require_once __DIR__ . '/Integrations/Yookassa/CreatedPaymentDto.php';    // файл с dto классом 
+require_once __DIR__ . '/Integrations/Yookassa/YookassaGateway.php';    // файл с gateway-ем юкассы, оберткой над ее sdk
+require_once __DIR__ . '/Payment/PaymentService.php';
+require_once __DIR__ . '/Payment/PaymentStatusSyncService.php';
 
 // Подключаем конфиги (массивы из переменных с константами из .env)
 $appConfig = require __DIR__ . '/config/app.php';
@@ -89,7 +97,7 @@ $cartId = $cartService->getOrCreateCartId($cartSessionId, $userId);    // пол
 $cartCount = $cartService->getItemsCount($cartId);    // получаем кол-во товаров в корзине (для отображения в хедере)
 $cartController = new CartController($cartSession, $cartService);
 
-// Работаем с сервисом и контроллером заказов
+// Создаем сервис заказов
 // В параметры передаем бд, другие сервисы для взаимодействия и переменные доставки из конфига
 $orderService = new OrderService(
     $db,
@@ -102,7 +110,18 @@ $orderService = new OrderService(
     $deliveryConfig['courier_delivery_from_hours'],
     $deliveryConfig['courier_delivery_to_hours'],
 );
-$orderController = new OrderController($orderService, $cartSession, $cartService);
+// Работаем с платежами
+$yookassaGateway = new YookassaGateway($servicesConfig['yookassa']['shop_id'], $servicesConfig['yookassa']['api_key']);
+$paymenService = new PaymenService($db, $orderService, $yookassaGateway, $deliveryConfig['vat_code']);
+$paymentStatusSyncService = new PaymentStatusSyncService($db, $orderService, $paymenService, $yookassaGateway);
+// Создаем контроллер заказов
+$orderController = new OrderController(
+    $orderService,
+    $cartSession,
+    $cartService,
+    $paymenService,
+    $paymentStatusSyncService
+);
 
 // Работаем с внешним сервисом DaData
 $dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // Создаем клиент для взаимодействия с сервисом DaData

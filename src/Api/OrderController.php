@@ -11,6 +11,8 @@ namespace App\Api;
 use App\Order\OrderService;    // используем класс OrderService из пространства имен App\Order
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
+use App\Payment\PaymentService;
+use App\Payment\PaymentStatusSyncService;
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления заказами пользователей (через методы сервиса)
@@ -19,20 +21,39 @@ class OrderController {
     private OrderService $orderService;    
     private CartSession $cartSession;
     private CartService $cartService;
+    private PaymentService $paymentService;
+    private PaymentStatusSyncService $paymentStatusSyncService;
     // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Конструктор (магический метод), присваиваем внеший экземпляр OrderService в переменные создоваемого объекта
-    public function __construct(OrderService $orderService, CartSession $cartSession, CartService $cartService) {
+    public function __construct(
+        OrderService $orderService,
+        CartSession $cartSession,
+        CartService $cartService,
+        PaymentService $paymentService,
+        PaymentStatusSyncService $paymentStatusSyncService
+    ) {
         $this->orderService = $orderService;
         $this->cartSession = $cartSession;
         $this->cartService = $cartService;
+        $this->paymentService = $paymentService;
+        $this->paymentStatusSyncService = $paymentStatusSyncService;
     }
 
     // Будующий конструктор (с логером)
-    // public function __construct(OrderService $orderService, CartSession $cartSession, CartService $cartService, Logger $logger) {
+    // public function __construct(
+    //     OrderService $orderService,
+    //     CartSession $cartSession,
+    //     CartService $cartService,
+    //     PaymentService $paymentService,
+    //     PaymentStatusSyncService $paymentStatusSyncService
+    //     Logger $logger
+    // ) {
     //     $this->orderService = $orderService;
     //     $this->cartSession = $cartSession;
     //     $this->cartService = $cartService;
+    //     $this->paymentService = $paymentService;
+    //     $this->paymentStatusSyncService = $paymentStatusSyncService;
     //     $this->logger = $logger;
     // }
 
@@ -211,6 +232,66 @@ class OrderController {
 
         } catch (\RuntimeException $e) {
             $this->error(400, 'ORDER_CANCEL_ERROR', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Cart getCart failed', [
+            //     'exception' => $e,
+            // ]);
+
+            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
+            $this->error();
+        }
+    }
+
+    // Метод для попытки оплаты заказа
+    // Обработчик запроса POST /api/order/{id}/start-payment
+    public function startPayment(int $orderId): void {
+        try {
+            $confirmationUrl = $this->paymentService->getOrCreatePayment($orderId);
+
+            // Возвращаем успех через приватную функцию
+            $this->success(200, ['confirmationUrl' => $confirmationUrl]);
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
+        } catch (\RuntimeException $e) {
+            $this->error(400, 'PAYMENT_CREATION_ERROR', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Cart getCart failed', [
+            //     'exception' => $e,
+            // ]);
+
+            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
+            $this->error();
+        }
+    }
+
+    // Метод для попытки синхронизации статуса платежа и заказа между бд и юкассой
+    // Обработчик запроса POST /api/order/{id}/sync-payment
+    public function syncPayment(int $orderId): void {
+        try {
+            $this->paymentStatusSyncService->syncByOrderId($orderId);
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
+        } catch (\RuntimeException $e) {
+            $this->error(400, 'PAYMENT_STATUS_SYNC_ERROR', $e->getMessage());
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
