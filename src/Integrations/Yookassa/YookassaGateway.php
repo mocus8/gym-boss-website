@@ -16,20 +16,23 @@ class YookassaGateway {
         $this->client->setAuth($shopId, $secretKey);
     }
 
-    // Метод создания платежа, возвращает массив с нужной инфой о платеже из юкассы
+    // Метод создания платежа, возвращает объект класса DTO с нужной инфой о платеже из юкассы
     // Payload - основное "тело", вся полезная инфа для создания платежа
-    // TODO мб сделать DTO вместо просто массива
-    public function createPayment(array $payload, string $idempotencyKey): array {
-        $paymentInfo = [];
-
+    public function createPayment(array $payload, string $idempotencyKey): CreatedPaymentDto {
         $payment = $this->client->createPayment($payload, $idempotencyKey);
 
-        $paymentInfo['confirmationUrl'] = $payment->getConfirmation()->getConfirmationUrl();
-        $expiresAtDateTime = $payment->getExpiresAt();
-        $paymentInfo['expiresAt'] = $expiresAtDateTime ? $expiresAtDateTime->format('Y-m-d H:i:s') : null;
-        $paymentInfo['paymentId'] = $payment->getId();
+        $paymentId = $payment->getId();
 
-        return $paymentInfo;
+        $confirmation = $payment->getConfirmation();
+        $confirmationUrl = $confirmation ? $confirmation->getConfirmationUrl() : null;
+        if (!$confirmationUrl) {
+            throw new \RuntimeException('YooKassa payment created without confirmationUrl');
+        }
+
+        $expiresAtDateTime = $payment->getExpiresAt();
+        $expiresAt = $expiresAtDateTime ? $expiresAtDateTime->format('Y-m-d H:i:s') : null;
+
+        return new CreatedPaymentDto($paymentId, $confirmationUrl, $expiresAt);
     }
 
     // Метод для получения статуса платежа по id

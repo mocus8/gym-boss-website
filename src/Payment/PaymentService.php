@@ -373,7 +373,7 @@ class PaymentService {
         // Пытаемся создать платеж в юкассе через gateway-интеграционную оболочку над sdk юкассы
         try {
             // Создается платеж, возвращается массив с инфой о платеже из юкассы
-            $paymentInfo = $this->yookassaGateway->createPayment($payload, $draftPaymentInfo['idempotencyKey']);
+            $createdPayment = $this->yookassaGateway->createPayment($payload, $draftPaymentInfo['idempotencyKey']);
         } catch (\Throwable $e) {
             // При ошибке ставим на "черновик" платежа ошибку и прокидываем ошибку
             $this->markPaymentFailed($draftPaymentInfo['paymentId'], $this->mapToErrorCode($e), $e->getMessage());
@@ -398,9 +398,9 @@ class PaymentService {
 
         $stmt->bind_param(
             "sssis",
-            $paymentInfo['paymentId'],
-            $paymentInfo['confirmationUrl'],
-            $paymentInfo['expiresAt'],
+            $createdPayment->paymentId,
+            $createdPayment->confirmationUrl,
+            $createdPayment->expiresAt,
             $draftPaymentInfo['paymentId'],
             $creatingStatus
         );
@@ -413,7 +413,7 @@ class PaymentService {
 
         $stmt->close();
 
-        return $paymentInfo['confirmationUrl'];
+        return $createdPayment->confirmationUrl;
     }
 
     // Метод для получения активного платежа
