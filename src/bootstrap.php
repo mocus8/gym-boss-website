@@ -112,14 +112,14 @@ $orderService = new OrderService(
 );
 // Работаем с платежами
 $yookassaGateway = new YookassaGateway($servicesConfig['yookassa']['shop_id'], $servicesConfig['yookassa']['api_key']);
-$paymenService = new PaymenService($db, $orderService, $yookassaGateway, $deliveryConfig['vat_code']);
-$paymentStatusSyncService = new PaymentStatusSyncService($db, $orderService, $paymenService, $yookassaGateway);
+$paymentService = new PaymentService($db, $orderService, $yookassaGateway, $deliveryConfig['vat_code']);
+$paymentStatusSyncService = new PaymentStatusSyncService($db, $orderService, $paymentService, $yookassaGateway);
 // Создаем контроллер заказов
 $orderController = new OrderController(
     $orderService,
     $cartSession,
     $cartService,
-    $paymenService,
+    $paymentService,
     $paymentStatusSyncService
 );
 
