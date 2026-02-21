@@ -268,7 +268,7 @@ class OrderController {
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
             // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
+            // $this->logger->error('Order startPayment failed', [
             //     'exception' => $e,
             // ]);
 
@@ -298,7 +298,7 @@ class OrderController {
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
             // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
+            // $this->logger->error('Order syncPayment failed', [
             //     'exception' => $e,
             // ]);
 
