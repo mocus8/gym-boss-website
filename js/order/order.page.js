@@ -272,6 +272,23 @@ function renderOrderInfo(data) {
     return true;
 }
 
+// Функция для получения и валидации инфы о заказе
+async function getAndValidateOrder(orderId) {
+    // Получаем инфу о заказе
+    const data = await getOrderById(orderId);
+
+    // Валидируем инфу
+    // Функции возвращают boolean
+    if (!validateOrderData(data)) {
+        showOrderError(
+            "Не удалось получить информацию о заказе. Перейдите в историю заказов или обратитесь в поддержку",
+        );
+        return null;
+    }
+
+    return data;
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
     const orderContainer = document.getElementById("order-container");
     const orderIdEl = document.getElementById("order-id");
@@ -293,31 +310,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     orderIdEl.textContent = String(orderId);
 
     try {
-        const data = await getOrderById(orderId);
-
-        // Валидация заказа
-        // Функции возвращают boolean
-        if (!validateOrderData(data)) {
-            console.error("[order-page] Невалидные данные заказа");
-            showOrderError(
-                "Данные заказа неполны. Перейдите в историю заказов или обратитесь в поддержку",
-            );
-            return;
-        }
-
-        // Рендер заказа
-        if (!renderOrderInfo(data)) {
-            showOrderError(
-                "Не удалось отобразить заказ. Перейдите в историю заказов или обратитесь в поддержку",
-            );
-            return;
-        }
+        // Получаем и валидируем инфу о заказе
+        let data = await getAndValidateOrder(orderId);
+        if (!data) return;
 
         // Синхронизируем статус заказа если его статус pending_payment
         if (data.order.status_code === "pending_payment") {
             try {
                 await syncPaymentForOrder(orderId);
-                window.location.reload();
+
+                // Обновляем данные о заказе и валидируем их
+                data = await getAndValidateOrder(orderId);
+                if (!data) return;
             } catch (e) {
                 // Логирование в консоль с полным контекстом
                 console.error(
@@ -330,6 +334,14 @@ window.addEventListener("DOMContentLoaded", async () => {
                     },
                 );
             }
+        }
+
+        // Рендерим заказ
+        if (!renderOrderInfo(data)) {
+            showOrderError(
+                "Не удалось отобразить заказ. Перейдите в историю заказов или обратитесь в поддержку",
+            );
+            return;
         }
     } catch (e) {
         console.error("[order-page] Не удалось загрузить заказ", {
