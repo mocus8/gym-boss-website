@@ -13,24 +13,25 @@ use App\Integrations\Yookassa\YookassaGateway;
 class PaymentService {
     // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;
+    private string $baseUrl;
     private OrderService $orderService;    // экземпляр сервиса для заказов (dependency injection)
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
+    private int $deliveryVatCode;    // код НДС для доставки
 
     // Константы для типов доставки
     private const DELIVERY_TYPE_COURIER = 1;
     private const DELIVERY_TYPE_PICKUP = 2;
 
-    // Код НДС для доставки
-    private int $deliveryVatCode;
-
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(
         \mysqli $db,
+        string $baseUrl,
         OrderService $orderService,
         YookassaGateway $yookassaGateway,
         int $deliveryVatCode
     ) {
         $this->db = $db;
+        $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
         $this->yookassaGateway = $yookassaGateway;
         $this->deliveryVatCode = $deliveryVatCode;
@@ -356,7 +357,7 @@ class PaymentService {
             ],
             'confirmation' => [
                 'type' => 'redirect',
-                'return_url' => $baseUrl . '/order/' . $draftPaymentInfo['orderId']
+                'return_url' => $this->baseUrl . '/order/' . $draftPaymentInfo['orderId']
             ],
             'capture' => true,
             'description' => 'Заказ №' . $draftPaymentInfo['orderId'],

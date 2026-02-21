@@ -77,6 +77,14 @@ $appConfig = require __DIR__ . '/config/app.php';
 $servicesConfig = require __DIR__ . '/config/services.php';
 $deliveryConfig = require __DIR__ . '/config/delivery.php';
 
+// Получаем URL сайта из переменных окружения
+$appUrl = $appConfig['url'] ?? null;
+if (!$appUrl) {
+    error_log('APP_URL is not set');    // логируем
+    throw new RuntimeException('APP_URL is not set');   // и падаем
+}
+$baseUrl = rtrim($appUrl, '/');
+
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connect($servicesConfig['database']);
 
@@ -84,16 +92,9 @@ $db = Db::connect($servicesConfig['database']);
 $productService = new ProductService($db);    // создаем экземпляр класса
 $productController = new ProductController($productService);    // создаем экземпляр класса
 
-// Создаем экземпляр класса и получаем id сеанса корзины (не статически т.к. более гибко для будующего)
+// Работаем с сервисом, контроллером и сессией корзины
 $cartSession = new CartSession();
-$cartSessionId = $cartSession->getId();
-
-$userId = getCurrentUserId();
-
-// Работаем с сервисом и контроллером корзины
-$cartService = new CartService($db, $productService);    // создаем экземпляр класса
-$cartId = $cartService->getOrCreateCartId($cartSessionId, $userId);    // получаем id корзины из бд
-$cartCount = $cartService->getItemsCount($cartId);    // получаем кол-во товаров в корзине (для отображения в хедере)
+$cartService = new CartService($db, $productService);
 $cartController = new CartController($cartSession, $cartService);
 
 // Создаем сервис заказов
@@ -111,7 +112,7 @@ $orderService = new OrderService(
 );
 // Работаем с платежами
 $yookassaGateway = new YookassaGateway($servicesConfig['yookassa']['shop_id'], $servicesConfig['yookassa']['api_key']);
-$paymentService = new PaymentService($db, $orderService, $yookassaGateway, $deliveryConfig['vat_code']);
+$paymentService = new PaymentService($db, $baseUrl, $orderService, $yookassaGateway, $deliveryConfig['vat_code']);
 $paymentStatusSyncService = new PaymentStatusSyncService($db, $orderService, $paymentService, $yookassaGateway);
 // Создаем контроллер заказов
 $orderController = new OrderController(
@@ -129,12 +130,3 @@ $dadataController = new DadataController($dadataClient);
 // Работаем с сервисом и контроллером магазинов
 $storeService = new StoreService($db);
 $storeController = new StoreController($storeService);
-
-// Получаем URL сайта из переменных окружения
-$appUrl = $appConfig['url'] ?? null;
-if (!$appUrl) {
-    error_log('APP_URL is not set');    // логируем
-    throw new RuntimeException('APP_URL is not set');   // и падаем
-}
-
-$baseUrl = rtrim($appUrl, '/');
