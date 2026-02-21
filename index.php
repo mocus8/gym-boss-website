@@ -82,7 +82,23 @@ if (strpos($uri, '/api/') === 0) {
         requireApiAuth();
 
         $orderId  = (int)$matches[1];
-        $orderController->markCancel($orderId );
+        $orderController->markCancel($orderId);
+        exit;
+    }
+    // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/order/{id}/start-payment
+    elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/start-payment$#', $apiPath, $matches)) {
+        requireApiAuth();
+
+        $orderId  = (int)$matches[1];
+        $orderController->startPayment($orderId);
+        exit;
+    }
+    // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/order/{id}/sync-payment
+    elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
+        requireApiAuth();
+
+        $orderId  = (int)$matches[1];
+        $orderController->syncPayment($orderId);
         exit;
     }
     // Получение магазина по id: GET /api/stores/{id}
