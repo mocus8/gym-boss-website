@@ -9,8 +9,6 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = rtrim($uri, '/');
 $method = $_SERVER['REQUEST_METHOD'];    // GET, POST и т.д.
 
-$userId = getCurrentUserId();
-
 // Api-маршруты
 if (strpos($uri, '/api/') === 0) {
     // убираем префикс /api
