@@ -57,7 +57,7 @@ class OrderService {
     }
 
     // Вспомогательный приватный метод для получения id статуса заказа по code (с кэшем)
-    private function getStatusIdByCode(string $code): int {
+    public function getStatusIdByCode(string $code): int {
         if (isset($this->statusIdCache[$code])) {
             return $this->statusIdCache[$code];
         }
