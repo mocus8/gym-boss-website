@@ -400,16 +400,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // Навешиваем открытие модалки на клик по кнопке "оплатить"
     payButton.addEventListener("click", async () => {
+        // TODO: добавить залипание кнопки на время обработки запроса
         try {
-            const paymentUrl = await getPaymentForOrder(orderId);
-            if (!paymentUrl) {
+            const paymentData = await getPaymentForOrder(orderId);
+            const confirmationUrl = paymentData?.confirmationUrl;
+            if (
+                typeof confirmationUrl !== "string" ||
+                confirmationUrl.length === 0
+            ) {
                 notification.open(
                     "Не удалось получить ссылку для оплаты. Попробуйте позже.",
                 );
                 return;
             }
+
             // Отправляем на страницу оплаты
-            window.location.href = paymentUrl;
+            window.location.href = confirmationUrl;
         } catch (e) {
             // Логирование в консоль с полным контекстом
             console.error("[order-page] Не удалось оплатить заказ", {
