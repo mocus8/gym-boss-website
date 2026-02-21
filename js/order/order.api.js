@@ -55,11 +55,30 @@ export function getUserOrders() {
 
 // Функция для отмены заказа по его id
 // Отправляет запрос POST /api/order/{id}/cancel
-// JSON.stringify({...}) - превращает объект в JSON‑строку
 export function markOrderAsCancelled(orderId) {
     const id = Number(orderId);
 
     return requestOrder(`order/${id}/cancel`, {
+        method: "POST",
+    });
+}
+
+// Функция для попытки оплаты заказа (получение ссылки для оплаты)
+// Отправляет запрос POST /api/order/{id}/start-payment
+export function getPaymentForOrder(orderId) {
+    const id = Number(orderId);
+
+    return requestOrder(`order/${id}/start-payment`, {
+        method: "POST",
+    });
+}
+
+// Функция для синхронизации статуса платежа и заказа между бд и юкассой
+// Отправляет запрос POST /api/order/{id}/sync-payment
+export function syncPaymentForOrder(orderId) {
+    const id = Number(orderId);
+
+    return requestOrder(`order/${id}/sync-payment`, {
         method: "POST",
     });
 }

@@ -1,4 +1,9 @@
-import { getOrderById, markOrderAsCancelled } from "./order.api.js";
+import {
+    getOrderById,
+    markOrderAsCancelled,
+    getPaymentForOrder,
+    syncPaymentForOrder,
+} from "./order.api.js";
 import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
 import { ConfirmationModal } from "../ui/confirmation-modal.js";
 import { notification } from "../ui/notification.js";
@@ -307,6 +312,25 @@ window.addEventListener("DOMContentLoaded", async () => {
             );
             return;
         }
+
+        // Синхронизируем статус заказа если его статус pending_payment
+        if (data.order.status_code === "pending_payment") {
+            try {
+                await syncPaymentForOrder(orderId);
+                window.location.reload();
+            } catch (e) {
+                // Логирование в консоль с полным контекстом
+                console.error(
+                    "[order-page] Не удалось синхронизировать статус заказа",
+                    {
+                        message: e.message,
+                        code: e.code,
+                        status: e.status,
+                        payload: e.payload, // data
+                    },
+                );
+            }
+        }
     } catch (e) {
         console.error("[order-page] Не удалось загрузить заказ", {
             message: e.message,
@@ -358,5 +382,27 @@ window.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    // TODO тут сделать обработчик кнопки оплаты
+    // Если нет кнопки оплаты - тихо выходим (она есть не для всех статусов)
+    const payButton = document.getElementById("order-pay-btn");
+    if (!payButton) return;
+
+    // Навешиваем открытие модалки на клик по кнопке "оплатить"
+    payButton.addEventListener("click", async () => {
+        try {
+            const paymentUrl = await getPaymentForOrder(orderId);
+            window.location.href = paymentUrl;
+        } catch (e) {
+            // Логирование в консоль с полным контекстом
+            console.error("[order-page] Не удалось оплатить заказ", {
+                message: e.message,
+                code: e.code,
+                status: e.status,
+                payload: e.payload, // data
+            });
+
+            // Показ ошибки пользователю
+            const message = getErrorMessage(e.code, e.status);
+            notification.open(message);
+        }
+    });
 });
