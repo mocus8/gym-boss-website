@@ -402,6 +402,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     payButton.addEventListener("click", async () => {
         try {
             const paymentUrl = await getPaymentForOrder(orderId);
+            if (!paymentUrl) {
+                notification.open(
+                    "Не удалось получить ссылку для оплаты. Попробуйте позже.",
+                );
+                return;
+            }
+            // Отправляем на страницу оплаты
             window.location.href = paymentUrl;
         } catch (e) {
             // Логирование в консоль с полным контекстом
