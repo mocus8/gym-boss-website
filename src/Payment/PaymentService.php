@@ -263,7 +263,7 @@ class PaymentService {
             $sql = "
                 SELECT login
                 FROM users
-                WHERE user_id = ?
+                WHERE id = ?
                 LIMIT 1        
             ";
             $stmt = $this->db->prepare($sql);
