@@ -397,11 +397,17 @@ class PaymentService {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
 
+        // Переносим значения в локальные переменные для использовании в bind_param
+        // Если попытаться передать просто как поле DTO то может вылететь ошибка о попытке модификации приватного поля
+        $externalPaymentId = $createdPayment->paymentId;
+        $confirmationUrl = $createdPayment->confirmationUrl;
+        $expiresAt = $createdPayment->expiresAt;
+
         $stmt->bind_param(
             "sssis",
-            $createdPayment->paymentId,
-            $createdPayment->confirmationUrl,
-            $createdPayment->expiresAt,
+            $externalPaymentId,
+            $confirmationUrl,
+            $expiresAt,
             $draftPaymentInfo['paymentId'],
             $creatingStatus
         );
@@ -414,7 +420,7 @@ class PaymentService {
 
         $stmt->close();
 
-        return $createdPayment->confirmationUrl;
+        return $confirmationUrl;
     }
 
     // Метод для получения активного платежа
