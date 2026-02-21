@@ -1,18 +1,19 @@
 <?php
-if ($userId != '') {
+// Задаем дефолты
+$login = '';
+$name  = '';
+$userId = $userId ?? null;
+
+if ($userId !== null) {
     //ищем пользователя в бд
     $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    $login;
-    $password;
-    $name;
-    //вытаскиваем логин из бд
+    // Вытаскиваем логин и имя из бд
     foreach ($result as $item) {
         $login = $item['login'];
-        $password = $item['password'];
         $name = $item['name'];
     }
 }
@@ -39,7 +40,7 @@ if ($userId != '') {
             </div>
         </a>
         <?php
-        if (!$userId) {
+        if ($userId === null) {
         ?>
         <a data-open-modal="authorization" style="cursor: pointer;">
             <div class="header_button">
@@ -100,7 +101,7 @@ if ($userId != '') {
         </div>
     </div>
     <?php
-    if ($userId == '') {
+    if (!$userId) {
     ?>
         <div class="header_account">
             <img class="header_account_icon" src="/img/person.png">
