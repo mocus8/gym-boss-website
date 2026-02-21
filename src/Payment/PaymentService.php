@@ -429,7 +429,8 @@ class PaymentService {
                 confirmation_url,
                 status,
                 external_payment_id,
-                expires_at
+                expires_at,
+                last_sync_at
             FROM payments
             WHERE order_id = ? 
                 AND status = 'pending'
@@ -478,6 +479,7 @@ class PaymentService {
         $sql = "
             UPDATE payments
             SET status = ?,
+                last_sync_at = NOW(),
                 error_code = ?,
                 error_message = ?
             WHERE external_payment_id = ?

@@ -78,6 +78,20 @@ class PaymentStatusSyncService {
             throw new \RuntimeException('Active payment has no external_payment_id');
         }
 
+        $lastSyncAtRaw = $paymentInfo['last_sync_at'];
+        if ($lastSyncAtRaw === '') {
+            throw new \RuntimeException('Active payment has no last_sync_at');
+        }
+
+        // Получаем настоящее время, время последней синхронизации и разницу в секундах
+        $lastSyncAt = new \DateTimeImmutable($lastSyncAtRaw);
+        $now = new \DateTimeImmutable('now');
+        $diffSeconds = $now->getTimestamp() - $lastSyncAt->getTimestamp();
+        // Если разница меньше 15 секунд - выходим
+        if ($diffSeconds < 15) {
+            return;
+        }
+
         $this->syncByExternalPaymentId($externalPaymentId);
     }
 }
