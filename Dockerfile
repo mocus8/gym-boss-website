@@ -19,7 +19,7 @@ RUN apk update \
         opcache \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY ./docker/php-fpm.d/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY ./docker/php-fpm.d/99-gymboss.conf /usr/local/etc/php-fpm.d/99-gymboss.conf
 
 WORKDIR /var/www/html
 
