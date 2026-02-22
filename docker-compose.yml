@@ -6,7 +6,6 @@ services:
         volumes:
             - .:/var/www/html # Папка с index.php
             - ./nginx.conf:/etc/nginx/nginx.conf:ro # Конфиг Nginx
-            - nginx_logs:/var/log/nginx # Логи сохраняются
         depends_on:
             php:
                 condition: service_healthy
@@ -24,7 +23,6 @@ services:
             - .:/var/www/html
             - ./docker/php/conf.d:/usr/local/etc/php/conf.d
             - php_sessions:/tmp/php-sessions
-            - php_logs:/var/log
         environment:
             - ENCRYPTION_KEY=${ENCRYPTION_KEY}
         depends_on:

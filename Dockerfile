@@ -17,16 +17,16 @@ RUN apk update \
         gd \
         pcntl \
         opcache \
-    && echo 'extension=mysqli' > /usr/local/etc/php/conf.d/docker-php-ext-mysqli.ini \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN mkdir -p /tmp/php-sessions /var/log \
-    && chown www-data:www-data /tmp/php-sessions /var/log \
-    && chmod 700 /tmp/php-sessions
+COPY ./docker/php-fpm.d/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 WORKDIR /var/www/html
-COPY . .
+
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+COPY . .
 
 EXPOSE 9000
 CMD ["php-fpm"]
