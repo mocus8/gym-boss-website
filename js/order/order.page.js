@@ -4,7 +4,12 @@ import {
     getPaymentForOrder,
     syncPaymentForOrder,
 } from "./order.api.js";
-import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
+import {
+    getErrorMessage,
+    setButtonLoading,
+    formatPrice,
+    formatDate,
+} from "../utils.js";
 import { ConfirmationModal } from "../ui/confirmation-modal.js";
 import { notification } from "../ui/notification.js";
 
@@ -400,8 +405,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // Навешиваем открытие модалки на клик по кнопке "оплатить"
     payButton.addEventListener("click", async () => {
-        // TODO: добавить залипание кнопки на время обработки запроса
         try {
+            // Навешиваем залипание (лоадер) на кнопку
+            setButtonLoading(payButton, true);
+
             const paymentData = await getPaymentForOrder(orderId);
             const confirmationUrl = paymentData?.confirmationUrl;
             if (
@@ -428,6 +435,9 @@ window.addEventListener("DOMContentLoaded", async () => {
             // Показ ошибки пользователю
             const message = getErrorMessage(e.code, e.status);
             notification.open(message);
+        } finally {
+            // Снимаем залипание
+            setButtonLoading(payButton, false);
         }
     });
 });

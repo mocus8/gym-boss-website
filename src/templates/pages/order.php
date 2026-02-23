@@ -50,7 +50,7 @@
 
     <div class="order_pending_actions hidden" data-visible-status="pending_payment">
         <button class="order_action_button" id="order-cancel-btn">Отменить</button>
-        <button class="order_action_button" id="order-pay-btn">Оплатить</button>
+        <button class="order_action_button" id="order-pay-btn"><span>Оплатить</span></button>
     </div>
 
     <div

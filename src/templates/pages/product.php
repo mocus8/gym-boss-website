@@ -43,7 +43,7 @@
     </div>
 
     <button class="product_button_add_not_in_cart" type="button" id="button-add" data-product-add-cart data-product-id="<?= (int)$product['product_id'] ?>">
-        Добавить в корзину
+        <span>Добавить в корзину</span>
     </button>
 
     <div class="product_button_add_in_cart hidden" type="button" id="button-change-qty">
