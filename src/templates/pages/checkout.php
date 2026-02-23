@@ -126,7 +126,7 @@
         </div>
 
         <button class="order_right_pay_button" id="create-order-btn">
-            Оформить заказ
+            <span>Оформить заказ</span>
         </button>
 
         <div class="payment_errors">

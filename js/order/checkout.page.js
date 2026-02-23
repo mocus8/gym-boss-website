@@ -1,5 +1,10 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
-import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
+import {
+    getErrorMessage,
+    setButtonLoading,
+    formatPrice,
+    formatDate,
+} from "../utils.js";
 import { loadYandexMapsScripts, CourierMap, PickupMap } from "../maps/index.js";
 import { notification } from "../ui/notification.js";
 import { getCart } from "../cart/cart.api.js";
@@ -473,10 +478,13 @@ document.getElementById("order-type-pickup").addEventListener("click", () => {
     setDeliveryMode("pickup");
 });
 
-// Обработчик нажатия на кнопку "Оформить заказ"
-document
-    .getElementById("create-order-btn")
-    .addEventListener("click", async () => {
+// Находим кнопку "оформить заказ"
+const createOrderBtn = document.getElementById("create-order-btn");
+// Если кнопка нашлась - вешаем обработчик
+if (!createOrderBtn) {
+    console.error("[checkout-page] Не найдена createOrderBtn");
+} else {
+    createOrderBtn.addEventListener("click", async () => {
         // Определяем переменные для использования метода создания заказа
         const selectedDeliveryType = getCurrentDeliveryType(); // выбранный тип доставки
         const checkoutTypeId = selectedDeliveryType === "courier" ? 1 : 2; // id выбранного типа доставки
@@ -501,7 +509,7 @@ document
             checkoutAddressText = courierAddressEl.textContent?.trim() ?? null;
             checkoutAddressPostCode =
                 courierAddressEl.dataset.postalCode ?? null;
-            if (!checkoutAddressText) {
+            if (!checkoutAddressPostCode) {
                 notification.open("Укажите адрес доставки");
                 return;
             }
@@ -530,6 +538,9 @@ document
         }
 
         try {
+            // Устанавливаем состояние загрузки на кнопку
+            setButtonLoading(createOrderBtn, true);
+
             const result = await createOrderFromCart({
                 deliveryTypeId: checkoutTypeId,
                 deliveryAddressText: checkoutAddressText,
@@ -561,5 +572,9 @@ document
             // Показ ошибки пользователю
             const message = getErrorMessage(e.code, e.status);
             notification.open(message);
+        } finally {
+            // Убираем состояние загрузки с кнопки
+            setButtonLoading(createOrderBtn, false);
         }
     });
+}
