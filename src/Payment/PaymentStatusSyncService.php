@@ -64,24 +64,36 @@ class PaymentStatusSyncService {
 
     // Метод-обертка над методом syncByExternalPaymentId, находит paymentId и вызывает метод syncByExternalPaymentId
     public function syncByOrderId(int $orderId): void {
+
+        error_log('ДЕБАГ [syncByOrderId] orderId: ' . $orderId);
+
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
 
         $paymentInfo = $this->paymentService->getActivePayment($orderId);
+        error_log('ДЕБАГ [syncByOrderId] paymentInfo:' . $paymentInfo);
         if (!$paymentInfo) {
             return;
         }
+
+        error_log('ДЕБАГ [syncByOrderId] paymentInfo: ' . $paymentInfo);
 
         $externalPaymentId = $paymentInfo['external_payment_id'];
         if ($externalPaymentId === '') {
             throw new \RuntimeException('Active payment has no external_payment_id');
         }
 
-        $lastSyncAtRaw = $paymentInfo['last_sync_at'];
-        if ($lastSyncAtRaw === '') {
-            throw new \RuntimeException('Active payment has no last_sync_at');
+        error_log('ДЕБАГ [syncByOrderId] externalPaymentId: ' . $externalPaymentId);
+
+        $lastSyncAtRaw = $paymentInfo['last_sync_at'] ?? null;
+        // Если последнее время синхронизации указано как null - то синхронизируем первый раз и выходим
+        if (!$lastSyncAtRaw) {
+            $this->syncByExternalPaymentId($externalPaymentId);
+            return;
         }
+
+        error_log('ДЕБАГ [syncByOrderId] lastSyncAtRaw: ' . $lastSyncAtRaw);
 
         // Получаем настоящее время, время последней синхронизации и разницу в секундах
         $lastSyncAt = new \DateTimeImmutable($lastSyncAtRaw);

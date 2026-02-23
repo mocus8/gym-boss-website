@@ -58,7 +58,7 @@ class PaymentService {
             FROM payments
             WHERE order_id = ? 
                 AND status = 'pending'
-                AND expires_at > NOW()
+                AND (expires_at IS NULL OR expires_at > NOW())
                 AND confirmation_url IS NOT NULL
             ORDER BY created_at DESC
             LIMIT 1
@@ -441,7 +441,7 @@ class PaymentService {
             FROM payments
             WHERE order_id = ? 
                 AND status = 'pending'
-                AND expires_at > NOW()
+                AND (expires_at IS NULL OR expires_at > NOW())
                 AND external_payment_id IS NOT NULL
             ORDER BY created_at DESC
             LIMIT 1
@@ -515,8 +515,6 @@ class PaymentService {
         if ($affected === 0) {
             throw new \RuntimeException('Payment status was not updated (not found or already succeeded)');
         }
-        
-        $stmt->close();
     }
 
     // Метод для получения id заказа по id платежа из провайдера (юкассы)
