@@ -145,6 +145,9 @@ class PaymentService {
         foreach ($itemsForReceipt as $item) {
             $receiptTotal += (float)$item['amount']['value'] * $item['quantity'];
         }
+
+        $diff = $receiptTotal - $orderTotal;
+        error_log("Суммы заказа: " . "receiptTotal: " . $receiptTotal . "orderTotal: " . $orderTotal . "Разница: " . $diff);
     
         if (abs($receiptTotal - $orderTotal) > 0.01) {
             throw new \RuntimeException('Receipt total mismatch');
@@ -233,7 +236,7 @@ class PaymentService {
             $userId = authId();
             // Получаем базовую инфу о заказе из orders с блокировкой строки через for update
             $order = $this->orderService->lockForPayment($orderId, $userId);
-            $orderTotal = (float)$order['total_price'];
+            $orderTotal = (float)$order['total_price'] + (float)$order['delivery_cost'];
             // Получаем id статуса pending_payment через таблицу-справочник
             $pendingPaymentStatusId = $this->orderService->getStatusIdByCode('pending_payment');
 
