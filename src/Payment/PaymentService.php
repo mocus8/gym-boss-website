@@ -145,9 +145,6 @@ class PaymentService {
         foreach ($itemsForReceipt as $item) {
             $receiptTotal += (float)$item['amount']['value'] * $item['quantity'];
         }
-
-        $diff = $receiptTotal - $orderTotal;
-        error_log("Суммы заказа: " . "receiptTotal: " . $receiptTotal . "orderTotal: " . $orderTotal . "Разница: " . $diff);
     
         if (abs($receiptTotal - $orderTotal) > 0.01) {
             throw new \RuntimeException('Receipt total mismatch');
