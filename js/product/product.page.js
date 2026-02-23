@@ -1,6 +1,10 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
 import { getCart, addCartItem, updateCartItemQty } from "../cart/cart.api.js";
-import { getErrorMessage, updateHeaderCounter } from "../utils.js";
+import {
+    getErrorMessage,
+    updateHeaderCounter,
+    setButtonLoading,
+} from "../utils.js";
 import { notification } from "../ui/notification.js";
 
 // Получение id товара
@@ -9,6 +13,19 @@ function getProductId() {
     if (!productId) return;
 
     return Number(productId);
+}
+
+// Функция для включения залипания кнопок на время обработки запроса
+function setProductButtonsLoading(isLoading) {
+    const btnAdd = document.getElementById("button-add");
+    const btnChangeQtyWrap = document.getElementById("button-change-qty");
+    if (!btnAdd || !btnChangeQtyWrap) return;
+
+    // Отключаем кликабельность для кнопок
+    setButtonLoading(btnAdd, isLoading);
+    btnChangeQtyWrap
+        .querySelectorAll("button")
+        .forEach((btn) => setButtonLoading(btn, isLoading));
 }
 
 // Функция для обновления счетчика товара в корзине
@@ -35,15 +52,14 @@ function toggleProductButtons(qty) {
 }
 
 // Выбираем состояние кнопок взаимодействия с товаром при прогрузке страницы
-window.addEventListener("load", async function () {
-    const btnAdd = document.getElementById("button-add");
-    const btnChangeQty = document.getElementById("button-change-qty");
-    if (!btnAdd || !btnChangeQty) return;
-
+window.addEventListener("DOMContentLoaded", async function () {
     const productId = getProductId();
     if (!productId) return;
 
     try {
+        // Делаем залипание на все кнопки
+        setProductButtonsLoading(true);
+
         const cart = await getCart();
         const cartItems = cart.items ?? [];
 
@@ -68,18 +84,27 @@ window.addEventListener("load", async function () {
                 payload: e.payload,
             },
         );
+    } finally {
+        // Отключаем залипание
+        setProductButtonsLoading(false);
     }
 });
 
+// Делигирование событий при клике на странице
 document.addEventListener("click", async function (e) {
-    const target = e.target;
+    // Определяем куда пришелся click
+    const addBtn = e.target.closest("[data-product-add-cart]");
+    const subBtn = e.target.closest("[data-product-subtract-cart]");
 
     // Если нажали на "+" или "добавить в корзину"
-    if (target.hasAttribute("data-product-add-cart")) {
+    if (addBtn) {
         const productId = getProductId();
         if (!productId) return;
 
         try {
+            // Делаем залипание на все кнопки
+            setProductButtonsLoading(true);
+
             const response = await addCartItem(productId, 1); // response = { success: true, data: { items, count, total } }
 
             const { items, count } = response; // деструктуризация объекта
@@ -114,11 +139,14 @@ document.addEventListener("click", async function (e) {
             // Показ ошибки пользователю
             const message = getErrorMessage(e.code, e.status);
             notification.open(message);
+        } finally {
+            // Отключаем залипание
+            setProductButtonsLoading(false);
         }
     }
 
     // Если нажали на "-"
-    if (target.hasAttribute("data-product-subtract-cart")) {
+    if (subBtn) {
         const productId = getProductId();
         if (!productId) return;
 
@@ -129,6 +157,9 @@ document.addEventListener("click", async function (e) {
         const newQty = Math.max(currentQty - 1, 0);
 
         try {
+            // Делаем залипание на все кнопки
+            setProductButtonsLoading(true);
+
             const response = await updateCartItemQty(productId, newQty);
 
             const { items, count } = response;
@@ -155,6 +186,9 @@ document.addEventListener("click", async function (e) {
             // Показ ошибки пользователю
             const message = getErrorMessage(e.code, e.status);
             notification.open(message);
+        } finally {
+            // Отключаем залипание
+            setProductButtonsLoading(false);
         }
     }
 });

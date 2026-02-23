@@ -32,34 +32,6 @@ input:autofill:active {
     transition: background-color 5000s ease-in-out 0s;
 }
 
-.hidden {
-    /* opacity: 0 !important;
-    visibility: hidden !important;
-    position: absolute !important;
-    pointer-events: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    top: -9999px !important;
-    left: -9999px !important; */
-
-    /* position: absolute !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important; */
-
-    display: none !important;
-}
-
-.processing {
-    pointer-events: none !important;
-    cursor: progress !important;
-    opacity: 0.9 !important;
-}
-
 ::-webkit-scrollbar {
     width: 0.75vw;
 }
@@ -93,6 +65,57 @@ input:autofill:active {
     font-weight: 400;
     font-style: normal;
     font-display: swap;
+}
+
+.hidden {
+    /* opacity: 0 !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    top: -9999px !important;
+    left: -9999px !important; */
+
+    /* position: absolute !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important; */
+
+    display: none !important;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+button.is-loading {
+    position: relative;
+}
+
+/* Применяется для дочерних элементов */
+button.is-loading > * {
+    opacity: 0.35;
+}
+
+/* Псевдоэлемент */
+button.is-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    animation: spin 1.5s linear infinite;
 }
 
 a {
@@ -147,15 +170,6 @@ button {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
 }
 
 @keyframes progressShrink {

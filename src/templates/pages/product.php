@@ -47,14 +47,14 @@
     </button>
 
     <div class="product_button_add_in_cart hidden" type="button" id="button-change-qty">
-        <button class="product_sign_button">
-            <img class="product_interaction_sign" src="/img/minus.png" data-product-subtract-cart data-product-id="<?= (int)$product['product_id'] ?>">
+        <button class="product_sign_button" type="button" data-product-subtract-cart data-product-id="<?= (int)$product['product_id'] ?>">
+            <img class="product_interaction_sign" src="/img/minus.png">
         </button>
 
         <span id="product-cart-counter"></span>
 
-        <button class="product_sign_button">
-            <img class="product_interaction_sign" src="/img/plus.png" data-product-add-cart data-product-id="<?= (int)$product['product_id'] ?>"> 
+        <button class="product_sign_button" type="button" data-product-add-cart data-product-id="<?= (int)$product['product_id'] ?>">
+            <img class="product_interaction_sign" src="/img/plus.png"> 
         </button>
     </div>
 </div>

@@ -310,6 +310,16 @@ export async function updateHeaderCounter(qty) {
     headerCounter.textContent = Number(qty);
 }
 
+// Функция для навешивания лоадера на кнопку (disabled + loader-класс)
+export function setButtonLoading(btn, isLoading) {
+    // Отключаем кликабельность
+    btn.disabled = isLoading;
+    // Визуальный лоадер через css-класс
+    btn.classList.toggle("is-loading", isLoading);
+    // Aria-атрибут для доступности
+    btn.setAttribute("aria-disabled", String(isLoading));
+}
+
 // Функция для экранирования html перед выводом
 export function escapeHtml(value) {
     return String(value ?? "")
