@@ -39,14 +39,14 @@
         </div>
     </div>
     
-    <?php if ($userId) { ?>
-        <a class="order_start hidden" id="start-order-btn" href="/checkout">
+    <?php if ($userId === null) { ?>
+        <a class="order_start hidden" id="start-order-btn" data-open-modal="registration">
             <div class="order_start_text">
                 Перейти к оформлению
             </div>
         </a>
     <?php } else { ?>
-        <a class="order_start hidden" id="start-order-btn" data-open-modal="registration">
+        <a class="order_start hidden" id="start-order-btn" href="/checkout">
             <div class="order_start_text">
                 Перейти к оформлению
             </div>

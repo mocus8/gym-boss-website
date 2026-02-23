@@ -5,6 +5,9 @@ $title  = 'Корзина товаров - Gym Boss';
 $robots = 'noindex,nofollow';
 $pageModuleScripts = ['/js/cart/cart.page.js'];
 
+// Получаем id пользователя 
+$userId = authId();
+
 // Через буфер записываем в переменную контент страницы
 ob_start();
 require __DIR__ . '/../templates/pages/cart.php';

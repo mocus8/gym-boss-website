@@ -10,7 +10,7 @@ $defaultCanonical = $baseUrl . $path;
 $canonical = $canonical ?? $defaultCanonical;
 
 // Получаем id юзера
-$userId = getCurrentUserId();
+$userId = $userId ?? authId();
 
 // Получаем инфу о корзине пользователя для счетчиков в хедере
 $cartCount = 0;    // ноль по умолчанию

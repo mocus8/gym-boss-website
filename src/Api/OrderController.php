@@ -106,7 +106,7 @@ class OrderController {
         try {
             // Подготавливаем переменные для использования в методе createFromCart
             $cartSessionId = $this->cartSession->getId();
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -161,7 +161,7 @@ class OrderController {
     // Обработчик запроса GET /api/order/{id}
     public function getById(int $orderId): void {
         try {
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $data = $this->orderService->getById($orderId, $userId);
 
@@ -194,7 +194,7 @@ class OrderController {
     // Обработчик запроса GET /api/orders
     public function getUserOrders(): void {
         try {
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $data = $this->orderService->getUserOrders($userId);
 
@@ -219,7 +219,7 @@ class OrderController {
     // Обработчик запроса POST /api/order/{id}/cancel
     public function markCancel(int $orderId): void {
         try {
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $this->orderService->markCancel($orderId, $userId);
 

@@ -230,7 +230,7 @@ class PaymentService {
         $this->db->begin_transaction();
 
         try {
-            $userId = getCurrentUserId();
+            $userId = authId();
             // Получаем базовую инфу о заказе из orders с блокировкой строки через for update
             $order = $this->orderService->lockForPayment($orderId, $userId);
             $orderTotal = (float)$order['total_price'];

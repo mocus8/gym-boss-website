@@ -93,7 +93,7 @@ class CartController {
     public function getCart(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -121,7 +121,7 @@ class CartController {
     public function addItem(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -167,7 +167,7 @@ class CartController {
     public function removeItem(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -207,7 +207,7 @@ class CartController {
     public function updateItemQty(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -248,7 +248,7 @@ class CartController {
     public function clear(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = getCurrentUserId();
+            $userId = authId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
