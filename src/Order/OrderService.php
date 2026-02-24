@@ -323,7 +323,7 @@ class OrderService {
                 o.created_at,
                 o.updated_at,
                 o.paid_at,
-                o.cancelled_at
+                o.canceled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
             LEFT JOIN stores AS s ON o.store_id = s.id
@@ -510,7 +510,7 @@ class OrderService {
                 o.created_at,
                 o.updated_at,
                 o.paid_at,
-                o.cancelled_at
+                o.canceled_at
             FROM orders AS o
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
             LEFT JOIN stores AS s ON o.store_id = s.id
@@ -600,25 +600,25 @@ class OrderService {
 
         $orderStatusId = (int)$row["status_id"];
 
-        $cancelledStatusId = $this->getStatusIdByCode('cancelled');
+        $canceledStatusId = $this->getStatusIdByCode('canceled');
         $pendingStatusId = $this->getStatusIdByCode('pending_payment');
 
         // Уже отменен (тихо выходим из метода)
-        if ($orderStatusId === $cancelledStatusId) {
+        if ($orderStatusId === $canceledStatusId) {
             return;
         }
 
         // Статус не pending_payment
         if ($orderStatusId !== $pendingStatusId) {
-            throw new \RuntimeException('Order cannot be cancelled from current status');
+            throw new \RuntimeException('Order cannot be canceled from current status');
         }
 
-        // Обновляем статус заказа на cancelled
+        // Обновляем статус заказа на canceled
         $sql = "
             UPDATE orders
             SET 
                 status_id = ?,
-                cancelled_at = NOW()
+                canceled_at = NOW()
             WHERE order_id = ? AND user_id = ?
         ";
 
@@ -628,7 +628,7 @@ class OrderService {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
 
-        $stmt->bind_param("iii", $cancelledStatusId, $orderId, $userId);
+        $stmt->bind_param("iii", $canceledStatusId, $orderId, $userId);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
@@ -686,25 +686,25 @@ class OrderService {
 
         $orderStatusId = (int)$row["status_id"];
 
-        $cancelledStatusId = $this->getStatusIdByCode('cancelled');
+        $canceledStatusId = $this->getStatusIdByCode('canceled');
         $pendingStatusId = $this->getStatusIdByCode('pending_payment');
 
         // Уже отменен (тихо выходим из метода)
-        if ($orderStatusId === $cancelledStatusId) {
+        if ($orderStatusId === $canceledStatusId) {
             return;
         }
 
         // Статус не pending_payment
         if ($orderStatusId !== $pendingStatusId) {
-            throw new \RuntimeException('Order cannot be cancelled from current status');
+            throw new \RuntimeException('Order cannot be canceled from current status');
         }
 
-        // Обновляем статус заказа на cancelled
+        // Обновляем статус заказа на canceled
         $sql = "
             UPDATE orders
             SET 
                 status_id = ?,
-                cancelled_at = NOW()
+                canceled_at = NOW()
             WHERE order_id = ?
         ";
 
@@ -714,7 +714,7 @@ class OrderService {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
 
-        $stmt->bind_param("ii", $cancelledStatusId, $orderId);
+        $stmt->bind_param("ii", $canceledStatusId, $orderId);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;

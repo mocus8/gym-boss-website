@@ -1,6 +1,6 @@
 import {
     getOrderById,
-    markOrderAsCancelled,
+    markOrderAsCanceled,
     getPaymentForOrder,
     syncPaymentForOrder,
 } from "./order.api.js";
@@ -377,7 +377,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             cancelText: "Нет, оставить",
             onConfirm: async () => {
                 try {
-                    await markOrderAsCancelled(orderId);
+                    await markOrderAsCanceled(orderId);
                     window.location.reload();
                 } catch (e) {
                     // Логирование в консоль с полным контекстом

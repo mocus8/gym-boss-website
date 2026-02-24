@@ -55,7 +55,7 @@ export function getUserOrders() {
 
 // Функция для отмены заказа по его id
 // Отправляет запрос POST /api/order/{id}/cancel
-export function markOrderAsCancelled(orderId) {
+export function markOrderAsCanceled(orderId) {
     const id = Number(orderId);
 
     return requestOrder(`order/${id}/cancel`, {
