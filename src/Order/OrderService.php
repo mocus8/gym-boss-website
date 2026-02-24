@@ -43,7 +43,7 @@ class OrderService {
         int $pickupReadyFromHours,
         int $pickupReadyToHours,
         int $courierDeliveryFromHours,
-        int $courierDeliveryToHours,
+        int $courierDeliveryToHours
     ) {
         $this->db = $db;
         $this->productService = $productService;
@@ -551,9 +551,8 @@ class OrderService {
         return $orders;
     }
 
-    // Метод для пометки заказа как отменненого
-    public function markCancel(int $orderId, int $userId): void {
-
+    // Метод для пометки заказа как отменненого (должен вызываться только внутри транзакции)
+    public function markCancelByUserInTx(int $orderId, int $userId): void {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
@@ -562,96 +561,168 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid userId');
         }
 
-        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
-        $this->db->begin_transaction();
+        // Получаем статус заказа с блокировкой строки (FOR UPDATE)
+        $sql = "
+            SELECT status_id
+            FROM orders
+            WHERE order_id = ? AND user_id = ?
+            FOR UPDATE
+        ";
 
-        try {
-            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
-            $sql = "
-                SELECT status_id
-                FROM orders
-                WHERE order_id = ? AND user_id = ?
-                FOR UPDATE
-            ";
+        $stmt = $this->db->prepare($sql);
 
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("ii", $orderId, $userId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $result = $stmt->get_result();
-
-            if (!$result) {
-                $stmt->close();
-                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-            }
-
-            $row = $result->fetch_assoc();
-
-            $stmt->close();
-
-            if (!$row) {
-                throw new \InvalidArgumentException('Order not found');
-            }
-
-            $orderStatusId = (int)$row["status_id"];
-
-            $cancelledStatusId = $this->getStatusIdByCode('cancelled');
-            $pendingStatusId = $this->getStatusIdByCode('pending_payment');
-
-            // Уже отменен (тихо выходим из метода)
-            if ($orderStatusId === $cancelledStatusId) {
-                $this->db->commit();
-                return;
-            }
-
-            // Статус не pending_payment
-            if ($orderStatusId !== $pendingStatusId) {
-                throw new \RuntimeException('Order cannot be cancelled from current status');
-            }
-
-            // Обновляем статус заказа на cancelled
-            $sql = "
-                UPDATE orders
-                SET 
-                    status_id = ?,
-                    cancelled_at = NOW()
-                WHERE order_id = ? AND user_id = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("iii", $cancelledStatusId, $orderId, $userId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $stmt->close();
-
-            // Комитим транзакцию
-            $this->db->commit();
-
-        } catch (\Throwable $e) {
-            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
-            $this->db->rollback();
-            throw $e;
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
+
+        $stmt->bind_param("ii", $orderId, $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        if (!$row) {
+            throw new \InvalidArgumentException('Order not found');
+        }
+
+        $orderStatusId = (int)$row["status_id"];
+
+        $cancelledStatusId = $this->getStatusIdByCode('cancelled');
+        $pendingStatusId = $this->getStatusIdByCode('pending_payment');
+
+        // Уже отменен (тихо выходим из метода)
+        if ($orderStatusId === $cancelledStatusId) {
+            return;
+        }
+
+        // Статус не pending_payment
+        if ($orderStatusId !== $pendingStatusId) {
+            throw new \RuntimeException('Order cannot be cancelled from current status');
+        }
+
+        // Обновляем статус заказа на cancelled
+        $sql = "
+            UPDATE orders
+            SET 
+                status_id = ?,
+                cancelled_at = NOW()
+            WHERE order_id = ? AND user_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("iii", $cancelledStatusId, $orderId, $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
+    }
+
+    
+    // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука, должен вызываться внутри транзакции) 
+    public function markCancelFromPaymentProviderInTx(int $orderId): void {
+
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Получаем статус заказа с блокировкой строки (FOR UPDATE)
+        $sql = "
+            SELECT status_id
+            FROM orders
+            WHERE order_id = ?
+            FOR UPDATE
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        if (!$row) {
+            throw new \InvalidArgumentException('Order not found');
+        }
+
+        $orderStatusId = (int)$row["status_id"];
+
+        $cancelledStatusId = $this->getStatusIdByCode('cancelled');
+        $pendingStatusId = $this->getStatusIdByCode('pending_payment');
+
+        // Уже отменен (тихо выходим из метода)
+        if ($orderStatusId === $cancelledStatusId) {
+            return;
+        }
+
+        // Статус не pending_payment
+        if ($orderStatusId !== $pendingStatusId) {
+            throw new \RuntimeException('Order cannot be cancelled from current status');
+        }
+
+        // Обновляем статус заказа на cancelled
+        $sql = "
+            UPDATE orders
+            SET 
+                status_id = ?,
+                cancelled_at = NOW()
+            WHERE order_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ii", $cancelledStatusId, $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
     }
 
     // Метод пометки заказа как оплаченного: только логика, должен вызываться только внутри открытой транзакции
@@ -907,104 +978,5 @@ class OrderService {
         }
 
         return $items;
-    }
-
-    // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука)
-    public function markCancelFromPaymentProvider(int $orderId): void {
-
-        if ($orderId <= 0) {
-            throw new \InvalidArgumentException('Invalid orderId');
-        }
-
-        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
-        $this->db->begin_transaction();
-
-        try {
-            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
-            $sql = "
-                SELECT status_id
-                FROM orders
-                WHERE order_id = ?
-                FOR UPDATE
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("i", $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $result = $stmt->get_result();
-
-            if (!$result) {
-                $stmt->close();
-                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-            }
-
-            $row = $result->fetch_assoc();
-
-            $stmt->close();
-
-            if (!$row) {
-                throw new \InvalidArgumentException('Order not found');
-            }
-
-            $orderStatusId = (int)$row["status_id"];
-
-            $cancelledStatusId = $this->getStatusIdByCode('cancelled');
-            $pendingStatusId = $this->getStatusIdByCode('pending_payment');
-
-            // Уже отменен (тихо выходим из метода)
-            if ($orderStatusId === $cancelledStatusId) {
-                $this->db->commit();
-                return;
-            }
-
-            // Статус не pending_payment
-            if ($orderStatusId !== $pendingStatusId) {
-                throw new \RuntimeException('Order cannot be cancelled from current status');
-            }
-
-            // Обновляем статус заказа на cancelled
-            $sql = "
-                UPDATE orders
-                SET 
-                    status_id = ?,
-                    cancelled_at = NOW()
-                WHERE order_id = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("ii", $cancelledStatusId, $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $stmt->close();
-
-            // Комитим транзакцию
-            $this->db->commit();
-
-        } catch (\Throwable $e) {
-            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
-            $this->db->rollback();
-            throw $e;
-        }
     }
 }

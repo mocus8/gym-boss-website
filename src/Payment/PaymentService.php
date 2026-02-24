@@ -475,48 +475,6 @@ class PaymentService {
         return $payment ?: null;
     }
 
-    // Метод для обновления статуса платежа по id из провайдера (юкассы)
-    public function updateStatusByExternalId(
-        string $externalPaymentId,
-        string $newStatus,
-        ?string $errorCode = null,
-        ?string $errorMessage = null
-    ): void {
-        // Вносим в строку платежа статус и код + сообщение ошибки
-        $sql = "
-            UPDATE payments
-            SET status = ?,
-                last_sync_at = NOW(),
-                error_code = ?,
-                error_message = ?
-            WHERE external_payment_id = ?
-                AND status <> 'succeeded'
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ssss", $newStatus, $errorCode, $errorMessage, $externalPaymentId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        // Проверяем, затронуты ли строки
-        $affected = $stmt->affected_rows;
-        $stmt->close();
-
-        if ($affected === 0) {
-            throw new \RuntimeException('Payment status was not updated (not found or already succeeded)');
-        }
-    }
-
     // Метод для получения id заказа по id платежа из провайдера (юкассы)
     public function getOrderIdByExternalId(
         string $externalPaymentId
@@ -560,5 +518,84 @@ class PaymentService {
 
         $orderId = (int)$row['order_id'];
         return $orderId;
+    }
+
+    // Метод для обновления статуса платежа по id из провайдера (юкассы)
+    public function updateStatusByExternalId(
+        string $externalPaymentId,
+        string $newStatus,
+        ?string $errorCode = null,
+        ?string $errorMessage = null
+    ): void {
+        // Вносим в строку платежа статус и код + сообщение ошибки
+        $sql = "
+            UPDATE payments
+            SET status = ?,
+                last_sync_at = NOW(),
+                error_code = ?,
+                error_message = ?
+            WHERE external_payment_id = ?
+                AND status <> 'succeeded'
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ssss", $newStatus, $errorCode, $errorMessage, $externalPaymentId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        // Проверяем, затронуты ли строки
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+
+        if ($affected === 0) {
+            throw new \RuntimeException('Payment status was not updated (not found or already succeeded)');
+        }
+    }
+
+    // Метод для пометки в бд всех платежей одного заказа как отмененнных
+    public function cancelAllByOrderId(
+        int $orderId,
+        ?string $errorCode = null,
+        ?string $errorMessage = null
+    ): void {
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Вносим в строку платежа статус и код + сообщение ошибки
+        $sql = "
+            UPDATE payments
+            SET status = 'canceled',
+                error_code = ?,
+                error_message = ?
+            WHERE order_id = ?
+                AND status IN ('creating','pending')
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ssi", $errorCode, $errorMessage, $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
     }
 }

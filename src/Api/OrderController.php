@@ -9,6 +9,7 @@
 namespace App\Api;
 
 use App\Order\OrderService;    // используем класс OrderService из пространства имен App\Order
+use App\Order\CancelOrderUseCase;    // используем класс CancelOrderUseCase из пространства имен App\Order
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 use App\Payment\PaymentService;
@@ -18,7 +19,8 @@ use App\Payment\PaymentStatusSyncService;
 // Класс для управления заказами пользователей (через методы сервиса)
 class OrderController {
     // Приватные свойства (переменные класса), привязанные к объекту
-    private OrderService $orderService;    
+    private OrderService $orderService;
+    private CancelOrderUseCase $CancelOrderUseCase;
     private CartSession $cartSession;
     private CartService $cartService;
     private PaymentService $paymentService;
@@ -28,12 +30,14 @@ class OrderController {
     // Конструктор (магический метод), присваиваем внеший экземпляр OrderService в переменные создоваемого объекта
     public function __construct(
         OrderService $orderService,
+        CancelOrderUseCase $CancelOrderUseCase,
         CartSession $cartSession,
         CartService $cartService,
         PaymentService $paymentService,
         PaymentStatusSyncService $paymentStatusSyncService
     ) {
         $this->orderService = $orderService;
+        $this->CancelOrderUseCase = $CancelOrderUseCase;
         $this->cartSession = $cartSession;
         $this->cartService = $cartService;
         $this->paymentService = $paymentService;
@@ -43,6 +47,7 @@ class OrderController {
     // Будующий конструктор (с логером)
     // public function __construct(
     //     OrderService $orderService,
+    //     CancelOrderUseCase $CancelOrderUseCase,
     //     CartSession $cartSession,
     //     CartService $cartService,
     //     PaymentService $paymentService,
@@ -50,6 +55,7 @@ class OrderController {
     //     Logger $logger
     // ) {
     //     $this->orderService = $orderService;
+    //     $this->CancelOrderUseCase = $CancelOrderUseCase;
     //     $this->cartSession = $cartSession;
     //     $this->cartService = $cartService;
     //     $this->paymentService = $paymentService;
@@ -221,7 +227,7 @@ class OrderController {
         try {
             $userId = authId();
 
-            $this->orderService->markCancel($orderId, $userId);
+            $this->CancelOrderUseCase->markCancelByUser($orderId, $userId);
 
             // Возвращаем успех через приватную функцию
             $this->success();
