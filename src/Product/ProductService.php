@@ -119,7 +119,18 @@ class ProductService {
 
     // Получение товара из бд по slug
     public function getBySlug(string $slug): ?array {
-        $sql = "SELECT * FROM products WHERE slug = ?";
+        $sql = "
+            SELECT
+                product_id,
+                category_id,
+                slug,
+                name,
+                price,
+                vat_code,
+                description
+            FROM products
+            WHERE slug = ?
+        ";
 
         $stmt = $this->db->prepare($sql);
 
@@ -155,7 +166,18 @@ class ProductService {
 
     // Получение товара из бд по id
     public function getById(int $id): ?array {
-        $sql = "SELECT * FROM products WHERE product_id = ?";
+        $sql = "
+            SELECT
+                product_id,
+                category_id,
+                slug,
+                name,
+                price,
+                vat_code,
+                description
+            FROM products
+            WHERE product_id = ?
+        ";
 
         $stmt = $this->db->prepare($sql);
 
@@ -206,7 +228,13 @@ class ProductService {
 
         $sql = "
             SELECT 
-                p.*,
+                p.product_id,
+                p.category_id,
+                p.slug,
+                p.name,
+                p.price,
+                p.vat_code,
+                p.description,
                 img.image_path
             FROM products p
             LEFT JOIN product_images img 
