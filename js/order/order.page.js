@@ -247,14 +247,22 @@ function showOrderSections(order) {
         el.classList.toggle("hidden", visibleType !== deliveryTypeCode);
     });
 
-    // Показываем подходищие по статусу блоки и скрываем неподходящие
+    // Показываем подходищие по статусу блоки и скрываем неподходящие, также дополнительно проверяем тип доставки
     document.querySelectorAll("[data-visible-status]").forEach((el) => {
         const allowed = (el.dataset.visibleStatus || "")
             .split(",") // разделяет по запятым
             .map((s) => s.trim()) // обрезает пробелы
             .filter(Boolean); // выкидывает пустые строки
+        const isAlloweStatus = allowed.includes(statusCode); // true, если в статусах элемента есть подходящий
 
-        el.classList.toggle("hidden", !allowed.includes(statusCode));
+        const visibleType = el.dataset.deliveryVisibleType;
+        const isAllowedDeliveryType =
+            !visibleType || visibleType === deliveryTypeCode;
+
+        el.classList.toggle(
+            "hidden",
+            !(isAlloweStatus && isAllowedDeliveryType),
+        );
     });
 }
 
