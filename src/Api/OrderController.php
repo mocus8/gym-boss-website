@@ -171,6 +171,16 @@ class OrderController {
 
             $data = $this->orderService->getById($orderId, $userId);
 
+            // Форматируем временные поля из SQL формата в ISO формат
+            $data['order'] = mapIsoFields($data['order'], [
+                'created_at',
+                'updated_at',
+                'paid_at',
+                'canceled_at',
+                'delivery_from',
+                'delivery_to',
+            ]);
+
             // Возвращаем успех через приватную функцию
             $this->success(200, $data);
 
@@ -203,6 +213,21 @@ class OrderController {
             $userId = authId();
 
             $data = $this->orderService->getUserOrders($userId);
+
+            // Форматируем временные поля в каждом заказе
+            $data = array_map(
+                fn(array $order) => mapIsoFields($order, [
+                    'courier_delivery_from',
+                    'courier_delivery_to',
+                    'ready_for_pickup_from',
+                    'ready_for_pickup_to',
+                    'created_at',
+                    'updated_at',
+                    'paid_at',
+                    'canceled_at',
+                ]),
+                $data
+            );
 
             // Возвращаем успех через приватную функцию
             $this->success(200, $data);

@@ -37,6 +37,27 @@ function requireWebAuth(): void {
     }
 }
 
+// Форматирование времени из SQL формата в ISO формат
+function sqlUtcToIso(?string $sql): ?string {
+    if ($sql === null) return null;
+    
+    $sql = trim($sql);
+    if ($sql === '') return null;
+
+    $dt = new DateTimeImmutable($sql, new DateTimeZone('UTC'));
+    return $dt->format('Y-m-d\TH:i:s\Z');
+}
+
+// Форматирование временных полей массива из SQL формата в ISO формат
+function mapIsoFields(array $row, array $fields): array {
+    foreach ($fields as $f) {
+        if (array_key_exists($f, $row)) {
+            $row[$f] = sqlUtcToIso($row[$f]);
+        }
+    }
+    return $row;
+}
+
 // Форматирование цены товара
 function formatPrice(float $value): string {
     return number_format($value, 2, ',', ' ');
