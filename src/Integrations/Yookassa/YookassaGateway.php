@@ -4,7 +4,11 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Integrations\Yookassa;
 use YooKassa\Client;
-use YooKassa\Model\PaymentInterface;
+use YooKassa\Model\Notification\NotificationEventType;
+use YooKassa\Model\Notification\NotificationSucceeded;
+use YooKassa\Model\Notification\NotificationWaitingForCapture;
+use YooKassa\Model\Notification\NotificationCanceled;
+
 
 class YookassaGateway {
     // Приватное поле - api клиент для использоания sdk юкассы
@@ -38,5 +42,34 @@ class YookassaGateway {
     // Метод для получения статуса платежа по id
     public function getPaymentStatus(string $paymentId): string {
         return $this->client->getPaymentInfo($paymentId)->getStatus();
+    }
+
+    // Метод для получения id платежа из уведомления
+    public function getPaymentIdFromNotification(array $payload): string {
+        if (!isset($payload['event'])) {
+            throw new \RuntimeException('YooKassa notification without event');
+        }
+
+        // На уровне SDK выбираем правильный класс уведомления
+        switch ($payload['event']) {
+            case NotificationEventType::PAYMENT_SUCCEEDED:
+                $notification = new NotificationSucceeded($payload);
+                break;
+            case NotificationEventType::PAYMENT_WAITING_FOR_CAPTURE:
+                $notification = new NotificationWaitingForCapture($payload);
+                break;
+            case NotificationEventType::PAYMENT_CANCELED:
+                $notification = new NotificationCanceled($payload);
+                break;
+            default:
+                // Неизвестный статус
+                throw new \RuntimeException('Unsupported YooKassa notification event: '.$payload['event']);
+        }
+
+        // Получаем объект платежа
+        $payment = $notification->getObject();
+
+        // Возвращаем id заказа
+        return $payment->getId();
     }
 }
