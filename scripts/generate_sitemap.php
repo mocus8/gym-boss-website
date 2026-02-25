@@ -43,9 +43,9 @@ try {
         $lastmod = null;
 
         if (!empty($row['changed'])) {
-            $ts = strtotime($row['changed']);
-            if ($ts !== false) {
-                $lastmod = date('Y-m-d', $ts);
+            $dt = new DateTimeImmutable($row['changed'], new DateTimeZone('UTC'));
+            if ($dt !== false) {
+                $lastmod = $dt->format('Y-m-d');
             }
         }
 
