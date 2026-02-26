@@ -8,17 +8,14 @@ use App\Integrations\Yookassa\YookassaGateway;
 
 class WebhookService {
     // Приватное свойство (переменная класса), привязанная к объекту
-    private \mysqli $db;
     private PaymentStatusSyncService $paymentStatusSyncService;
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в поля создоваемого объекта
     public function __construct(
-        \mysqli $db,
         PaymentStatusSyncService $paymentStatusSyncService,
         YookassaGateway $yookassaGateway
     ) {
-        $this->db = $db;
         $this->paymentStatusSyncService = $paymentStatusSyncService;
         $this->yookassaGateway = $yookassaGateway;
     }
