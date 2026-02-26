@@ -49,6 +49,8 @@ use App\Api\StoreController;   // используем класс StoreControlle
 use App\Integrations\Yookassa\YookassaGateway;
 use App\Payment\PaymentService;
 use App\Payment\PaymentStatusSyncService;
+use App\Payment\WebhookService;
+use App\Api\WebhookController;
 
 // Работаем с библиотекой Dotenv, загружаем .env файл
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
