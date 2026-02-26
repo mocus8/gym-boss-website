@@ -73,6 +73,8 @@ require_once __DIR__ . '/Integrations/Yookassa/CreatedPaymentDto.php';    // ф�
 require_once __DIR__ . '/Integrations/Yookassa/YookassaGateway.php';    // файл с gateway-ем юкассы, оберткой над ее sdk
 require_once __DIR__ . '/Payment/PaymentService.php';
 require_once __DIR__ . '/Payment/PaymentStatusSyncService.php';
+require_once __DIR__ . '/Payment/WebhookService.php';
+require_once __DIR__ . '/Api/WebhookController.php';
 
 // Подключаем конфиги (массивы из переменных с константами из .env)
 $appConfig = require __DIR__ . '/config/app.php';
@@ -127,6 +129,10 @@ $orderController = new OrderController(
     $paymentService,
     $paymentStatusSyncService
 );
+
+// Создаем вебхук для обработки уведомлений от юкассы
+$webhookService = new WebhookService($paymentStatusSyncService, $yookassaGateway);
+$webhookController = new WebhookController($webhookService);
 
 // Работаем с внешним сервисом DaData
 $dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // Создаем клиент для взаимодействия с сервисом DaData

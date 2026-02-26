@@ -9,6 +9,12 @@ $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = rtrim($uri, '/');
 $method = $_SERVER['REQUEST_METHOD'];    // GET, POST и т.д.
 
+// Маршрут вебхука (получение уведомлений от провайдера оплаты)
+if ($method === 'POST' && $uri === '/webhook/yookassa') {
+    $webhookController->handleNotification();
+    exit;
+}
+
 // Api-маршруты
 if (strpos($uri, '/api/') === 0) {
     // убираем префикс /api
