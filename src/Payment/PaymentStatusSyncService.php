@@ -59,7 +59,11 @@ class PaymentStatusSyncService {
             return;
         }
 
-        throw new \RuntimeException('Unknown payment status from provider');
+        // Для любого другого статуса (неизвестный/битый/новый) помечаем платеж как unknown и логируем
+        $this->paymentService->updateStatusByExternalId($externalPaymentId, 'unknown');
+        // TODO: потом сделать правильно через логер (с контекстом)
+        error_log("Unknown payment status from provider: $providerStatus for payment: $externalPaymentId");
+        return;
     }
 
     // Метод-обертка над методом syncByExternalPaymentId, находит paymentId и вызывает метод syncByExternalPaymentId
