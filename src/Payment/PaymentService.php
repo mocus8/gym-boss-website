@@ -524,19 +524,30 @@ class PaymentService {
     public function updateStatusByExternalId(
         string $externalPaymentId,
         string $newStatus,
+        string $newProviderStatus,
         ?string $errorCode = null,
         ?string $errorMessage = null
     ): void {
-        // Вносим в строку платежа статус и код + сообщение ошибки
+        // В бд для платежа безусловно устанавливаем provider_status и last_sync_at
+        // Далее если статус succeeded - не меняем поля, в другом случае устанавливаем новые
         $sql = "
-            UPDATE payments
-            SET status = ?,
-                last_sync_at = NOW(),
-                error_code = ?,
-                error_message = ?
-            WHERE external_payment_id = ?
-                AND status <> 'succeeded'
-            LIMIT 1
+        UPDATE payments
+        SET
+            provider_status = ?,
+            last_sync_at = NOW(),
+            status = CASE
+                WHEN status = 'succeeded' THEN status
+                ELSE ?
+            END,
+            error_code = CASE
+                WHEN status = 'succeeded' THEN error_code
+                ELSE ?
+            END,
+            error_message = CASE
+                WHEN status = 'succeeded' THEN error_message
+                ELSE ?
+            END
+        WHERE external_payment_id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -545,7 +556,7 @@ class PaymentService {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
 
-        $stmt->bind_param("ssss", $newStatus, $errorCode, $errorMessage, $externalPaymentId);
+        $stmt->bind_param("sssss", $newProviderStatus, $newStatus, $errorCode, $errorMessage, $externalPaymentId);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
@@ -553,13 +564,7 @@ class PaymentService {
             throw new \RuntimeException('DB execute failed: ' . $error);
         }
 
-        // Проверяем, затронуты ли строки
-        $affected = $stmt->affected_rows;
         $stmt->close();
-
-        if ($affected === 0) {
-            throw new \RuntimeException('Payment status was not updated (not found or already succeeded)');
-        }
     }
 
     // Метод для пометки в бд всех платежей одного заказа как отмененнных

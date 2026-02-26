@@ -39,7 +39,7 @@ class PaymentStatusSyncService {
             try {
                 $orderId = $this->paymentService->getOrderIdByExternalId($externalPaymentId);
                 $this->orderService->markPaidInTx($orderId);
-                $this->paymentService->updateStatusByExternalId($externalPaymentId, 'succeeded');
+                $this->paymentService->updateStatusByExternalId($externalPaymentId, 'succeeded', $providerStatus);
 
                 $this->db->commit();
                 return;
@@ -50,17 +50,17 @@ class PaymentStatusSyncService {
         } 
         // Если платеж отменен
         else if ($providerStatus === 'canceled') {
-            $this->paymentService->updateStatusByExternalId($externalPaymentId, 'canceled');
+            $this->paymentService->updateStatusByExternalId($externalPaymentId, 'canceled', $providerStatus);
             return;
         }
         // Если платеж ожидается
         else if ($providerStatus === 'pending' || $providerStatus === 'waiting_for_capture') {
-            $this->paymentService->updateStatusByExternalId($externalPaymentId, 'pending');
+            $this->paymentService->updateStatusByExternalId($externalPaymentId, 'pending', $providerStatus);
             return;
         }
 
         // Для любого другого статуса (неизвестный/битый/новый) помечаем платеж как unknown и логируем
-        $this->paymentService->updateStatusByExternalId($externalPaymentId, 'unknown');
+        $this->paymentService->updateStatusByExternalId($externalPaymentId, 'unknown', $providerStatus);
         // TODO: потом сделать правильно через логер (с контекстом)
         error_log("Unknown payment status from provider: $providerStatus for payment: $externalPaymentId");
         return;
