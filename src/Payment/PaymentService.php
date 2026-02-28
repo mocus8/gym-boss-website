@@ -9,7 +9,7 @@ namespace App\Payment;
 use App\Order\OrderService;
 use App\Integrations\Yookassa\YookassaGateway;
 
-// Класс для управления корзинами пользователей
+// Класс для управления платежами
 class PaymentService {
     // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;
