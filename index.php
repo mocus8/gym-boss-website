@@ -23,12 +23,24 @@ if (strpos($uri, '/api/') === 0) {
     // Api маршруты, требуещие авторизации
     $protectedApiRoutes = [
         'POST' => [
+            '/auth/email/resend',
+            '/auth/logout',
             '/order/create-from-cart',
             '/dadata/suggest/address',
         ],
         'GET' => [
+            '/auth/me',
             '/orders',
         ],
+        'PUT' => [
+            '/account/password',
+        ],
+        'PATCH' => [
+            '/account/profile',
+        ],
+        'DELETE' => [
+            '/account',
+        ]
         // сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
     ];
 
@@ -39,13 +51,14 @@ if (strpos($uri, '/api/') === 0) {
 
     // Определение api маршрутов
     $apiRoutes = [
-        'GET' => [
-            '/cart' => [$cartController, 'getCart'],
-            '/products' => [$productController, 'getCatalog'],
-            '/orders' => [$orderController, 'getUserOrders'],
-            '/stores' => [$storeController, 'getAll']
-        ],
         'POST' => [
+            '/auth/register' => [$authController, 'register'],    // TODO
+            '/auth/email/resend' => [$authController, 'resendVerification'],    // TODO
+            '/auth/email/verify' => [$authController, 'verifyEmail '],    // TODO
+            '/auth/login' => [$authController, 'login'],    // TODO
+            '/auth/logout' => [$authController, 'logout'],    // TODO
+            '/auth/password/forgot' => [$authController, 'forgotPassword'],    // TODO
+            '/auth/password/reset' => [$authController, 'resetPassword'],    // TODO
             '/cart/add-item' => [$cartController, 'addItem'],
             '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
             '/cart/remove-item' => [$cartController, 'removeItem'],
@@ -53,6 +66,22 @@ if (strpos($uri, '/api/') === 0) {
             '/order/create-from-cart' => [$orderController, 'createFromCart'],
             '/dadata/suggest/address' => [$dadataController, 'suggestAddress'],
         ],
+        'GET' => [
+            '/auth/me' => [$authController, 'me'],    // TODO
+            '/cart' => [$cartController, 'getCart'],
+            '/products' => [$productController, 'getCatalog'],
+            '/orders' => [$orderController, 'getUserOrders'],
+            '/stores' => [$storeController, 'getAll'],
+        ],
+        'PUT' => [
+            '/account/profile' => [$accountController, 'updateProfile'],    // TODO
+        ],
+        'PATCH' => [
+            '/account/password' => [$accountController, 'updatePassword'],    // TODO
+        ],
+        'DELETE' => [
+            '/account' => [$accountController, 'delete'],    // TODO
+        ]
     ];
 
     // Если маршрут есть в списке, подключаем соответствующий метод
