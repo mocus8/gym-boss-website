@@ -256,13 +256,13 @@ class PaymentService {
             // 2. через gateway юкассы создаем платеж в самой юкассе 
             // 3. если платеж в юкассе создан - дополняем запись платежа в бд, если нет - помечаем как failed
 
-            // Получаем логин пользователя через метод UserService для формирования чека
-            // $login = $this->UserService->getLoginForReceipt($userId);
+            // Получаем логин пользователя через метод AccountService для формирования чека
+            // $email = $this->AccountService->getEmailForReceipt($userId);
 
             // TODO потом заменить на то, что выше
             // Пока через простой запрос
             $sql = "
-                SELECT login
+                SELECT email
                 FROM users
                 WHERE id = ?
                 LIMIT 1        
@@ -283,7 +283,7 @@ class PaymentService {
                 throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
             }
             $row = $result->fetch_assoc();
-            $login = $row['login'] ?? null;
+            $email = $row['email'] ?? null;
             $stmt->close();
 
             // Получаем залоченые позиции заказа из order_items
@@ -335,7 +335,7 @@ class PaymentService {
                 'paymentId' => $paymentId,
                 'orderId' => $orderId,
                 'orderTotal' => $orderTotal,
-                'login' => $login,
+                'email' => $email,
                 'itemsForReceipt' => $itemsForReceipt,
                 'idempotencyKey' => $idempotencyKey,
             ];
@@ -365,7 +365,7 @@ class PaymentService {
 
             'receipt' => [
                 'customer' => [
-                    'phone' => $draftPaymentInfo['login']
+                    'email' => $draftPaymentInfo['email']
                 ],
                 'items' => $draftPaymentInfo['itemsForReceipt']
             ]

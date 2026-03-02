@@ -1,6 +1,6 @@
 <?php
 // Задаем дефолты
-$login = '';
+$email = '';
 $name  = '';
 $userId = $userId ?? null;
 
@@ -13,7 +13,7 @@ if ($userId !== null) {
 
     // Вытаскиваем логин и имя из бд
     foreach ($result as $item) {
-        $login = $item['login'];
+        $email = $item['email'];
         $name = $item['name'];
     }
 }
@@ -122,7 +122,7 @@ if ($userId !== null) {
                     <?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>
                 </div>
                 <div class="header_account_inf">
-                    <?= htmlspecialchars($login, ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>
                 </div>
             </div>
             <div class="header_account_buttons_logged_in">
