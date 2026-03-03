@@ -14,7 +14,7 @@ class AuthSession {
         $_SESSION['userId'] = $userId;
     }
 
-    // Метод для выходя из аккаунта (удаление userId из сессии)
+    // Метод для выхода из аккаунта (удаление userId из сессии)
     public function logout(): void {
         // Очищаем сессию
         $_SESSION = [];
