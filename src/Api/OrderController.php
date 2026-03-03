@@ -8,6 +8,7 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
+use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
 use App\Order\OrderService;    // используем класс OrderService из пространства имен App\Order
 use App\Order\CancelOrderUseCase;    // используем класс CancelOrderUseCase из пространства имен App\Order
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
@@ -19,6 +20,7 @@ use App\Payment\PaymentStatusSyncService;
 // Класс для управления заказами пользователей (через методы сервиса)
 class OrderController {
     // Приватные свойства (переменные класса), привязанные к объекту
+    private AuthSession $authSession;
     private OrderService $orderService;
     private CancelOrderUseCase $CancelOrderUseCase;
     private CartSession $cartSession;
@@ -29,6 +31,7 @@ class OrderController {
 
     // Конструктор (магический метод), присваиваем внеший экземпляр OrderService в переменные создоваемого объекта
     public function __construct(
+        AuthSession $authSession,
         OrderService $orderService,
         CancelOrderUseCase $CancelOrderUseCase,
         CartSession $cartSession,
@@ -36,6 +39,7 @@ class OrderController {
         PaymentService $paymentService,
         PaymentStatusSyncService $paymentStatusSyncService
     ) {
+        $this->authSession = $authSession;
         $this->orderService = $orderService;
         $this->CancelOrderUseCase = $CancelOrderUseCase;
         $this->cartSession = $cartSession;
@@ -46,6 +50,7 @@ class OrderController {
 
     // Будующий конструктор (с логером)
     // public function __construct(
+    //     AuthSession $authSession,
     //     OrderService $orderService,
     //     CancelOrderUseCase $CancelOrderUseCase,
     //     CartSession $cartSession,
@@ -54,6 +59,7 @@ class OrderController {
     //     PaymentStatusSyncService $paymentStatusSyncService
     //     Logger $logger
     // ) {
+    //     $this->authSession = $authSession;
     //     $this->orderService = $orderService;
     //     $this->CancelOrderUseCase = $CancelOrderUseCase;
     //     $this->cartSession = $cartSession;
@@ -112,7 +118,7 @@ class OrderController {
         try {
             // Подготавливаем переменные для использования в методе createFromCart
             $cartSessionId = $this->cartSession->getId();
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -167,7 +173,7 @@ class OrderController {
     // Обработчик запроса GET /api/order/{id}
     public function getById(int $orderId): void {
         try {
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $data = $this->orderService->getById($orderId, $userId);
 
@@ -210,7 +216,7 @@ class OrderController {
     // Обработчик запроса GET /api/orders
     public function getUserOrders(): void {
         try {
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $data = $this->orderService->getUserOrders($userId);
 
@@ -250,7 +256,7 @@ class OrderController {
     // Обработчик запроса POST /api/order/{id}/cancel
     public function markCancel(int $orderId): void {
         try {
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $this->CancelOrderUseCase->markCancelByUser($orderId, $userId);
 
@@ -282,7 +288,9 @@ class OrderController {
     // Обработчик запроса POST /api/order/{id}/start-payment
     public function startPayment(int $orderId): void {
         try {
-            $confirmationUrl = $this->paymentService->getOrCreatePayment($orderId);
+            $userId = $this->authSession->getUserId();
+
+            $confirmationUrl = $this->paymentService->getOrCreatePayment($orderId, $userId);
 
             // Возвращаем успех через приватную функцию
             $this->success(200, ['confirmationUrl' => $confirmationUrl]);

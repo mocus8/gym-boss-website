@@ -9,24 +9,28 @@
 namespace App\Api;
 
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
+use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления корзинами пользователей (через методы сервиса)
 class CartController {
     private CartSession $cartSession;    // приватное свойство (переменная класса), привязанная к объекту
+    private AuthSession $authSession;    // приватное свойство (переменная класса), привязанная к объекту
     private CartService $cartService;    // приватное свойство (переменная класса), привязанная к объекту
     // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Конструктор (магический метод), присваиваем внеший экземпляр CartService и CartSession в переменные создоваемого объекта
-    public function __construct(CartSession $cartSession, CartService $cartService) {
+    public function __construct(CartSession $cartSession, AuthSession $authSession, CartService $cartService) {
         $this->cartSession = $cartSession;
+        $this->authSession = $authSession;
         $this->cartService = $cartService;
     }
 
     // Будующий конструктор (с логером)
-    // public function __construct(CartService $cartService, Logger $logger) {
+    // public function __construct(CartSession $cartSession, AuthSession $authSession, CartService $cartService, Logger $logger) {
     //     $this->cartSession = $cartSession;
+    //     $this->authSession = $authSession;
     //     $this->cartService = $cartService;
     //     $this->logger = $logger;
     // }
@@ -93,7 +97,7 @@ class CartController {
     public function getCart(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -121,7 +125,7 @@ class CartController {
     public function addItem(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -167,7 +171,7 @@ class CartController {
     public function removeItem(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -207,7 +211,7 @@ class CartController {
     public function updateItemQty(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 
@@ -248,7 +252,7 @@ class CartController {
     public function clear(): void {
         try {
             $cartSessionId = $this->cartSession->getId();
-            $userId = authId();
+            $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
 

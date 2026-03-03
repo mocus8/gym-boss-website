@@ -6,7 +6,7 @@ $robots = 'noindex,nofollow';
 $pageModuleScripts = ['/js/cart/cart.page.js'];
 
 // Получаем id пользователя 
-$userId = authId();
+$userId = $authSession->getUserId();
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

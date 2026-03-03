@@ -2,20 +2,10 @@
 // Файл для мелких технических функций, утилит (например форматирование цен, дат и т.д.; работа с путями/URL;
 // обёртка для htmlspecialchars, сокращённые проверки, маленькие преобразования строк/массивов)
 
-// Получение id юзера
-function authId(): ?int {
-    return $_SESSION['user']['id'] ?? null;
-}
-
-// Проверка авторизации (наличия user id в сессии)
-function authCheck(): bool {
-    return authId() !== null;
-}
-
 // Проверка авторизации для api запросов (с 401 ответом и json ответом)
-function requireApiAuth(): void {
+function requireApiAuth(AuthSession $authSession): void {
     // Если пользователь не залогинен - возвращаем 401-й статус и json ответ с указанием
-    if (!authCheck()) {
+    if (!$authSession->isAuthenticated()) {
         http_response_code(401);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode([
@@ -30,8 +20,8 @@ function requireApiAuth(): void {
 }
 
 // Проверка авторизации для web маршрутов (с редиректом)
-function requireWebAuth(): void {
-    if (!authCheck()) {
+function requireWebAuth(AuthSession $authSession): void {
+    if (!$authSession->isAuthenticated()) {
         header('Location: /');
         exit;
     }

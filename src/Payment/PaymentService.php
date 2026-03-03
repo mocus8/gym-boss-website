@@ -210,9 +210,13 @@ class PaymentService {
     }
 
     // Метод для получения или создания платежа, возвращает существующею/новую ссылку на платеж
-    public function getOrCreatePayment (int $orderId): string {
+    public function getOrCreatePayment(int $orderId, int $userId): string {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        if ($userId <= 0) {
+            throw new \InvalidArgumentException('Invalid userId');
         }
 
         // Cтавим ожидание блокировок как 5 секунд, потом ошибка от sql
@@ -230,7 +234,6 @@ class PaymentService {
         $this->db->begin_transaction();
 
         try {
-            $userId = authId();
             // Получаем базовую инфу о заказе из orders с блокировкой строки через for update
             $order = $this->orderService->lockForPayment($orderId, $userId);
             $orderTotal = (float)$order['total_price'] + (float)$order['delivery_cost'];

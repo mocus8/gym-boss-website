@@ -46,7 +46,7 @@ if (strpos($uri, '/api/') === 0) {
 
     // Если маршрут требует авторизации - проверяем авторизацию
     if ( isset($protectedApiRoutes[$method]) && in_array($apiPath, $protectedApiRoutes[$method], true)) {
-        requireApiAuth();
+        requireApiAuth($authSession);
     }
 
     // Определение api маршрутов
@@ -104,7 +104,7 @@ if (strpos($uri, '/api/') === 0) {
     }
     // Заказ по id: GET /api/order/{id}
     elseif ($method === 'GET' && preg_match('#^/order/([0-9]+)$#', $apiPath, $matches)) {
-        requireApiAuth();
+        requireApiAuth($authSession);
 
         $orderId  = (int)$matches[1];
         $orderController->getById($orderId );
@@ -112,7 +112,7 @@ if (strpos($uri, '/api/') === 0) {
     }
     // Отмена заказа по id: POST /api/order/{id}/cancel
     elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/cancel$#', $apiPath, $matches)) {
-        requireApiAuth();
+        requireApiAuth($authSession);
 
         $orderId  = (int)$matches[1];
         $orderController->markCancel($orderId);
@@ -120,7 +120,7 @@ if (strpos($uri, '/api/') === 0) {
     }
     // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/order/{id}/start-payment
     elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/start-payment$#', $apiPath, $matches)) {
-        requireApiAuth();
+        requireApiAuth($authSession);
 
         $orderId  = (int)$matches[1];
         $orderController->startPayment($orderId);
@@ -128,7 +128,7 @@ if (strpos($uri, '/api/') === 0) {
     }
     // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/order/{id}/sync-payment
     elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
-        requireApiAuth();
+        requireApiAuth($authSession);
 
         $orderId  = (int)$matches[1];
         $orderController->syncPayment($orderId);
@@ -163,7 +163,7 @@ $protectedWebRoutes = [
 
 // Если маршрут требует авторизации - проверяем авторизацию
 if (in_array($uri, $protectedWebRoutes, true)) {
-    requireWebAuth();
+    requireWebAuth($authSession);
 }
 
 // Определение web маршрутов
@@ -192,7 +192,7 @@ elseif (preg_match('#^/product/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
 }
 // Страница заказа: /order/123, также записываем в GET id
 elseif (preg_match('#^/order/([0-9]+)$#', $uri, $matches)) {
-    requireWebAuth();
+    requireWebAuth($authSession);
 
     $_GET['orderId'] = $matches[1];
     require __DIR__ . '/src/pages/order.php';
