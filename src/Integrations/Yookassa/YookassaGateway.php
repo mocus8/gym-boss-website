@@ -3,7 +3,6 @@
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Integrations\Yookassa;
-use App\Integrations\Yookassa\CreatedPaymentDto;
 use YooKassa\Client;
 use YooKassa\Model\Notification\NotificationEventType;
 use YooKassa\Model\Notification\NotificationSucceeded;
