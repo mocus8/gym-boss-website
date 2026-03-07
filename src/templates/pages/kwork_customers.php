@@ -16,7 +16,7 @@
         Были использованы HTML, CSS, PHP, JavaScript, MySQL, для разработки дизайна использовался конструктор Figma.
     </div>
     <div class="customers_inf">
-        Для функционирования карт были исользованы Yandex Maps API и DaData API, для оплаты подключён SDK ЮKassa, подключен API SMSC для отправки sms. 
+        Для функционирования карт были исользованы Yandex Maps API и DaData API, для оплаты подключён SDK ЮKassa, подключен API Resend для отправки email. 
     </div>
     <div class="customers_inf">
         Сайт представляет из себя макет интернет-магазина со всем необходимым функционалом, адаптирован под все устройства. 

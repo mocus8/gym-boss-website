@@ -26,14 +26,10 @@ return [
         'secret_key' => $_ENV['GOOGLE_RECAPTCHA_SECRET_KEY'] ?: '',
     ],
 
-    'smsc' => [
-        'login'    => $_ENV['SMSC_LOGIN'] ?? '',
-        'password' => $_ENV['SMSC_PASSWORD'] ?? '',
-        'post'     => (int)($_ENV['SMSC_POST'] ?? 0),
-        'https'    => (int)($_ENV['SMSC_HTTPS'] ?? 1),
-        'charset'  => $_ENV['SMSC_CHARSET'] ?? 'utf-8',
-        'debug'    => (int)($_ENV['SMSC_DEBUG'] ?? 0),
-        'sender'   => $_ENV['SMSC_SENDER'] ?? '',
-        'test'     => ($_ENV['SMSC_TEST_MODE'] ?? 'false') === 'true',
+    'resend' => [
+        'api_key' => $_ENV['RESEND_API_KEY'] ?? '',
+        'mail_from_email' => $_ENV['MAIL_FROM_EMAIL'] ?? '',
+        'mail_from_name' => ($_ENV['MAIL_FROM_NAME'] ?? ''),
+        'mail_reply_to' => ($_ENV['MAIL_REPLY_TO'] ?? ''),
     ],
 ];

@@ -82,8 +82,8 @@ require_once __DIR__ . '/Api/WebhookController.php';
 
 // Подключаем конфиги (массивы из переменных с константами из .env)
 $appConfig = require __DIR__ . '/config/app.php';
-$servicesConfig = require __DIR__ . '/config/services.php';
 $deliveryConfig = require __DIR__ . '/config/delivery.php';
+$servicesConfig = require __DIR__ . '/config/services.php';
 
 // Получаем URL сайта из переменных окружения
 $appUrl = $appConfig['url'] ?? null;
