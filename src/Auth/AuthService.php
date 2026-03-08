@@ -108,7 +108,6 @@ class AuthService {
 
             $stmt->close();
 
-
             // Генерируем случайный токен для подтверждения пользователем почты (64 hex-символа)
             // random_bytes даёт криптографически безопасные случайные байты
             // bin2hex превращает их в URL‑безопасную строку
@@ -158,7 +157,16 @@ class AuthService {
         // Собираем ссылку вида http://localhost/auth/email/verify?token=...
         $verifyUrl = $this->baseUrl . '/auth/email/verify?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
         // Отправляем письмо со ссылкой через метод mailService 
-        $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
+        try {
+            $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
+        } catch (\Throwable $e) {
+            throw new AuthException(
+                'EMAIL_SEND_FAILURE',
+                'Failed to send verification email',
+                0,
+                $e
+            );
+        }
 
         // Возвращаем userId
         return $userId;
