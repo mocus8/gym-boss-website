@@ -15,19 +15,16 @@ final readonly class EmailMessageDto {
     public string $subject;    // тема письма
     public ?string $html;    // html-версия письма
     public ?string $text;    // text-версия письма
-    public ?string $replyTo;    // адрес для ответа
 
     public function __construct(
         string|array $to,
         string $subject,
         ?string $html = null,
-        ?string $text = null,
-        ?string $replyTo = null
+        ?string $text = null
     ) {
         $this->to = $to;
         $this->subject = $subject;
         $this->html = $html;
         $this->text = $text;
-        $this->replyTo = $replyTo;
     }
 }

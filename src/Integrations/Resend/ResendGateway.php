@@ -28,6 +28,7 @@ class ResendGateway {
             'from' => sprintf('%s <%s>', $this->fromName, $this->fromEmail),
             'to' => is_array($message->to) ? $message->to : [$message->to],
             'subject' => $message->subject,
+            'replyTo' => $this->replyTo,
         ];
 
         // Добавляем в тело параметры, которые есть
@@ -38,10 +39,6 @@ class ResendGateway {
 
         if ($message->text !== null) {
             $payload['text'] = $message->text;
-        }
-
-        if ($message->replyTo !== null) {
-            $payload['replyTo'] = $message->replyTo;
         }
 
         // Отправляем письмо и сохраняем результат этого в $response
