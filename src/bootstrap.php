@@ -34,7 +34,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Подключаем пространства имен
 use Dotenv\Dotenv; // библиотека для прочтения .env файла
 use App\Db\Db;  // используем класс Db из пространства имен App\Db
+use App\Integrations\Resend\ResendGateway;
+use App\Mail\MailService;
 use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
+use App\Auth\AuthService;
+use App\Api\AuthController;
 use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
 use App\Api\ProductController;    // используем класс ProductController из пространства имен App\Api
 use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
@@ -59,7 +63,13 @@ $dotenv->safeLoad();
 
 // Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
+require_once __DIR__ . '/Auth/AuthException.php';
+require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
+require_once __DIR__ . '/Integrations/Resend/ResendGateway.php';    // файл с gateway-ем Resend-а, оберткой над его sdk
+require_once __DIR__ . '/Mail/MailService.php';    // подключаем файл с классом-сервисом для отправки писем
 require_once __DIR__ . '/Auth/AuthSession.php';    // подключаем файл с классом для работы с сессией
+require_once __DIR__ . '/Auth/AuthService.php';    // подключаем файл с классом-сервисом для работы с пользователями
+require_once __DIR__ . '/Api/AuthController.php';    // подключаем файл с классом-контроллером для взаимодействия с пользователями
 require_once __DIR__ . '/support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Product/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
 require_once __DIR__ . '/Api/ProductController.php';    // подключаем файл с классом-контроллером для получения инфы о товарах
@@ -96,8 +106,19 @@ $baseUrl = rtrim($appUrl, '/');
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connect($servicesConfig['database']);
 
+// Работаем с электронными письмами
+$resendGateway = new ResendGateway(
+    $servicesConfig['resend']['api_key'],
+    $servicesConfig['resend']['mail_from_email'],
+    $servicesConfig['resend']['mail_from_name'],
+    $servicesConfig['resend']['mail_reply_to']
+);
+$mailService = new MailService($resendGateway);
+
 // Работаем с сессией и пользователями
 $authSession = new AuthSession();
+$authService = new AuthService($db, $mailService, $baseUrl);
+$authController = new AuthController($authSession, $authService);
 
 // Работаем с сервисом и контроллером товара
 $productService = new ProductService($db);    // создаем экземпляр класса
