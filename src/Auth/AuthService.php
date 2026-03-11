@@ -6,6 +6,7 @@
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Auth;
+use App\Mail\MailService;
 
 // Класс для управления авторизацией пользователей
 class AuthService {
