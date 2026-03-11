@@ -1,9 +1,3 @@
-<?php
-$userName = 'Жмышенко валерий';
-$verifyUrl = 'http://localhost/src/templates/email/verification.html.php';
-?>
-
-
 <!DOCTYPE html>
 <html lang="ru">
 	<head>
