@@ -185,7 +185,7 @@ class AuthController {
             $name = $validData['name'];
 
             // Вызываем метод регистрации в auth сервисе
-            $userId = $this->authService->register($email, $password, $name);    // TODO: сделать AuthService и этот метод
+            $userId = $this->authService->register($email, $password, $name);
 
             // Если получилось - логиним пользователя
             $this->authSession->login($userId);
@@ -203,6 +203,47 @@ class AuthController {
         
         } catch (AuthException $e) {
             // Кастомный класс для ошибки в бизнес логике
+            $this->error(422, $e->getErrorCode(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для повторной отправки письма для подтверждения почты
+    public function resendEmailVerification(): void {
+        try {
+            // Получаем id пользователя
+            $userId = $this->authSession->getUserId();
+
+            // Если null - ошибку
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Вызываем метод повторной отправки письма для подтерждения
+            $this->authService->resendEmailVerification($userId); // TODO сделать метод сервиса и универсальны метод проверки авторизации 
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+
+            // Если есть значение кулдауна - передаем его в заголовке
+            if ($e->getRetryAfter() !== null) {
+                header('Retry-After: ' . $e->getRetryAfter());
+            }
+
             $this->error(422, $e->getErrorCode(), $e->getMessage());
 
         } catch (\Throwable $e) {

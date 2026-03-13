@@ -15,11 +15,76 @@ class AuthService {
     private MailService $mailService;
     private string $baseUrl;
 
+    // Кэш с верификацией пользователей: userId -> bool
+    private array $emailVerifiedCache = [];
+    // Константа с временем кулдауна на отправку писем
+    private const RESEND_COOLDOWN_SECONDS = 60;
+
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(\mysqli $db, MailService $mailService, string $baseUrl) {
         $this->db = $db;
         $this->mailService = $mailService;
         $this->baseUrl = $baseUrl;
+    }
+
+    // Приватный вспомагательный метод для генерации токена, его хеширования и записи в бд
+    private function createEmailVerificationToken(int $userId): string {
+        if ($userId < 1) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        // Генерируем случайный токен для подтверждения пользователем почты (64 hex-символа)
+        // random_bytes даёт криптографически безопасные случайные байты
+        // bin2hex превращает их в URL‑безопасную строку
+        $rawToken = bin2hex(random_bytes(32));
+        // Хэшируем токен через sha256
+        $hashedToken = hash('sha256', $rawToken);
+
+        // Записываем в бд новую строку с токеном для подтверждения почты
+        // Если есть старый токен для пользователя - он перезаписывается
+        $sql = "
+            INSERT INTO email_verification_tokens (
+                user_id,
+                token,
+                created_at
+            )
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE
+                token = ?,
+                created_at = CURRENT_TIMESTAMP
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('iss', $userId, $hashedToken, $hashedToken);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        return $rawToken;
+    }
+
+    // Приватный вспомагательный метод для создания ссылки подтверждения и отправки письма с ней
+    private function createAndSendEmailVerificationLink(string $rawToken, string $email, string $name): void {
+        // Собираем ссылку вида http://localhost/auth/email/verify?token=...
+        $verifyUrl = $this->baseUrl . '/auth/email/verify?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
+
+        // Отправляем письмо со ссылкой через метод mailService 
+        try {
+            $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
+        } catch (\Throwable $e) {
+            // Создаем класс используя именованные аргументы (можно пропустить один, не по порядку)
+            throw new AuthException('EMAIL_SEND_FAILURE', 'Failed to send verification email', previous: $e);
+        }
     }
 
     // Метод для регистрации
@@ -109,42 +174,8 @@ class AuthService {
 
             $stmt->close();
 
-            // Генерируем случайный токен для подтверждения пользователем почты (64 hex-символа)
-            // random_bytes даёт криптографически безопасные случайные байты
-            // bin2hex превращает их в URL‑безопасную строку
-            $rawToken = bin2hex(random_bytes(32));
-            // Хэшируем токен через sha256
-            $hashedToken = hash('sha256', $rawToken);
-
-            // Записываем в бд новую строку с токеном для подтверждения почты
-            // Если есть старый токен для пользователя - он перезаписывается
-            $sql = "
-                INSERT INTO email_verification_tokens (
-                    user_id,
-                    token,
-                    created_at
-                )
-                VALUES (?, ?, CURRENT_TIMESTAMP)
-                ON DUPLICATE KEY UPDATE
-                    token = ?,
-                    created_at = CURRENT_TIMESTAMP
-            ";
-        
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-        
-            $stmt->bind_param('iss', $userId, $hashedToken, $hashedToken);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-        
-            $stmt->close();
+            // Генерируем и получаем токен через вспомагательный метод, также хешированный токен записывается в бд
+            $rawToken = $this->createEmailVerificationToken($userId);
 
             // Комитим транзакцию
             $this->db->commit();
@@ -155,21 +186,195 @@ class AuthService {
             throw $e;
         }
 
-        // Собираем ссылку вида http://localhost/auth/email/verify?token=...
-        $verifyUrl = $this->baseUrl . '/auth/email/verify?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
-        // Отправляем письмо со ссылкой через метод mailService 
-        try {
-            $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
-        } catch (\Throwable $e) {
-            throw new AuthException(
-                'EMAIL_SEND_FAILURE',
-                'Failed to send verification email',
-                0,
-                $e
-            );
-        }
+        // Собираем и отправляем ссылку для подтверждения почты через приватный метод
+        $this->createAndsendEmailVerificationLink($rawToken, $email, $name);
 
         // Возвращаем userId
         return $userId;
+    }
+
+    // Метод для повторной отправки пользователю письма для подтверждения почты
+    public function resendEmailVerification(int $userId): void {
+        if ($userId < 1) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        // Получаем инфу о пользователе из бд
+        $sql = "
+            SELECT
+                email,
+                email_verified_at,
+                name
+            FROM users
+            WHERE id = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Пользователь не найден
+        if ($row === null) {
+            throw new \RuntimeException("User not found: $userId");
+        }
+
+        if ($row['email_verified_at'] !== null) {
+            throw new AuthException('EMAIL_ALREADY_VERIFIED', 'Users email is already verified');
+        }
+
+        $email = $row['email'];
+        $name = $row['name'];
+        if (!$email || !$name) {
+            throw new \RuntimeException('Empty user email or name');
+        }
+
+        // Получаем время создания прошлого токена 
+        $sql = "
+            SELECT created_at
+            FROM email_verification_tokens
+            WHERE user_id = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Запись с токеном не найдена
+        if ($row === null) {
+            // Создаем токен
+            $rawToken = $this->createEmailVerificationToken($userId);
+            // Отправляем письмо
+            $this->createAndsendEmailVerificationLink($rawToken, $email, $name);
+
+            return;
+        }
+
+        $tokenCreatedAtRaw = $row['created_at'];
+        if (!$tokenCreatedAtRaw) {
+            throw new \RuntimeException('Empty created_at');
+        }
+
+        // Получаем настоящее время и разницу в секундах
+        $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
+        $now = new \DateTimeImmutable('now');
+        $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
+
+        // Считаем сколько осталось до снятия кулдауна
+        $retryAfter = self::RESEND_COOLDOWN_SECONDS - $diffSeconds;
+
+        // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
+        if ($diffSeconds < self::RESEND_COOLDOWN_SECONDS) {
+            throw new AuthException('RESEND_TOO_SOON', 'Email resend attempt too soon', $retryAfter);
+        }
+        
+        // Генерируем и получаем токен через вспомагательный метод, также хешированный токен записывается в бд
+        $rawToken = $this->createEmailVerificationToken($userId);
+
+        // Собираем и отправляем ссылку для подтверждения почты через приватный метод
+        $this->createAndsendEmailVerificationLink($rawToken, $email, $name);
+    }
+
+    // Метод для проверки верификации почты пользователя по его id 
+    public function isEmailVerified(int $userId): bool {
+        if ($userId < 1) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        // Сначала проверяем запись в кеше (в свойстве объекта класса), если есть - возвращаем ее 
+        if (array_key_exists($userId, $this->emailVerifiedCache)) {
+            return $this->emailVerifiedCache[$userId];
+        }
+
+        // Проверяем по бд
+        $sql = "
+            SELECT email_verified_at
+            FROM users
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Пользователь не найден
+        if ($row === null) {
+            throw new \RuntimeException("User not found: $userId");
+        }
+
+        // Проверяем полученное состояние почты, кешируем и возвращаем результат
+        $isVerified = $row['email_verified_at'] !== null;
+        $this->emailVerifiedCache[$userId] = $isVerified;
+        return $isVerified;
+    }
+
+    // Метод для верификации почты пользователя 
+    public function verify() {
+        // TODO: тут сделать сброс кеша для пользователя 
+        // unset($this->emailVerifiedCache[$userId]);
     }
 }
