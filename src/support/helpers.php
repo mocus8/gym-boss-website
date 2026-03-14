@@ -27,6 +27,40 @@ function requireWebAuth(\App\Auth\AuthSession $authSession): void {
     }
 }
 
+// Проверка подтвержденной почты
+function requireVerifiedEmail(\App\Auth\AuthSession $authSession, \App\Auth\AuthService $authService): void {
+    // Получаем userId из сессии через метод
+    $userId = $authSession->getUserId();
+
+    // Если пользователь не залогинен - возвращаем 401-й статус и json ответ с указанием
+    if ($userId === null) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => [
+                'code'    => 'UNAUTHORIZED',
+                'message' => 'User is not authorized',
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // Если почта не подтверждена - возвращаем 403-й статус и json ответ с указанием
+    if (!$authService->isEmailVerified($userId)) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => [
+                'code'    => 'EMAIL_UNVERIFIED',
+                'message' => 'User email is not verified',
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 // Форматирование времени из SQL формата в ISO формат
 function sqlUtcToIso(?string $sql): ?string {
     if ($sql === null) return null;
