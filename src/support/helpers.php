@@ -3,7 +3,7 @@
 // обёртка для htmlspecialchars, сокращённые проверки, маленькие преобразования строк/массивов)
 
 // Проверка авторизации для api запросов (с 401 ответом и json ответом)
-function requireApiAuth(AuthSession $authSession): void {
+function requireApiAuth(\App\Auth\AuthSession $authSession): void {
     // Если пользователь не залогинен - возвращаем 401-й статус и json ответ с указанием
     if (!$authSession->isAuthenticated()) {
         http_response_code(401);
@@ -20,7 +20,7 @@ function requireApiAuth(AuthSession $authSession): void {
 }
 
 // Проверка авторизации для web маршрутов (с редиректом)
-function requireWebAuth(AuthSession $authSession): void {
+function requireWebAuth(\App\Auth\AuthSession $authSession): void {
     if (!$authSession->isAuthenticated()) {
         header('Location: /');
         exit;
