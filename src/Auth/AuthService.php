@@ -194,7 +194,7 @@ class AuthService {
     }
 
     // Метод для повторной отправки пользователю письма для подтверждения почты
-    public function resendEmailVerification(int $userId): void {
+    public function resendVerification(int $userId): void {
         if ($userId < 1) {
             throw new \InvalidArgumentException('Invalid userId');
         }

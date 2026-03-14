@@ -9,7 +9,7 @@ class AuthException extends \Exception {
     private string $errorCode;
     private ?int $retryAfter = null;
 
-    public function __construct(string $errorCode, string $message = '', ?int $retryAfter, \Throwable $previous = null) {
+    public function __construct(string $errorCode, string $message = '', ?int $retryAfter = null, \Throwable $previous = null) {
         $this->errorCode = $errorCode;
         $this->retryAfter = $retryAfter;
         // Вызываем конструктор базового класса
