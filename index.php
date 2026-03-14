@@ -71,7 +71,6 @@ if (strpos($uri, '/api/') === 0) {
         'POST' => [
             '/auth/register' => [$authController, 'register'],
             '/auth/email/resend' => [$authController, 'resendVerification'],
-            '/auth/email/verify' => [$authController, 'verifyEmail '],    // TODO
             '/auth/login' => [$authController, 'login'],    // TODO
             '/auth/logout' => [$authController, 'logout'],    // TODO
             '/auth/password/forgot' => [$authController, 'forgotPassword'],    // TODO
@@ -189,15 +188,16 @@ if (in_array($uri, $protectedWebRoutes, true)) {
 
 // Определение web маршрутов
 $routes = [
-    ''              => 'home.php',
-    '/'             => 'home.php',
-    '/cart'       => 'cart.php',
-    '/contacts'   => 'contacts.php',
+    '' => 'home.php',
+    '/' => 'home.php',
+    '/auth/email/verify' => 'email_verify.php',
+    '/cart' => 'cart.php',
+    '/contacts' => 'contacts.php',
     '/kwork-customers' => 'kwork_customers.php',
-    '/account/orders'  => 'orders.php',
+    '/account/orders' => 'orders.php',
     '/checkout' => 'checkout.php',
-    '/privacy'    => 'privacy.php',
-    '/stores'     => 'stores.php',
+    '/privacy' => 'privacy.php',
+    '/stores' => 'stores.php',
 ];
 
 // Если маршрут есть в списке, подключаем соответствующий файл
