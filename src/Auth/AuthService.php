@@ -15,10 +15,9 @@ class AuthService {
     private MailService $mailService;
     private string $baseUrl;
 
-    // Кэш с верификацией пользователей: userId -> bool
-    private array $emailVerifiedCache = [];
-    // Константа с временем кулдауна на отправку писем
-    private const RESEND_COOLDOWN_SECONDS = 60;
+    private array $emailVerifiedCache = [];    // кэш с верификацией пользователей: userId -> bool
+    private const RESEND_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
+    private const VERIFY_TOKEN_TTL_SECONDS = 900;    // константа с временем жизни токена подверждения (15 минут)
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(\mysqli $db, MailService $mailService, string $baseUrl) {
@@ -373,8 +372,126 @@ class AuthService {
     }
 
     // Метод для верификации почты пользователя 
-    public function verify() {
-        // TODO: тут сделать сброс кеша для пользователя 
-        // unset($this->emailVerifiedCache[$userId]);
+    public function verify(string $rawToken): void {
+        // Хэшируем токен через sha256
+        $hashedToken = hash('sha256', $rawToken);
+
+        // Получаем инфу о токене из бд
+        $sql = "
+            SELECT
+                user_id,
+                created_at
+            FROM email_verification_tokens
+            WHERE token = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $hashedToken);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Токен не найден
+        if ($row === null) {
+            throw new AuthException('TOKEN_INVALID', 'Token not found');
+        }
+
+        $userId = $row['user_id'];
+        $tokenCreatedAtRaw = $row['created_at'];
+
+        // Если у пользователя уже подтвержденная почта - ошибку
+        if ($this->isEmailVerified($userId)) {
+            throw new AuthException('EMAIL_ALREADY_VERIFIED', 'Users email already verified');
+        }
+
+        // Находим время, прошедшее с момента создания токена
+        $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
+        $now = new \DateTimeImmutable('now');
+        $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
+
+        // Если ttl токена истекло - ошибку
+        if ($diffSeconds > self::VERIFY_TOKEN_TTL_SECONDS ) {
+            throw new AuthException('TOKEN_EXPIRED', 'Verify token has expired');
+        }
+
+        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
+        $this->db->begin_transaction();
+
+        try {
+            // Помечаем почту пользователя как подтвержденную
+            $sql = "
+                UPDATE users
+                SET email_verified_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $userId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $stmt->close();
+
+            // Удаляем использованный токен подтверждения
+            $sql = "
+                DELETE FROM email_verification_tokens
+                WHERE token = ?
+            ";
+        
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+        
+            $stmt->bind_param('s', $hashedToken);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+        
+            $stmt->close();
+
+            // Комитим транзакцию
+            $this->db->commit();
+
+        } catch (\Throwable $e) {
+            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
+            $this->db->rollback();
+            throw $e;
+        }
+
+        // Обновляем кеш
+        $this->emailVerifiedCache[$userId] = true;
     }
 }
