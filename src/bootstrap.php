@@ -164,7 +164,7 @@ $webhookService = new WebhookService($paymentStatusSyncService, $yookassaGateway
 $webhookController = new WebhookController($webhookService);
 
 // Работаем с внешним сервисом DaData
-$dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // Создаем клиент для взаимодействия с сервисом DaData
+$dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // создаем клиент для взаимодействия с сервисом DaData
 $dadataController = new DadataController($dadataClient);
 
 // Работаем с сервисом и контроллером магазинов

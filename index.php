@@ -52,8 +52,8 @@ if (strpos($uri, '/api/') === 0) {
     // Определение api маршрутов
     $apiRoutes = [
         'POST' => [
-            '/auth/register' => [$authController, 'register'],    // TODO
-            '/auth/email/resend' => [$authController, 'resendVerification'],    // TODO
+            '/auth/register' => [$authController, 'register'],
+            '/auth/email/resend' => [$authController, 'resendVerification'],
             '/auth/email/verify' => [$authController, 'verifyEmail '],    // TODO
             '/auth/login' => [$authController, 'login'],    // TODO
             '/auth/logout' => [$authController, 'logout'],    // TODO
@@ -73,15 +73,15 @@ if (strpos($uri, '/api/') === 0) {
             '/orders' => [$orderController, 'getUserOrders'],
             '/stores' => [$storeController, 'getAll'],
         ],
-        'PUT' => [
-            '/account/profile' => [$accountController, 'updateProfile'],    // TODO
-        ],
-        'PATCH' => [
-            '/account/password' => [$accountController, 'updatePassword'],    // TODO
-        ],
-        'DELETE' => [
-            '/account' => [$accountController, 'delete'],    // TODO
-        ]
+        // 'PUT' => [
+        //     '/account/profile' => [$accountController, 'updateProfile'],    // TODO
+        // ],
+        // 'PATCH' => [
+        //     '/account/password' => [$accountController, 'updatePassword'],    // TODO
+        // ],
+        // 'DELETE' => [
+        //     '/account' => [$accountController, 'delete'],    // TODO
+        // ]
     ];
 
     // Если маршрут есть в списке, подключаем соответствующий метод
