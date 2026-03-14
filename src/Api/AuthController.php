@@ -8,6 +8,7 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
+use App\Auth\AuthException;
 use App\Auth\AuthSession;
 use App\Auth\AuthService;
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
@@ -29,19 +30,6 @@ class AuthController {
     //    $this->authService = $authService;
     //     $this->logger = $logger;
     // }
-
-    // Приватный метод для получения, декодирования и проверки json входных данных
-    private function getJsonBody(): ?array {
-        $rawBody = file_get_contents('php://input');
-        $data = json_decode($rawBody, true);
-    
-        if (!is_array($data)) {
-            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
-            return null;
-        }
-    
-        return $data;
-    }
 
     // Приватная функция для отправки успеха
     private function success(int $status = 200, array $data = []): void {
@@ -71,6 +59,19 @@ class AuthController {
                 'message' => $message,
             ],
         ], JSON_UNESCAPED_UNICODE);
+    }
+
+    // Приватный метод для получения, декодирования и проверки json входных данных
+    private function getJsonBody(): ?array {
+        $rawBody = file_get_contents('php://input');
+        $data = json_decode($rawBody, true);
+    
+        if (!is_array($data)) {
+            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
+            return null;
+        }
+    
+        return $data;
     }
 
     // Метод для валидации входных полей при регистрации
@@ -219,7 +220,7 @@ class AuthController {
     }
 
     // Метод для повторной отправки письма для подтверждения почты
-    public function resendEmailVerification(): void {
+    public function resendVerification(): void {
         try {
             // Получаем id пользователя
             $userId = $this->authSession->getUserId();
@@ -231,7 +232,7 @@ class AuthController {
             }
 
             // Вызываем метод повторной отправки письма для подтерждения
-            $this->authService->resendEmailVerification($userId); // TODO сделать метод сервиса и универсальны метод проверки авторизации 
+            $this->authService->resendVerification($userId);
 
             // Возвращаем успех через приватную функцию
             $this->success();
