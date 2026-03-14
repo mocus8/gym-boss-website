@@ -45,8 +45,25 @@ if (strpos($uri, '/api/') === 0) {
     ];
 
     // Если маршрут требует авторизации - проверяем авторизацию
-    if ( isset($protectedApiRoutes[$method]) && in_array($apiPath, $protectedApiRoutes[$method], true)) {
+    if (isset($protectedApiRoutes[$method]) && in_array($apiPath, $protectedApiRoutes[$method], true)) {
         requireApiAuth($authSession);
+    }
+
+    // Api маршруты, требующие подтвержденного email
+    $verifiedEmailApiRoutes = [
+        'POST' => [
+            '/order/create-from-cart',
+            '/dadata/suggest/address',
+        ],
+        'GET' => [
+            '/orders',
+        ]
+        // сюда же можно добавить ещё закрытых маршрутов
+    ];
+
+    // Если маршрут требует подтвержденной почты - проверяем верификацию
+    if (isset($verifiedEmailApiRoutes[$method]) && in_array($apiPath, $verifiedEmailApiRoutes[$method], true)) {
+        requireVerifiedEmail($authSession, $authService);
     }
 
     // Определение api маршрутов
@@ -105,6 +122,7 @@ if (strpos($uri, '/api/') === 0) {
     // Заказ по id: GET /api/order/{id}
     elseif ($method === 'GET' && preg_match('#^/order/([0-9]+)$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->getById($orderId );
@@ -113,6 +131,7 @@ if (strpos($uri, '/api/') === 0) {
     // Отмена заказа по id: POST /api/order/{id}/cancel
     elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/cancel$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->markCancel($orderId);
@@ -121,6 +140,7 @@ if (strpos($uri, '/api/') === 0) {
     // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/order/{id}/start-payment
     elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/start-payment$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->startPayment($orderId);
@@ -129,6 +149,7 @@ if (strpos($uri, '/api/') === 0) {
     // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/order/{id}/sync-payment
     elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->syncPayment($orderId);
