@@ -18,7 +18,7 @@ class AuthService {
     private array $emailVerifiedCache = [];    // кэш с верификацией пользователей: userId -> bool
     private const RESEND_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
     private const VERIFY_TOKEN_TTL_SECONDS = 900;    // константа с временем жизни токена подверждения (15 минут)
-    private const LOGIN_ATTEMPTS_WINDOW = 15; // константа с окном для ввода непраивльного пароля (15 минут)
+    private const LOGIN_ATTEMPTS_WINDOW = 900; // константа с окном для ввода непраивльного пароля (15 минут)
     private const MAX_LOGIN_ATTEMPTS = 5;    // константа с кол-вом попыток ввода пароля
     private const LOGIN_ATTEMPTS_TTL = 86400;    // константа с временем жизни попыток входа, для аналитики
 
