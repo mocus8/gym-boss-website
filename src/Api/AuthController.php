@@ -74,11 +74,11 @@ class AuthController {
         return $data;
     }
 
-    // Метод для валидации входных полей при регистрации
-    // Возвращает проверенный массив либо null
-    private function validateRegisterInput(array $data): ?array {
+    // Приватный метод для валидации почты, возвращает null или валидированный email
+    private function validateEmail(mixed $rawEmail): ?string {
+        $email = trim((string)$rawEmail);
+
         // Проверяем наличие email
-        $email = isset($data['email']) ? trim((string)$data['email']) : null;
         if (!$email) {
             $this->error(422, 'EMAIL_REQUIRED', 'Email is required');
             return null;
@@ -110,8 +110,15 @@ class AuthController {
             return null;
         }
 
+        // Возвращаем валидированный email
+        return $validatedEmail;
+    }
+
+    // Приватный метод для проверки валидности пароля
+    private function validatePassword(mixed $rawPassword): ?string {
+        $password = (string)$rawPassword;
+
         // Проверяем наличие пароля
-        $password = isset($data['password']) ? (string)$data['password'] : null;
         if (!$password) {
             $this->error(422, 'PASSWORD_REQUIRED', 'Password is required');
             return null;
@@ -132,8 +139,15 @@ class AuthController {
             return null;
         }
 
+        // Возвращаем валидированный пароль
+        return $password;
+    }
+
+    // Приватный метод для проверки валидности имени
+    private function validateName(mixed $rawName): ?string {
+        $name = trim((string)$rawName);
+
         // Проверяем наличие имени
-        $name = isset($data['name']) ? trim((string)$data['name']) : null;
         if (!$name) {
             $this->error(422, 'NAME_REQUIRED', 'Name is required');
             return null;
@@ -151,9 +165,37 @@ class AuthController {
             return null;
         }
 
+        // Возвращаем валидированное имя
+        return $name;
+    }
+
+    // Приватный метод для валидации входных полей при регистрации
+    // Возвращает проверенный массив либо null
+    private function validateRegisterInput(array $data): ?array {
+        // Проверяем email через метод
+        $email = isset($data['email']) ? (string)$data['email'] : null;
+        $email = $this->validateEmail($email);
+        if ($email === null) {
+            return null;
+        }
+
+        // Проверяем валидность пароля через метод
+        $password = isset($data['password']) ? (string)$data['password'] : null;
+        $password = $this->validatePassword($password);
+        if ($password === null) {
+            return null;
+        }
+
+        // Проверяем валидность имени через метод
+        $name = isset($data['name']) ? (string)$data['name'] : null;
+        $name = $this->validateName($name);
+        if ($name === null) {
+            return null;
+        }
+
         // Если все проверки прошли - возвращаем проверенный ассоциативный массив
         return [
-            'email' => $validatedEmail,
+            'email' => $email,
             'password' => $password,
             'name' => $name
         ];
@@ -246,6 +288,81 @@ class AuthController {
             }
 
             $this->error(422, $e->getErrorCode(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для валидации входных полей при входе в аккаунт
+    // Возвращает проверенный массив либо null
+    private function validateLoginInput(array $data): ?array {
+        // Проверяем email через метод
+        $email = isset($data['email']) ? (string)$data['email'] : null;
+        $email = $this->validateEmail($email);
+        if ($email === null) {
+            return null;
+        }
+
+        // Проверяем валидность пароля через метод
+        $password = isset($data['password']) ? (string)$data['password'] : null;
+        $password = $this->validatePassword($password);
+        if ($password === null) {
+            return null;
+        }
+
+        // Если все проверки прошли - возвращаем проверенный ассоциативный массив
+        return [
+            'email' => $email,
+            'password' => $password
+        ];
+    }
+
+    // Метод для входа в аккаунт
+    public function login(): void {
+        try {
+            if ($this->authSession->getUserId() !== null) {
+                // Пользователь уже залогинен
+                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
+                return;
+            }
+
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Проверяем входные поля через приватный метод
+            $validData = $this->validateLoginInput($data);
+            if ($validData === null) return;
+
+            $email = $validData['email'];
+            $password = $validData['password'];
+
+            // Вызываем метод логина в auth сервисе (получаем инфу о пользователе)
+            $userInfo = $this->authService->login($email, $password);
+
+            // Если получилось - логиним пользователя
+            $this->authSession->login($userInfo['id']);
+
+            $this->success(200, [
+                'userId' => $userInfo['id'],
+                'email' => $email,
+                'name' => $userInfo['name'],
+                'emailVerified' => $userInfo['is_verified']
+            ]);
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+
+            $this->error(401, $e->getErrorCode(), $e->getMessage());
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
