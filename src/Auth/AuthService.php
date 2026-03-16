@@ -514,7 +514,8 @@ class AuthService {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
 
-        $stmt->bind_param("si", $email, self::LOGIN_ATTEMPTS_WINDOW);
+        $window = self::LOGIN_ATTEMPTS_WINDOW;
+        $stmt->bind_param("si", $email, $window);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
@@ -681,7 +682,8 @@ class AuthService {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
     
-        $stmt->bind_param('i', self::LOGIN_ATTEMPTS_TTL);
+        $ttl = self::LOGIN_ATTEMPTS_TTL;
+        $stmt->bind_param('i', $ttl);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
