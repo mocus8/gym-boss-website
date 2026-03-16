@@ -131,6 +131,8 @@ const ERROR_CODE_MESSAGES = {
     PASSWORD_TOO_SHORT: "Слишком короткий пароль",
     PASSWORD_TOO_LONG: "Слишком длинный пароль",
     PASSWORD_INVALID_CHARS: "Пароль содержит недопустимые символы",
+    INVALID_CREDENTIALS: "Неверный email или пароль",
+    LOGIN_ATTEMPTS_EXCEEDED: "Слишком много попыток, попробуйте позже",
     NAME_REQUIRED: "Требуется имя",
     NAME_TOO_LONG: "Слишком длинное имя",
     NAME_INVALID_CHARS: "Имя содержит недопустимые символы",

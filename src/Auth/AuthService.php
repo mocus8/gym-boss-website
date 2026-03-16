@@ -18,6 +18,9 @@ class AuthService {
     private array $emailVerifiedCache = [];    // кэш с верификацией пользователей: userId -> bool
     private const RESEND_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
     private const VERIFY_TOKEN_TTL_SECONDS = 900;    // константа с временем жизни токена подверждения (15 минут)
+    private const LOGIN_ATTEMPTS_WINDOW = 15; // константа с окном для ввода непраивльного пароля (15 минут)
+    private const MAX_LOGIN_ATTEMPTS = 5;    // константа с кол-вом попыток ввода пароля
+    private const LOGIN_ATTEMPTS_TTL = 86400;    // константа с временем жизни попыток входа, для аналитики
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(\mysqli $db, MailService $mailService, string $baseUrl) {
@@ -493,5 +496,199 @@ class AuthService {
 
         // Обновляем кеш
         $this->emailVerifiedCache[$userId] = true;
+    }
+
+    // Приватный вспомагательный метод для проверки лимита на попытки ввода пароля по email
+    private function checkLoginLimit(string $email): void {
+        // Находим кол-во попыток за время (задано в константе)
+        $sql = "
+            SELECT COUNT(*)
+            FROM login_attempts
+            WHERE email = ?
+                AND attempted_at > NOW() - INTERVAL ? SECOND             
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("si", $email, self::LOGIN_ATTEMPTS_WINDOW);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_row();
+
+        if ($row === null) {
+            $stmt->close();
+            throw new \RuntimeException('DB fetch_row failed');
+        }
+
+        $stmt->close();
+
+        // Кол-во попыток за последние LOGIN_ATTEMPTS_WINDOW секунд
+        $count = (int)$row[0];
+
+        // Если превысили лимит - ошибку 
+        if ($count >= self::MAX_LOGIN_ATTEMPTS) {
+            throw new AuthException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts');
+        }
+    }
+
+    // Приватный вспомагательный метод для фиксирования неудачной попытки
+    private function addLoginAttempt(string $email): void {
+        $sql = "
+            INSERT INTO login_attempts (
+                email,
+                attempted_at
+            )
+            VALUES (?, CURRENT_TIMESTAMP)
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('s', $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
+
+    // Приватный вспомагательный метод для удаления записи о попытках входах по email
+    private function deleteLoginAttemptsOnEmail(string $email): void {
+        $sql = "
+            DELETE FROM login_attempts
+            WHERE email = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('s', $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
+
+    // Метод для входа пользователя в аккаунт, сверяется пароль и возвращается инфа о пользователе
+    public function login(string $email, string $inputPassword): array {
+        // Проверяем лимит неудачных попыток
+        $this->checkLoginLimit($email);
+
+        // Находим в бд по email инфу о пользователе
+        $sql = "
+            SELECT
+                id,
+                email_verified_at,
+                password,
+                name
+            FROM users
+            WHERE email = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если пользователь не нашелся - ошибку
+        if (!$row) {
+            throw new AuthException('INVALID_CREDENTIALS', 'Wrong password or email');
+        }
+
+        $id = $row["id"];
+        $password = $row["password"];
+        $name = $row["name"];
+        $isVerified = $row["email_verified_at"] !== null;
+
+        // Сравниваем пароли из бд и введеный через password_verify (сравнивает введеный с хешем из бд)
+        if (!password_verify($inputPassword, $password)) {
+            // Если пароль не подходит - записываем неудачную попытку и выкидываем исключение
+            $this->addLoginAttempt($email);
+            throw new AuthException('INVALID_CREDENTIALS', 'Wrong password or email');
+        }
+
+        // Удаляем записи о попытках для этого email
+        $this->deleteLoginAttemptsOnEmail($email);
+
+        // Возвращаем инфу о пользователе
+        return [
+            'id' => $id,
+            'name' => $name,
+            'is_verified' => $isVerified,
+        ];
+    }
+
+    // Метод для удаления устаревших попыток входа
+    public function deleteOldLoginAttempts(): void {
+        $sql = "
+            DELETE FROM login_attempts
+            WHERE attempted_at < NOW() - INTERVAL ? SECOND
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('i', self::LOGIN_ATTEMPTS_TTL);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
     }
 }
