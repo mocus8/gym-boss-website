@@ -376,4 +376,32 @@ class AuthController {
             $this->error();
         }
     }
+
+    // Метод для логаута
+    public function logout(): void {
+        try {
+            // Если пользователь не залогинен
+            if ($this->authSession->getUserId() === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Чистим сессию
+            $this->authSession->logout();
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
 }
