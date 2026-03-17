@@ -458,6 +458,10 @@ class AuthController {
             // Возвращаем успех через приватную функцию
             $this->success();
 
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
         } catch (AuthException $e) {
             // Кастомный класс для ошибки в бизнес логике
             // Для защиты от user-enumeration тут показываем только ошибку по лимиту отправки писем

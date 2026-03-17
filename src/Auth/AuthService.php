@@ -787,11 +787,11 @@ class AuthService {
     // Приватный вспомагательный метод для создания ссылки сброса пароля и отправки письма с ней
     private function createAndSendPasswordResetLink(string $rawToken, string $email, string $name): void {
         // Собираем ссылку вида http://localhost/auth/password/reset?token=...
-        $verifyUrl = $this->baseUrl . '/auth/password/reset?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
+        $resetUrl = $this->baseUrl . '/auth/password/reset?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
 
         // Отправляем письмо со ссылкой через метод mailService
         try {
-            $this->mailService->sendPasswordResetLink($email, $name, $verifyUrl);
+            $this->mailService->sendPasswordResetLink($email, $name, $resetUrl);
         } catch (\Throwable $e) {
             throw new \RuntimeException('Failed to send password reset email', 0, $e);
         }

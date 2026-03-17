@@ -83,4 +83,39 @@ class MailService {
             throw new \RuntimeException('Cannot send verification email', 0, $e);
         }
     }
+
+    // Метод для отправки письма с ссылкой для сброса пароля
+    public function sendPasswordResetLink(string $userEmail, string $userName, string $resetUrl): void {
+        if (trim($userEmail) === '' || trim($userName) === '' || trim($resetUrl) === '') {
+            throw new \InvalidArgumentException('Empty userEmail, userName or resetUrl');
+        }
+
+        // Задаем тему письма
+        $subject = 'Сброс пароля в GymBoss';
+
+        // Задаем html-версию письма
+        $html = $this->renderTemplate(
+            __DIR__ . '/../templates/email/reset-password.html.php', 
+            [
+                'userName' => $userName,
+                'resetUrl' => $resetUrl,
+            ]
+        );
+
+        // Задаем text-версию письма
+        $text = $this->renderTemplate(
+            __DIR__ . '/../templates/email/reset-password.text.php', 
+            ['userName' => $userName, 'resetUrl' => $resetUrl]
+        );
+
+        // Оформляем инфу о письме в DTO
+        $message = new EmailMessageDto($userEmail, $subject, $html, $text);
+
+        // Через метод gateway-я пробуем отправить письмо
+        try {
+            $this->resendGateway->send($message);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Cannot send password reset email', 0, $e);
+        }
+    }
 }
