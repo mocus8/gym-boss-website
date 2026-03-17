@@ -285,16 +285,8 @@ class AuthService {
 
         $stmt->close();
 
-        // Запись с токеном не найдена
-        if ($row === null) {
-            // Создаем токен
-            $rawToken = $this->createEmailVerificationToken($userId);
-            // Отправляем письмо
-            $this->createAndsendEmailVerificationLink($rawToken, $email, $name);
-
-            return;
-        }
-
+        // Если прошлый токен найден и кулдаун не прошел - исключение по лимиту отправки
+        if ($row !== null) {
         $tokenCreatedAtRaw = $row['created_at'];
         if (!$tokenCreatedAtRaw) {
             throw new \RuntimeException('Empty created_at');
@@ -311,6 +303,7 @@ class AuthService {
         // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
         if ($diffSeconds < self::RESEND_COOLDOWN_SECONDS) {
             throw new AuthException('EMAIL_RATE_LIMIT', 'Email resend attempt too soon', $retryAfter);
+        }
         }
         
         // Генерируем и получаем токен через вспомагательный метод, также хешированный токен записывается в бд
