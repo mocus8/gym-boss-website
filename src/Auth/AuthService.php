@@ -16,7 +16,7 @@ class AuthService {
     private string $baseUrl;
 
     private array $emailVerifiedCache = [];    // кэш с верификацией пользователей: userId -> bool
-    private const RESEND_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
+    private const SEND_EMAIL_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
     private const VERIFY_TOKEN_TTL_SECONDS = 900;    // константа с временем жизни токена подверждения (15 минут)
     private const LOGIN_ATTEMPTS_WINDOW = 900; // константа с окном для ввода непраивльного пароля (15 минут)
     private const MAX_LOGIN_ATTEMPTS = 5;    // константа с кол-вом попыток ввода пароля
@@ -29,7 +29,7 @@ class AuthService {
         $this->baseUrl = $baseUrl;
     }
 
-    // Приватный вспомагательный метод для генерации токена, его хеширования и записи в бд
+    // Приватный вспомагательный метод для генерации токена подтверждения почты, его хеширования и записи в бд
     private function createEmailVerificationToken(int $userId): string {
         if ($userId < 1) {
             throw new \InvalidArgumentException('Invalid userId');
@@ -189,7 +189,7 @@ class AuthService {
         }
 
         // Собираем и отправляем ссылку для подтверждения почты через приватный метод
-        $this->createAndsendEmailVerificationLink($rawToken, $email, $name);
+        $this->createAndSendEmailVerificationLink($rawToken, $email, $name);
 
         // Возвращаем userId
         return $userId;
@@ -287,30 +287,30 @@ class AuthService {
 
         // Если прошлый токен найден и кулдаун не прошел - исключение по лимиту отправки
         if ($row !== null) {
-        $tokenCreatedAtRaw = $row['created_at'];
-        if (!$tokenCreatedAtRaw) {
-            throw new \RuntimeException('Empty created_at');
-        }
+            $tokenCreatedAtRaw = $row['created_at'];
+            if (!$tokenCreatedAtRaw) {
+                throw new \RuntimeException('Empty created_at');
+            }
 
-        // Получаем настоящее время и разницу в секундах
-        $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
-        $now = new \DateTimeImmutable('now');
-        $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
+            // Получаем настоящее время и разницу в секундах
+            $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
+            $now = new \DateTimeImmutable('now');
+            $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
 
-        // Считаем сколько осталось до снятия кулдауна
-        $retryAfter = self::RESEND_COOLDOWN_SECONDS - $diffSeconds;
+            // Считаем сколько осталось до снятия кулдауна
+            $retryAfter = self::SEND_EMAIL_COOLDOWN_SECONDS - $diffSeconds;
 
-        // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
-        if ($diffSeconds < self::RESEND_COOLDOWN_SECONDS) {
-            throw new AuthException('EMAIL_RATE_LIMIT', 'Email resend attempt too soon', $retryAfter);
-        }
+            // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
+            if ($diffSeconds < self::SEND_EMAIL_COOLDOWN_SECONDS) {
+                throw new AuthException('EMAIL_RATE_LIMIT', 'Email resend attempt too soon', $retryAfter);
+            }
         }
         
         // Генерируем и получаем токен через вспомагательный метод, также хешированный токен записывается в бд
         $rawToken = $this->createEmailVerificationToken($userId);
 
         // Собираем и отправляем ссылку для подтверждения почты через приватный метод
-        $this->createAndsendEmailVerificationLink($rawToken, $email, $name);
+        $this->createAndSendEmailVerificationLink($rawToken, $email, $name);
     }
 
     // Метод для проверки верификации почты пользователя по его id 
@@ -740,5 +740,164 @@ class AuthService {
             'name' => $name,
             'is_verified' => $isVerified,
         ];
+    }
+
+    // Приватный вспомагательный метод для генерации токена для сброса пароля, его хеширования и записи в бд
+    private function createPasswordResetToken(string $email): string {
+        // Генерируем случайный токен (64 hex-символа)
+        // random_bytes даёт криптографически безопасные случайные байты
+        // bin2hex превращает их в URL‑безопасную строку
+        $rawToken = bin2hex(random_bytes(32));
+        // Хэшируем токен через sha256
+        $hashedToken = hash('sha256', $rawToken);
+
+        // Записываем в бд новую строку с токеном для сброса пароля
+        // Если есть старый токен для почты - он перезаписывается
+        $sql = "
+            INSERT INTO password_reset_tokens (
+                email,
+                token,
+                created_at
+            )
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE
+                token = ?,
+                created_at = CURRENT_TIMESTAMP
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('sss', $email, $hashedToken, $hashedToken);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        return $rawToken;
+    }
+
+    // Приватный вспомагательный метод для создания ссылки сброса пароля и отправки письма с ней
+    private function createAndSendPasswordResetLink(string $rawToken, string $email, string $name): void {
+        // Собираем ссылку вида http://localhost/auth/password/reset?token=...
+        $verifyUrl = $this->baseUrl . '/auth/password/reset?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
+
+        // Отправляем письмо со ссылкой через метод mailService
+        try {
+            $this->mailService->sendPasswordResetLink($email, $name, $verifyUrl);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Failed to send password reset email', 0, $e);
+        }
+    }
+
+    // Метод для начала сброса пароля
+    // Создает токен, собирает ссылку и отправляет письмо через метод MailService
+    // Не выкидываем исключений, который могут раскрыть существование пользователя (user-enumeration)
+    public function sendPasswordResetLink(string $email): void {
+        // Находим в бд по email имя пользователя 
+        $sql = "
+            SELECT
+                name
+            FROM users
+            WHERE email = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если пользователь не нашелся - тихо выходим
+        if (!$row) return;
+
+        $name = $row["name"];
+
+        // Получаем время создания прошлого токена 
+        $sql = "
+            SELECT created_at
+            FROM password_reset_tokens
+            WHERE email = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если прошлый токен найден и кулдаун не прошел - исключение по лимиту отправки
+        if ($row !== null) {
+            $tokenCreatedAtRaw = $row['created_at'];
+            if (!$tokenCreatedAtRaw) {
+                throw new \RuntimeException('Empty created_at');
+            }
+
+            // Получаем настоящее время и разницу в секундах
+            $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
+            $now = new \DateTimeImmutable('now');
+            $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
+
+            // Считаем сколько осталось до снятия кулдауна
+            $retryAfter = self::SEND_EMAIL_COOLDOWN_SECONDS - $diffSeconds;
+
+            // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
+            if ($diffSeconds < self::SEND_EMAIL_COOLDOWN_SECONDS) {
+                throw new AuthException('EMAIL_RATE_LIMIT', 'Email resend password attempt too soon', $retryAfter);
+            }
+        }
+        
+        // Генерируем и получаем токен через вспомагательный метод, также хешированный токен записывается в бд
+        $rawToken = $this->createPasswordResetToken($email);
+
+        // Собираем и отправляем ссылку для подтверждения почты через приватный метод
+        $this->createAndSendPasswordResetLink($rawToken, $email, $name);
     }
 }
