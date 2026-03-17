@@ -73,7 +73,7 @@ if (strpos($uri, '/api/') === 0) {
             '/auth/email/resend' => [$authController, 'resendVerification'],
             '/auth/login' => [$authController, 'login'],
             '/auth/logout' => [$authController, 'logout'],
-            '/auth/password/forgot' => [$authController, 'forgotPassword'],    // TODO
+            '/auth/password/forgot' => [$authController, 'forgotPassword'],
             '/auth/password/reset' => [$authController, 'resetPassword'],    // TODO
             '/cart/add-item' => [$cartController, 'addItem'],
             '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
