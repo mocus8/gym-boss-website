@@ -439,4 +439,41 @@ class AuthController {
             $this->error();
         }
     }
+
+    // Метод для начала сброса пароля, принимает email, ответ одинаковый для всех исходов (защита от user-enumeration)
+    public function forgotPassword(): void {
+        try {
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Валидируем email через метод
+            $email = isset($data['email']) ? (string)$data['email'] : null;
+            $email = $this->validateEmail($email);
+            if ($email === null) return;
+    
+            // Начинаем процесс сброса пароля через метод сервиса
+            $this->authService->sendPasswordResetLink($email);
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+            // Для защиты от user-enumeration тут показываем только ошибку по лимиту отправки писем
+
+            $this->error(429, 'EMAIL_RATE_LIMIT', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
 }
