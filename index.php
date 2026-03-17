@@ -83,7 +83,7 @@ if (strpos($uri, '/api/') === 0) {
             '/dadata/suggest/address' => [$dadataController, 'suggestAddress'],
         ],
         'GET' => [
-            '/auth/me' => [$authController, 'me'],    // TODO
+            '/auth/me' => [$authController, 'me'],
             '/cart' => [$cartController, 'getCart'],
             '/products' => [$productController, 'getCatalog'],
             '/orders' => [$orderController, 'getUserOrders'],

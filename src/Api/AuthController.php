@@ -404,4 +404,39 @@ class AuthController {
             $this->error();
         }
     }
+
+    // Метод для получения информации о текущем пользователе в сессии
+    public function me(): void  {
+        try {
+            $userId = $this->authSession->getUserId();
+
+            // Если пользователь не залогинен
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Получаем информацию о пользователе через метод сервиса
+            $userInfo = $this->authService->getUserInfo($userId);
+
+            // Возвращаем информацию
+            $this->success(200, [
+                'userId' => $userId,
+                'email' => $userInfo['email'],
+                'name' => $userInfo['name'],
+                'emailVerified' => $userInfo['is_verified']
+            ]);
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
 }

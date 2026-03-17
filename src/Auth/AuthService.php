@@ -693,4 +693,59 @@ class AuthService {
     
         $stmt->close();
     }
+
+    // Метод для получения информации о пользователе по id
+    public function getUserInfo(int $userId): array {
+        // Находим в бд по email инфу о пользователе
+        $sql = "
+            SELECT
+                email,
+                email_verified_at,
+                name
+            FROM users
+            WHERE id = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если пользователь не нашелся - ошибку
+        if (!$row) {
+            throw new \RuntimeException('User not found');
+        }
+
+        $email = $row["email"];
+        $name = $row["name"];
+        $isVerified = $row["email_verified_at"] !== null;
+
+        // Возвращаем инфу о пользователе
+        return [
+            'email' => $email,
+            'name' => $name,
+            'is_verified' => $isVerified,
+        ];
+    }
 }
