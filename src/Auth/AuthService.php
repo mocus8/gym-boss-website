@@ -309,6 +309,9 @@ class AuthService {
 
     // Метод для верификации почты пользователя 
     public function verify(string $rawToken): void {
+        // Валидируем токен
+        validateToken($rawToken);
+
         // Хэшируем токен через sha256
         $hashedToken = hash('sha256', $rawToken);
 
@@ -685,6 +688,8 @@ class AuthService {
         $this->createAndSendPasswordResetLink($rawToken, $email, $name);
     }
 
+    // TODO: метод сброса пароля, валидировать токен validateToken()
+
     // Приватный вспомагательный метод для генерации токена подтверждения почты, его хеширования и записи в бд
     private function createEmailVerificationToken(int $userId): string {
         if ($userId < 1) {
@@ -742,6 +747,13 @@ class AuthService {
         } catch (\Throwable $e) {
             // Создаем класс используя именованные аргументы (можно пропустить один, не по порядку)
             throw new AuthException('EMAIL_SEND_FAILURE', 'Failed to send verification email', previous: $e);
+        }
+    }
+
+    // Приватный вспомагательный метод для валидации токена
+    private function validateToken(string $token): void {
+        if (strlen($token) !== 64 || !preg_match('/^[0-9a-f]{64}$/i', $token)) {
+            throw new AuthException('TOKEN_INVALID', 'Invalid token format');
         }
     }
 
