@@ -4,7 +4,7 @@
 // Импортируем общую функция для взаимодвействия с api
 import { requestApi } from "../utils.js";
 
-const PRODUCT_BASE_URL = "/api/products/";
+const PRODUCT_BASE_URL = "/api/products";
 
 // Оборачиваем общую функцию (добавляем базовый путь)
 async function requestProduct(path, options = {}) {
@@ -25,7 +25,7 @@ export function getBySlug(slug) {
     // Защищаем от пробелов и странных символов в slug.
     const safeSlug = encodeURIComponent(slug);
 
-    return requestProduct(safeSlug, {
+    return requestProduct(`/${safeSlug}`, {
         method: "GET",
     });
 }
@@ -47,7 +47,7 @@ export async function searchProducts(query) {
     // URLSearchParams правильно собирает query‑строку и кодирует спецсимволы
     q = new URLSearchParams({ q }).toString();
 
-    const products = requestProduct(`search?${q}`, {
+    const products = requestProduct(`/search?${q}`, {
         method: "GET",
     });
 

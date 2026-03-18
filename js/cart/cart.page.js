@@ -22,7 +22,7 @@ function createCartProductElement(item) {
 
     // Ссылка на товар
     const link = document.createElement("a");
-    link.href = `product/${item.slug}`;
+    link.href = `products/${item.slug}`;
     productClick.appendChild(link);
 
     const img = document.createElement("img");

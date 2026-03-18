@@ -71,7 +71,7 @@ $robots = 'noindex, nofollow';
 
 // Через буфер записываем в переменную контент страницы
 ob_start();
-require __DIR__ . "/../templates/pages/email_verify.php";    // TODO: сделать шаблон страницы результата, по status выбрать содержимое
+require __DIR__ . "/../templates/pages/email_verify.php";
 $content = ob_get_clean();
 
 // Подключаем главный шаблон сайта

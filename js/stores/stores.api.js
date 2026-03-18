@@ -3,7 +3,7 @@
 // Импортируем общую функция для взаимодвействия с api
 import { requestApi } from "../utils.js";
 
-const STORE_BASE_URL = "/api/stores/";
+const STORE_BASE_URL = "/api/stores";
 
 // Оборачиваем общую функцию (добавляем базовый путь)
 async function requestStore(path, options = {}) {
@@ -23,7 +23,7 @@ export function getStores() {
 export function getStoreById(storeId) {
     const id = Number(storeId);
 
-    return requestStore(`${id}`, {
+    return requestStore(`/${id}`, {
         method: "GET",
     });
 }

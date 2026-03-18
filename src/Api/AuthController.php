@@ -234,10 +234,10 @@ class AuthController {
             $this->authSession->login($userId);
 
             $this->success(201, [
-                'userId' => $userId,
+                'user_id' => $userId,
                 'email' => $email,
                 'name' => $name,
-                'emailVerified' => false
+                'is_email_verified' => false
             ]);
 
         } catch (\InvalidArgumentException $e) {
@@ -353,10 +353,10 @@ class AuthController {
             $this->authSession->login($userInfo['id']);
 
             $this->success(200, [
-                'userId' => $userInfo['id'],
+                'user_id' => $userInfo['id'],
                 'email' => $email,
                 'name' => $userInfo['name'],
-                'emailVerified' => $userInfo['is_verified']
+                'is_email_verified' => $userInfo['is_verified']
             ]);
 
         } catch (AuthException $e) {
@@ -421,10 +421,10 @@ class AuthController {
 
             // Возвращаем информацию
             $this->success(200, [
-                'userId' => $userId,
+                'user_id' => $userId,
                 'email' => $userInfo['email'],
                 'name' => $userInfo['name'],
-                'emailVerified' => $userInfo['is_verified']
+                'is_email_verified' => $userInfo['is_verified']
             ]);
 
         } catch (\Throwable $e) {

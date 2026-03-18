@@ -4,7 +4,7 @@
 // Импортируем общую функция для взаимодвействия с api
 import { requestApi } from "../utils.js";
 
-const CART_BASE_URL = "/api/cart/";
+const CART_BASE_URL = "/api/cart";
 
 // Оборачиваем общую функцию (добавляем базовый путь)
 async function requestCart(path, options = {}) {
@@ -24,10 +24,10 @@ export function getCart() {
 // JSON.stringify({...}) - превращает объект в JSON‑строку
 // Nubmer - приводит строку к числу
 export function addCartItem(productId, qty = 1) {
-    return requestCart("add-item", {
+    return requestCart("/add-item", {
         method: "POST",
         body: JSON.stringify({
-            productId: Number(productId),
+            product_id: Number(productId),
             qty: Number(qty),
         }),
     });
@@ -36,10 +36,10 @@ export function addCartItem(productId, qty = 1) {
 // Функция для удаления товара из корзины
 // Отправляет запрос POST /api/cart/remove-item
 export function removeCartItem(productId) {
-    return requestCart("remove-item", {
+    return requestCart("/remove-item", {
         method: "POST",
         body: JSON.stringify({
-            productId: Number(productId),
+            product_id: Number(productId),
         }),
     });
 }
@@ -48,10 +48,10 @@ export function removeCartItem(productId) {
 // Если qty = 0 — на бэке товар убирается
 // Отправляет запрос POST /api/cart/update-item-qty
 export function updateCartItemQty(productId, qty) {
-    return requestCart("update-item-qty", {
+    return requestCart("/update-item-qty", {
         method: "POST",
         body: JSON.stringify({
-            productId: Number(productId),
+            product_id: Number(productId),
             qty: Number(qty),
         }),
     });
@@ -60,7 +60,7 @@ export function updateCartItemQty(productId, qty) {
 // Функция для очистки корзины
 // Отправляет запрос POST /api/cart/clear
 export function clearCart() {
-    return requestCart("clear", {
+    return requestCart("/clear", {
         method: "POST",
     });
 }

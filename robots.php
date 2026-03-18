@@ -17,7 +17,7 @@ header('Content-Type: text/plain; charset=UTF-8');
 echo "User-agent: *\n";
 echo "Disallow: /404\n";
 echo "Disallow: /cart\n";
-echo "Disallow: /my-orders\n";
+echo "Disallow: /orders\n";
 echo "Disallow: /checkout\n";
 echo "Disallow: /db\n";
 echo "Disallow: /scripts\n";

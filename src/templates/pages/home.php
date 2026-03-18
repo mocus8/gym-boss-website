@@ -8,7 +8,7 @@
         </div>
         <div class="products_main">
             <?php foreach ($categoryData['products'] as $productData) { ?>
-                <a href="/product/<?= htmlspecialchars($productData['slug'], ENT_QUOTES, 'UTF-8') ?>">
+                <a href="/products/<?= htmlspecialchars($productData['slug'], ENT_QUOTES, 'UTF-8') ?>">
                     <div class="product">
                         <div class="product_click">
                             <img class="product_img_1"

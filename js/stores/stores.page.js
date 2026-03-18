@@ -2,7 +2,7 @@
 import { getErrorMessage } from "../utils.js";
 import { loadYandexMapsScripts, StoresMap } from "../maps/index.js";
 import { notification } from "../ui/notification.js";
-import { getStores } from "../store/store.api.js";
+import { getStores } from "../stores/stores.api.js";
 
 // Функция для получения элемента магазина для списка магазинов
 function createStoreEl(store) {

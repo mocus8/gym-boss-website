@@ -8,7 +8,7 @@
 // Настраиваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Payment\WebhookService;    // используем класс StoreService из пространства имен App\Store
+use App\Payments\WebhookService;    // используем класс StoreService из пространства имен App\Payments
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 class WebhookController {

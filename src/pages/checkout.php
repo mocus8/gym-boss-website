@@ -4,7 +4,7 @@
 $title  = 'Оформление заказа - Gym Boss';
 $robots = 'noindex,nofollow';
 $pageModuleScripts = [
-    '/js/order/checkout.page.js',
+    '/js/orders/checkout.page.js',
     '/js/maps/index.js'
 ];
 

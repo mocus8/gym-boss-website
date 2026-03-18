@@ -1,4 +1,4 @@
-import { getUserOrders } from "./order.api.js";
+import { getUserOrders } from "./orders.api.js";
 import { getErrorMessage, formatPrice, formatDate } from "../utils.js";
 import { notification } from "../ui/notification.js";
 
@@ -49,7 +49,7 @@ function createOrderElement(order) {
 
     // Кнопка-ссылка для перехода к заказу
     const link = document.createElement("a");
-    link.href = `/order/${Number(order.order_id)}`;
+    link.href = `/orders/${Number(order.order_id)}`;
     link.classList.add("order_action_button");
     link.textContent = "Перейти к заказу";
     orderDiv.appendChild(link);

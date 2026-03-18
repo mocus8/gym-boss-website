@@ -2,9 +2,9 @@
 // Класс-сервис для синхронизации статуса заказа со статусом платежа в юкассе
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
-namespace App\Payment;
-use App\Order\OrderService;
-use App\Payment\PaymentService;
+namespace App\Payments;
+use App\Orders\OrderService;
+use App\Payments\PaymentService;
 use App\Integrations\Yookassa\YookassaGateway;
 
 class PaymentStatusSyncService {

@@ -5,7 +5,7 @@
 // В этих файлах перед вызовом этих методов нужно валидировать данные
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
-namespace App\Product;
+namespace App\Products;
 
 // Класс для получения инфы о товарах
 class ProductService {

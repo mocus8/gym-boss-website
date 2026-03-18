@@ -5,8 +5,8 @@
 // В этих файлах перед вызовом этих методов нужно валидировать данные
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
-namespace App\Order;
-use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
+namespace App\Orders;
+use App\Products\ProductService;    // используем класс ProductService из пространства имен App\Products
 use App\Cart\CartService;    // Используем класс CartService из пространства имен App\Cart
 
 // Класс для управления корзинами пользователей

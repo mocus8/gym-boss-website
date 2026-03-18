@@ -3,7 +3,7 @@
 // Импортируем общую функция для взаимодвействия с api
 import { requestApi } from "../utils.js";
 
-const ORDER_BASE_URL = "/api/";
+const ORDER_BASE_URL = "/api/orders";
 
 // Оборачиваем общую функцию (добавляем базовый путь)
 async function requestOrder(path, options = {}) {
@@ -12,7 +12,7 @@ async function requestOrder(path, options = {}) {
 
 // Функция для создания заказа из корзины
 // В параметре объект с полями (так не обязательно явно указывать все поля при вызове)
-// Отправляет запрос POST /api/order/create-from-cart
+// Отправляет запрос POST /api/orders/create-from-cart
 // JSON.stringify({...}) - превращает объект в JSON‑строку
 export function createOrderFromCart({
     deliveryTypeId,
@@ -20,65 +20,65 @@ export function createOrderFromCart({
     deliveryPostalCode = null,
     storeId = null,
 }) {
-    return requestOrder("order/create-from-cart", {
+    return requestOrder("/create-from-cart", {
         method: "POST",
         body: JSON.stringify({
-            deliveryTypeId: Number(deliveryTypeId),
-            deliveryAddressText:
+            delivery_type_id: Number(deliveryTypeId),
+            delivery_address_text:
                 deliveryAddressText == null
                     ? null
                     : String(deliveryAddressText),
-            deliveryPostalCode:
+            delivery_postal_code:
                 deliveryPostalCode == null ? null : String(deliveryPostalCode),
-            storeId: storeId == null ? null : Number(storeId),
+            store_id: storeId == null ? null : Number(storeId),
         }),
     });
 }
 
 // Функция для получения заказа по его id
-// Отправляет запрос GET /api/order/{id}
+// Отправляет запрос GET /api/orders/{id}
 export function getOrderById(orderId) {
     const id = Number(orderId);
 
-    return requestOrder(`order/${id}`, {
+    return requestOrder(`/${id}`, {
         method: "GET",
     });
 }
 
-// Функция для получения заказа по его id
+// Функция для получения заказов
 // Отправляет запрос GET /api/orders
 export function getUserOrders() {
-    return requestOrder("orders", {
+    return requestOrder("", {
         method: "GET",
     });
 }
 
 // Функция для отмены заказа по его id
-// Отправляет запрос POST /api/order/{id}/cancel
+// Отправляет запрос POST /api/orders/{id}/cancel
 export function markOrderAsCanceled(orderId) {
     const id = Number(orderId);
 
-    return requestOrder(`order/${id}/cancel`, {
+    return requestOrder(`/${id}/cancel`, {
         method: "POST",
     });
 }
 
 // Функция для попытки оплаты заказа (получение ссылки для оплаты)
-// Отправляет запрос POST /api/order/{id}/start-payment
+// Отправляет запрос POST /api/orders/{id}/start-payment
 export function getPaymentForOrder(orderId) {
     const id = Number(orderId);
 
-    return requestOrder(`order/${id}/start-payment`, {
+    return requestOrder(`/${id}/start-payment`, {
         method: "POST",
     });
 }
 
 // Функция для синхронизации статуса платежа и заказа между бд и юкассой
-// Отправляет запрос POST /api/order/{id}/sync-payment
+// Отправляет запрос POST /api/orders/{id}/sync-payment
 export function syncPaymentForOrder(orderId) {
     const id = Number(orderId);
 
-    return requestOrder(`order/${id}/sync-payment`, {
+    return requestOrder(`/${id}/sync-payment`, {
         method: "POST",
     });
 }

@@ -6,8 +6,8 @@
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Cart;
-// Используем класс ProductService из пространства имен App\Product
-use App\Product\ProductService;
+// Используем класс ProductService из пространства имен App\Products
+use App\Products\ProductService;
 
 // Класс для управления корзинами пользователей
 class CartService {

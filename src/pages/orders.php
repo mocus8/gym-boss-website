@@ -3,7 +3,7 @@
 
 $title  = 'Мои заказы - Gym Boss';
 $robots = 'noindex, nofollow';
-$pageModuleScripts = ['/js/order/orders.page.js'];
+$pageModuleScripts = ['/js/orders/orders.page.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

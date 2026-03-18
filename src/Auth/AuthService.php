@@ -15,7 +15,7 @@ class AuthService {
     private MailService $mailService;
     private string $baseUrl;
 
-    private array $emailVerifiedCache = [];    // кэш с верификацией пользователей: userId -> bool
+    private array $verifiedEmailsCache = [];    // кэш с верификацией пользователей: userId -> bool
     private const SEND_EMAIL_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
     private const VERIFY_TOKEN_TTL_SECONDS = 900;    // константа с временем жизни токена подверждения (15 минут)
     private const LOGIN_ATTEMPTS_WINDOW = 900; // константа с окном для ввода непраивльного пароля (15 минут)
@@ -320,8 +320,8 @@ class AuthService {
         }
 
         // Сначала проверяем запись в кеше (в свойстве объекта класса), если есть - возвращаем ее 
-        if (array_key_exists($userId, $this->emailVerifiedCache)) {
-            return $this->emailVerifiedCache[$userId];
+        if (array_key_exists($userId, $this->verifiedEmailsCache)) {
+            return $this->verifiedEmailsCache[$userId];
         }
 
         // Проверяем по бд
@@ -363,7 +363,7 @@ class AuthService {
 
         // Проверяем полученное состояние почты, кешируем и возвращаем результат
         $isVerified = $row['email_verified_at'] !== null;
-        $this->emailVerifiedCache[$userId] = $isVerified;
+        $this->verifiedEmailsCache[$userId] = $isVerified;
         return $isVerified;
     }
 
@@ -488,7 +488,7 @@ class AuthService {
         }
 
         // Обновляем кеш
-        $this->emailVerifiedCache[$userId] = true;
+        $this->verifiedEmailsCache[$userId] = true;
     }
 
     // Приватный вспомагательный метод для проверки лимита на попытки ввода пароля по email

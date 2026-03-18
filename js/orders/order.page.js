@@ -3,7 +3,7 @@ import {
     markOrderAsCanceled,
     getPaymentForOrder,
     syncPaymentForOrder,
-} from "./order.api.js";
+} from "./orders.api.js";
 import {
     getErrorMessage,
     setButtonLoading,
@@ -418,7 +418,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             setButtonLoading(payButton, true);
 
             const paymentData = await getPaymentForOrder(orderId);
-            const confirmationUrl = paymentData?.confirmationUrl;
+            const confirmationUrl = paymentData?.confirmation_url;
             if (
                 typeof confirmationUrl !== "string" ||
                 confirmationUrl.length === 0

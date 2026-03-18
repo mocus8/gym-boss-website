@@ -8,8 +8,8 @@ import {
 import { loadYandexMapsScripts, CourierMap, PickupMap } from "../maps/index.js";
 import { notification } from "../ui/notification.js";
 import { getCart } from "../cart/cart.api.js";
-import { createOrderFromCart } from "./order.api.js";
-import { getStores } from "../store/store.api.js";
+import { createOrderFromCart } from "./orders.api.js";
+import { getStores } from "../stores/stores.api.js";
 
 // Функция убирания лоадера
 function hideMapLoader(loaderId) {
@@ -548,7 +548,7 @@ if (!createOrderBtn) {
                 storeId: checkoutStoreId,
             });
 
-            const orderId = result?.orderId;
+            const orderId = result?.order_id;
             if (!orderId) {
                 console.error(
                     "[checkout-page] Не удалось найти orderId в ответе от сервера",
@@ -559,7 +559,7 @@ if (!createOrderBtn) {
 
             const uriOrderId = encodeURI(String(orderId));
 
-            window.location.href = `/order/${uriOrderId}`;
+            window.location.href = `/orders/${uriOrderId}`;
         } catch (e) {
             // Логирование в консоль с полным контекстом
             console.error("[checkout-page] Не удалось оформить заказ", {

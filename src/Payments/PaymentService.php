@@ -5,8 +5,8 @@
 // Вызывается из OrderController, без отдельного контроллера 
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
-namespace App\Payment;
-use App\Order\OrderService;
+namespace App\Payments;
+use App\Orders\OrderService;
 use App\Integrations\Yookassa\YookassaGateway;
 
 // Класс для управления платежами
@@ -360,7 +360,7 @@ class PaymentService {
             ],
             'confirmation' => [
                 'type' => 'redirect',
-                'return_url' => $this->baseUrl . '/order/' . $draftPaymentInfo['orderId']
+                'return_url' => $this->baseUrl . '/orders/' . $draftPaymentInfo['orderId']
             ],
             'capture' => true,
             'description' => 'Заказ №' . $draftPaymentInfo['orderId'],

@@ -4,7 +4,7 @@
 $title  = 'Магазины Gym Boss';
 $canonical = $baseUrl . '/stores';
 $pageModuleScripts = [
-    '/js/store/stores.page.js',
+    '/js/stores/stores.page.js',
     '/js/maps/index.js'
 ];
 

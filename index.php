@@ -25,7 +25,7 @@ if (strpos($uri, '/api/') === 0) {
         'POST' => [
             '/auth/email/resend',
             '/auth/logout',
-            '/order/create-from-cart',
+            '/orders/create-from-cart',
             '/dadata/suggest/address',
         ],
         'GET' => [
@@ -41,7 +41,7 @@ if (strpos($uri, '/api/') === 0) {
         'DELETE' => [
             '/account',
         ]
-        // сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
+        // Сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
     ];
 
     // Если маршрут требует авторизации - проверяем авторизацию
@@ -52,13 +52,13 @@ if (strpos($uri, '/api/') === 0) {
     // Api маршруты, требующие подтвержденного email
     $verifiedEmailApiRoutes = [
         'POST' => [
-            '/order/create-from-cart',
+            '/orders/create-from-cart',
             '/dadata/suggest/address',
         ],
         'GET' => [
             '/orders',
         ]
-        // сюда же можно добавить ещё закрытых маршрутов
+        // Сюда же можно добавить ещё закрытых маршрутов
     ];
 
     // Если маршрут требует подтвержденной почты - проверяем верификацию
@@ -79,7 +79,7 @@ if (strpos($uri, '/api/') === 0) {
             '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
             '/cart/remove-item' => [$cartController, 'removeItem'],
             '/cart/clear' => [$cartController, 'clear'],
-            '/order/create-from-cart' => [$orderController, 'createFromCart'],
+            '/orders/create-from-cart' => [$orderController, 'createFromCart'],
             '/dadata/suggest/address' => [$dadataController, 'suggestAddress'],
         ],
         'GET' => [
@@ -118,8 +118,8 @@ if (strpos($uri, '/api/') === 0) {
         $productController->getBySlug($slug);
         exit;
     }
-    // Заказ по id: GET /api/order/{id}
-    elseif ($method === 'GET' && preg_match('#^/order/([0-9]+)$#', $apiPath, $matches)) {
+    // Заказ по id: GET /api/orders/{id}
+    elseif ($method === 'GET' && preg_match('#^/orders/([0-9]+)$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
         requireVerifiedEmail($authSession, $authService);
 
@@ -127,8 +127,8 @@ if (strpos($uri, '/api/') === 0) {
         $orderController->getById($orderId );
         exit;
     }
-    // Отмена заказа по id: POST /api/order/{id}/cancel
-    elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/cancel$#', $apiPath, $matches)) {
+    // Отмена заказа по id: POST /api/orders/{id}/cancel
+    elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/cancel$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
         requireVerifiedEmail($authSession, $authService);
 
@@ -136,8 +136,8 @@ if (strpos($uri, '/api/') === 0) {
         $orderController->markCancel($orderId);
         exit;
     }
-    // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/order/{id}/start-payment
-    elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/start-payment$#', $apiPath, $matches)) {
+    // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/orders/{id}/start-payment
+    elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/start-payment$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
         requireVerifiedEmail($authSession, $authService);
 
@@ -145,8 +145,8 @@ if (strpos($uri, '/api/') === 0) {
         $orderController->startPayment($orderId);
         exit;
     }
-    // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/order/{id}/sync-payment
-    elseif ($method === 'POST' && preg_match('#^/order/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
+    // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/orders/{id}/sync-payment
+    elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
         requireVerifiedEmail($authSession, $authService);
 
@@ -191,6 +191,7 @@ $routes = [
     '' => 'home.php',
     '/' => 'home.php',
     '/auth/email/verify' => 'email_verify.php',
+    '/auth/password/reset' =>'password_reset.php',
     '/cart' => 'cart.php',
     '/contacts' => 'contacts.php',
     '/kwork-customers' => 'kwork_customers.php',
@@ -205,14 +206,14 @@ if (isset($routes[$uri])) {
     require __DIR__ . '/src/pages/' . $routes[$uri];
     exit;
 }
-// Страница товара: /product/slug
-elseif (preg_match('#^/product/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
+// Страница товара: /products/slug
+elseif (preg_match('#^/products/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
     $_GET['url'] = $matches[1];
     require __DIR__ . '/src/pages/product.php';
     exit;
 }
-// Страница заказа: /order/123, также записываем в GET id
-elseif (preg_match('#^/order/([0-9]+)$#', $uri, $matches)) {
+// Страница заказа: /orders/123, также записываем в GET id
+elseif (preg_match('#^/orders/([0-9]+)$#', $uri, $matches)) {
     requireWebAuth($authSession);
 
     $_GET['orderId'] = $matches[1];

@@ -2,9 +2,9 @@
 // Use-case/координатор класс, для использования методов из двух других сервисов, для обхода цикличейской DI зависимости
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
-namespace App\Order;
-use App\Order\OrderService;
-use App\Payment\PaymentService;
+namespace App\Orders;
+use App\Orders\OrderService;
+use App\Payments\PaymentService;
 
 // Класс для управления корзинами пользователей
 class CancelOrderUseCase {

@@ -2,8 +2,8 @@
 // Вебхук для обработки уведомлений от юкассы
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
-namespace App\Payment;
-use App\Order\OrderService;
+namespace App\Payments;
+use App\Orders\OrderService;
 use App\Integrations\Yookassa\YookassaGateway;
 
 class WebhookService {

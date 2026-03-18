@@ -51,7 +51,7 @@ try {
 
         // Создание базовой записи для URL
         $entry = [
-            'loc' => $baseUrl . '/product/' . rawurlencode($slug),
+            'loc' => $baseUrl . '/products/' . rawurlencode($slug),
         ];
 
         // Если есть дата изменения, добавляем её

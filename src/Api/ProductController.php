@@ -8,7 +8,7 @@
 // Настраиваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Product\ProductService;    // используем класс ProductService из пространства имен App\Product
+use App\Products\ProductService;    // используем класс ProductService из пространства имен App\Products
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для подгрузки инфы о товарах (через методы сервиса)

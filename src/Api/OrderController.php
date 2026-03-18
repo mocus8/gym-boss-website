@@ -9,12 +9,12 @@
 namespace App\Api;
 
 use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
-use App\Order\OrderService;    // используем класс OrderService из пространства имен App\Order
-use App\Order\CancelOrderUseCase;    // используем класс CancelOrderUseCase из пространства имен App\Order
+use App\Orders\OrderService;    // используем класс OrderService из пространства имен App\Orders
+use App\Orders\CancelOrderUseCase;    // используем класс CancelOrderUseCase из пространства имен App\Orders
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
-use App\Payment\PaymentService;
-use App\Payment\PaymentStatusSyncService;
+use App\Payments\PaymentService;
+use App\Payments\PaymentStatusSyncService;
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления заказами пользователей (через методы сервиса)
@@ -113,7 +113,7 @@ class OrderController {
     }
 
     // Метод для создания заказа на основе корзины, корзину помечает как конвертированную, возвращает id заказа
-    // Обработчик запроса POST /api/order/create-from-cart
+    // Обработчик запроса POST /api/orders/create-from-cart
     public function createFromCart(): void {
         try {
             // Подготавливаем переменные для использования в методе createFromCart
@@ -149,7 +149,7 @@ class OrderController {
             );
 
             // Возвращаем успех через приватную функцию
-            $this->success(201, ['orderId' => $orderId,]);
+            $this->success(201, ['order_id' => $orderId,]);
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
@@ -170,7 +170,7 @@ class OrderController {
     }
 
     // Метод для получения заказа по его id, возвращает массив с инфой о заказе и товарах в нем
-    // Обработчик запроса GET /api/order/{id}
+    // Обработчик запроса GET /api/orders/{id}
     public function getById(int $orderId): void {
         try {
             $userId = $this->authSession->getUserId();
@@ -253,7 +253,7 @@ class OrderController {
     }
 
     // Метод для пометки заказа как отмененного
-    // Обработчик запроса POST /api/order/{id}/cancel
+    // Обработчик запроса POST /api/orders/{id}/cancel
     public function markCancel(int $orderId): void {
         try {
             $userId = $this->authSession->getUserId();
@@ -285,7 +285,7 @@ class OrderController {
     }
 
     // Метод для попытки оплаты заказа
-    // Обработчик запроса POST /api/order/{id}/start-payment
+    // Обработчик запроса POST /api/orders/{id}/start-payment
     public function startPayment(int $orderId): void {
         try {
             $userId = $this->authSession->getUserId();
@@ -293,7 +293,7 @@ class OrderController {
             $confirmationUrl = $this->paymentService->getOrCreatePayment($orderId, $userId);
 
             // Возвращаем успех через приватную функцию
-            $this->success(200, ['confirmationUrl' => $confirmationUrl]);
+            $this->success(200, ['confirmation_url' => $confirmationUrl]);
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
@@ -317,7 +317,7 @@ class OrderController {
     }
 
     // Метод для попытки синхронизации статуса платежа и заказа между бд и юкассой
-    // Обработчик запроса POST /api/order/{id}/sync-payment
+    // Обработчик запроса POST /api/orders/{id}/sync-payment
     public function syncPayment(int $orderId): void {
         try {
             $this->paymentStatusSyncService->syncByOrderId($orderId);
