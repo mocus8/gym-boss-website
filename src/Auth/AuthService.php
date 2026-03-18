@@ -29,66 +29,6 @@ class AuthService {
         $this->baseUrl = $baseUrl;
     }
 
-    // Приватный вспомагательный метод для генерации токена подтверждения почты, его хеширования и записи в бд
-    private function createEmailVerificationToken(int $userId): string {
-        if ($userId < 1) {
-            throw new \InvalidArgumentException('Invalid userId');
-        }
-
-        // Генерируем случайный токен для подтверждения пользователем почты (64 hex-символа)
-        // random_bytes даёт криптографически безопасные случайные байты
-        // bin2hex превращает их в URL‑безопасную строку
-        $rawToken = bin2hex(random_bytes(32));
-        // Хэшируем токен через sha256
-        $hashedToken = hash('sha256', $rawToken);
-
-        // Записываем в бд новую строку с токеном для подтверждения почты
-        // Если есть старый токен для пользователя - он перезаписывается
-        $sql = "
-            INSERT INTO email_verification_tokens (
-                user_id,
-                token,
-                created_at
-            )
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-            ON DUPLICATE KEY UPDATE
-                token = ?,
-                created_at = CURRENT_TIMESTAMP
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('iss', $userId, $hashedToken, $hashedToken);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
-
-        return $rawToken;
-    }
-
-    // Приватный вспомагательный метод для создания ссылки подтверждения и отправки письма с ней
-    private function createAndSendEmailVerificationLink(string $rawToken, string $email, string $name): void {
-        // Собираем ссылку вида http://localhost/auth/email/verify?token=...
-        $verifyUrl = $this->baseUrl . '/auth/email/verify?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
-
-        // Отправляем письмо со ссылкой через метод mailService 
-        try {
-            $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
-        } catch (\Throwable $e) {
-            // Создаем класс используя именованные аргументы (можно пропустить один, не по порядку)
-            throw new AuthException('EMAIL_SEND_FAILURE', 'Failed to send verification email', previous: $e);
-        }
-    }
-
     // Метод для регистрации
     // Регистрирует пользователя и инициализирует verify-процесс
     public function register(string $email, string $password, string $name): int {
@@ -491,107 +431,6 @@ class AuthService {
         $this->verifiedEmailsCache[$userId] = true;
     }
 
-    // Приватный вспомагательный метод для проверки лимита на попытки ввода пароля по email
-    private function checkLoginLimit(string $email): void {
-        // Находим кол-во попыток за время (задано в константе)
-        $sql = "
-            SELECT COUNT(*)
-            FROM login_attempts
-            WHERE email = ?
-                AND attempted_at > NOW() - INTERVAL ? SECOND             
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $window = self::LOGIN_ATTEMPTS_WINDOW;
-        $stmt->bind_param("si", $email, $window);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_row();
-
-        if ($row === null) {
-            $stmt->close();
-            throw new \RuntimeException('DB fetch_row failed');
-        }
-
-        $stmt->close();
-
-        // Кол-во попыток за последние LOGIN_ATTEMPTS_WINDOW секунд
-        $count = (int)$row[0];
-
-        // Если превысили лимит - ошибку 
-        if ($count >= self::MAX_LOGIN_ATTEMPTS) {
-            throw new AuthException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts');
-        }
-    }
-
-    // Приватный вспомагательный метод для фиксирования неудачной попытки
-    private function addLoginAttempt(string $email): void {
-        $sql = "
-            INSERT INTO login_attempts (
-                email,
-                attempted_at
-            )
-            VALUES (?, CURRENT_TIMESTAMP)
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('s', $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
-    }
-
-    // Приватный вспомагательный метод для удаления записи о попытках входах по email
-    private function deleteLoginAttemptsOnEmail(string $email): void {
-        $sql = "
-            DELETE FROM login_attempts
-            WHERE email = ?
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('s', $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
-    }
-
     // Метод для входа пользователя в аккаунт, сверяется пароль и возвращается инфа о пользователе
     public function login(string $email, string $inputPassword): array {
         // Проверяем лимит неудачных попыток
@@ -742,61 +581,6 @@ class AuthService {
         ];
     }
 
-    // Приватный вспомагательный метод для генерации токена для сброса пароля, его хеширования и записи в бд
-    private function createPasswordResetToken(string $email): string {
-        // Генерируем случайный токен (64 hex-символа)
-        // random_bytes даёт криптографически безопасные случайные байты
-        // bin2hex превращает их в URL‑безопасную строку
-        $rawToken = bin2hex(random_bytes(32));
-        // Хэшируем токен через sha256
-        $hashedToken = hash('sha256', $rawToken);
-
-        // Записываем в бд новую строку с токеном для сброса пароля
-        // Если есть старый токен для почты - он перезаписывается
-        $sql = "
-            INSERT INTO password_reset_tokens (
-                email,
-                token,
-                created_at
-            )
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-            ON DUPLICATE KEY UPDATE
-                token = ?,
-                created_at = CURRENT_TIMESTAMP
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('sss', $email, $hashedToken, $hashedToken);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
-
-        return $rawToken;
-    }
-
-    // Приватный вспомагательный метод для создания ссылки сброса пароля и отправки письма с ней
-    private function createAndSendPasswordResetLink(string $rawToken, string $email, string $name): void {
-        // Собираем ссылку вида http://localhost/auth/password/reset?token=...
-        $resetUrl = $this->baseUrl . '/auth/password/reset?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
-
-        // Отправляем письмо со ссылкой через метод mailService
-        try {
-            $this->mailService->sendPasswordResetLink($email, $name, $resetUrl);
-        } catch (\Throwable $e) {
-            throw new \RuntimeException('Failed to send password reset email', 0, $e);
-        }
-    }
-
     // Метод для начала сброса пароля
     // Создает токен, собирает ссылку и отправляет письмо через метод MailService
     // Не выкидываем исключений, который могут раскрыть существование пользователя (user-enumeration)
@@ -899,5 +683,221 @@ class AuthService {
 
         // Собираем и отправляем ссылку для подтверждения почты через приватный метод
         $this->createAndSendPasswordResetLink($rawToken, $email, $name);
+    }
+
+    // Приватный вспомагательный метод для генерации токена подтверждения почты, его хеширования и записи в бд
+    private function createEmailVerificationToken(int $userId): string {
+        if ($userId < 1) {
+            throw new \InvalidArgumentException('Invalid userId');
+        }
+
+        // Генерируем случайный токен для подтверждения пользователем почты (64 hex-символа)
+        // random_bytes даёт криптографически безопасные случайные байты
+        // bin2hex превращает их в URL‑безопасную строку
+        $rawToken = bin2hex(random_bytes(32));
+        // Хэшируем токен через sha256
+        $hashedToken = hash('sha256', $rawToken);
+
+        // Записываем в бд новую строку с токеном для подтверждения почты
+        // Если есть старый токен для пользователя - он перезаписывается
+        $sql = "
+            INSERT INTO email_verification_tokens (
+                user_id,
+                token,
+                created_at
+            )
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE
+                token = ?,
+                created_at = CURRENT_TIMESTAMP
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('iss', $userId, $hashedToken, $hashedToken);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        return $rawToken;
+    }
+
+    // Приватный вспомагательный метод для создания ссылки подтверждения и отправки письма с ней
+    private function createAndSendEmailVerificationLink(string $rawToken, string $email, string $name): void {
+        // Собираем ссылку вида http://localhost/auth/email/verify?token=...
+        $verifyUrl = $this->baseUrl . '/auth/email/verify?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
+
+        // Отправляем письмо со ссылкой через метод mailService 
+        try {
+            $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
+        } catch (\Throwable $e) {
+            // Создаем класс используя именованные аргументы (можно пропустить один, не по порядку)
+            throw new AuthException('EMAIL_SEND_FAILURE', 'Failed to send verification email', previous: $e);
+        }
+    }
+
+    // Приватный вспомагательный метод для проверки лимита на попытки ввода пароля по email
+    private function checkLoginLimit(string $email): void {
+        // Находим кол-во попыток за время (задано в константе)
+        $sql = "
+            SELECT COUNT(*)
+            FROM login_attempts
+            WHERE email = ?
+                AND attempted_at > NOW() - INTERVAL ? SECOND             
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $window = self::LOGIN_ATTEMPTS_WINDOW;
+        $stmt->bind_param("si", $email, $window);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_row();
+
+        if ($row === null) {
+            $stmt->close();
+            throw new \RuntimeException('DB fetch_row failed');
+        }
+
+        $stmt->close();
+
+        // Кол-во попыток за последние LOGIN_ATTEMPTS_WINDOW секунд
+        $count = (int)$row[0];
+
+        // Если превысили лимит - ошибку 
+        if ($count >= self::MAX_LOGIN_ATTEMPTS) {
+            throw new AuthException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts');
+        }
+    }
+
+    // Приватный вспомагательный метод для фиксирования неудачной попытки
+    private function addLoginAttempt(string $email): void {
+        $sql = "
+            INSERT INTO login_attempts (
+                email,
+                attempted_at
+            )
+            VALUES (?, CURRENT_TIMESTAMP)
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('s', $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
+
+    // Приватный вспомагательный метод для удаления записи о попытках входах по email
+    private function deleteLoginAttemptsOnEmail(string $email): void {
+        $sql = "
+            DELETE FROM login_attempts
+            WHERE email = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('s', $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
+
+    // Приватный вспомагательный метод для генерации токена для сброса пароля, его хеширования и записи в бд
+    private function createPasswordResetToken(string $email): string {
+        // Генерируем случайный токен (64 hex-символа)
+        // random_bytes даёт криптографически безопасные случайные байты
+        // bin2hex превращает их в URL‑безопасную строку
+        $rawToken = bin2hex(random_bytes(32));
+        // Хэшируем токен через sha256
+        $hashedToken = hash('sha256', $rawToken);
+
+        // Записываем в бд новую строку с токеном для сброса пароля
+        // Если есть старый токен для почты - он перезаписывается
+        $sql = "
+            INSERT INTO password_reset_tokens (
+                email,
+                token,
+                created_at
+            )
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE
+                token = ?,
+                created_at = CURRENT_TIMESTAMP
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('sss', $email, $hashedToken, $hashedToken);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        return $rawToken;
+    }
+
+    // Приватный вспомагательный метод для создания ссылки сброса пароля и отправки письма с ней
+    private function createAndSendPasswordResetLink(string $rawToken, string $email, string $name): void {
+        // Собираем ссылку вида http://localhost/auth/password/reset?token=...
+        $resetUrl = $this->baseUrl . '/auth/password/reset?' . http_build_query( ['token' => $rawToken], '', '&', PHP_QUERY_RFC3986);
+
+        // Отправляем письмо со ссылкой через метод mailService
+        try {
+            $this->mailService->sendPasswordResetLink($email, $name, $resetUrl);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Failed to send password reset email', 0, $e);
+        }
     }
 }

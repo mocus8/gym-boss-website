@@ -37,178 +37,6 @@ class PaymentService {
         $this->deliveryVatCode = $deliveryVatCode;
     }
 
-    // Вспомогательный приватный метод для генерации уникального кода UUID v4
-    private function generateUuidV4(): string {
-        $data = random_bytes(16);
-        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
-        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
-    
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
-
-    // Вспомогательный приватный метод для получения ссылки для оплаты из активного платежа
-    private function getActivePaymentUrl(int $orderId): ?string {
-        if ($orderId <= 0) {
-            throw new \InvalidArgumentException('Invalid orderId');
-        }
-
-        // Получаем информацию о последнем активном платеже на заказ
-        $sql = "
-            SELECT confirmation_url
-            FROM payments
-            WHERE order_id = ? 
-                AND status = 'pending'
-                AND (expires_at IS NULL OR expires_at > NOW())
-                AND confirmation_url IS NOT NULL
-            ORDER BY created_at DESC
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $payment = $result->fetch_assoc();
-
-        $stmt->close();
-
-        // Если платеж есть
-        if ($payment !== null && !empty($payment['confirmation_url'])) {
-            return $payment['confirmation_url'];
-        }
-
-        // Если платежа нет
-        return null;
-    }
-
-    // Вспомогательный приватный метод для формирования массива товаров для чека
-    private function buildReceiptItems(array $order, array $items): array {
-        // Cоздаём массив товаров в нужном для чека формате
-        $itemsForReceipt = [];
-        foreach ($items as $item) {
-            $price = number_format($item['price'], 2, '.', '');
-    
-            $itemsForReceipt[] = [
-                'description' => $item['product_name'],
-                'quantity' => $item['amount'],
-                'amount' => [
-                    'value' => $price,
-                    'currency' => 'RUB'
-                ],
-                'vat_code' => $item['vat_code'],
-                'payment_mode' => 'full_payment',
-                'payment_subject' => 'commodity'
-            ];
-        }
-    
-        // Добавляем стоимость доставки если она есть
-        $deliveryCost = number_format((float)$order['delivery_cost'], 2, '.', '');
-        $deliveryTypeId = (int)$order['delivery_type_id'];
-        if ((float)$order['delivery_cost'] > 0 && $deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
-            $itemsForReceipt[] = [
-                'description' => 'Доставка',
-                'quantity' => 1,
-                'amount' => [
-                    'value' => $deliveryCost,
-                    'currency' => 'RUB'
-                ],
-                'vat_code' => $this->deliveryVatCode,
-                'payment_mode' => 'full_payment',
-                'payment_subject' => 'service'    // доставка это услуга, не товар
-            ];
-        }
-
-        return $itemsForReceipt;
-    }
-
-    // Вспомогательный приватный метод для проверки схождения сумм заказа из объекта order и массива itemsForReceipt
-    private function checkReceiptTotalMatch(array $itemsForReceipt, float $orderTotal): void {
-        // Проверяем итоговую стоимость (должна сходиться с чеком)
-        $receiptTotal = 0;
-        foreach ($itemsForReceipt as $item) {
-            $receiptTotal += (float)$item['amount']['value'] * $item['quantity'];
-        }
-    
-        if (abs($receiptTotal - $orderTotal) > 0.01) {
-            throw new \RuntimeException('Receipt total mismatch');
-        }
-    }
-
-    // Вспомогательный приватный метод для пометки платежа как неудачного (создан черновик в бд, не создался в юкассе)
-    private function markPaymentFailed(
-        int $paymentId, 
-        string $errorCode,
-        string $errorMessage
-    ): void {
-        if ($paymentId <= 0) {
-            throw new \InvalidArgumentException('Invalid paymentId');
-        }
-
-        // Вносим в строку платежа статус failed и код + сообщение ошибки 
-        $sql = "
-            UPDATE payments
-            SET status = 'failed',
-                error_code = ?,
-                error_message = ?
-            WHERE id = ?
-                AND status = 'creating'
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ssi", $errorCode, $errorMessage, $paymentId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-        
-        $stmt->close();
-    }
-
-    // Вспомогательный приватный метод для маппинга ошибки создания платежа в юкассе
-    private function mapToErrorCode(\Throwable $e): string {
-        // Ошибки запроса/данных
-        if ($e instanceof \YooKassa\Common\Exceptions\BadApiRequestException) {
-            return 'BAD_REQUEST';
-        }
-
-        // Проблемы соединения/таймауты
-        if ($e instanceof \YooKassa\Common\Exceptions\ApiConnectionException) {
-            return 'PAYMENT_SERVICE_UNAVAILABLE';
-        }
-
-        // Общая ошибка API
-        if ($e instanceof \YooKassa\Common\Exceptions\ApiException) {
-            return 'PAYMENT_SYSTEM_ERROR';
-        }
-
-        // Всё остальное это внутренняя ошибка
-        return 'INTERNAL_ERROR';
-    }
-
     // Метод для получения или создания платежа, возвращает существующею/новую ссылку на платеж
     public function getOrCreatePayment(int $orderId, int $userId): string {
         if ($orderId <= 0) {
@@ -605,5 +433,177 @@ class PaymentService {
         }
 
         $stmt->close();
+    }
+
+    // Вспомогательный приватный метод для генерации уникального кода UUID v4
+    private function generateUuidV4(): string {
+        $data = random_bytes(16);
+        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+    
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    // Вспомогательный приватный метод для получения ссылки для оплаты из активного платежа
+    private function getActivePaymentUrl(int $orderId): ?string {
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Получаем информацию о последнем активном платеже на заказ
+        $sql = "
+            SELECT confirmation_url
+            FROM payments
+            WHERE order_id = ? 
+                AND status = 'pending'
+                AND (expires_at IS NULL OR expires_at > NOW())
+                AND confirmation_url IS NOT NULL
+            ORDER BY created_at DESC
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $orderId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $payment = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если платеж есть
+        if ($payment !== null && !empty($payment['confirmation_url'])) {
+            return $payment['confirmation_url'];
+        }
+
+        // Если платежа нет
+        return null;
+    }
+
+    // Вспомогательный приватный метод для формирования массива товаров для чека
+    private function buildReceiptItems(array $order, array $items): array {
+        // Cоздаём массив товаров в нужном для чека формате
+        $itemsForReceipt = [];
+        foreach ($items as $item) {
+            $price = number_format($item['price'], 2, '.', '');
+    
+            $itemsForReceipt[] = [
+                'description' => $item['product_name'],
+                'quantity' => $item['amount'],
+                'amount' => [
+                    'value' => $price,
+                    'currency' => 'RUB'
+                ],
+                'vat_code' => $item['vat_code'],
+                'payment_mode' => 'full_payment',
+                'payment_subject' => 'commodity'
+            ];
+        }
+    
+        // Добавляем стоимость доставки если она есть
+        $deliveryCost = number_format((float)$order['delivery_cost'], 2, '.', '');
+        $deliveryTypeId = (int)$order['delivery_type_id'];
+        if ((float)$order['delivery_cost'] > 0 && $deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+            $itemsForReceipt[] = [
+                'description' => 'Доставка',
+                'quantity' => 1,
+                'amount' => [
+                    'value' => $deliveryCost,
+                    'currency' => 'RUB'
+                ],
+                'vat_code' => $this->deliveryVatCode,
+                'payment_mode' => 'full_payment',
+                'payment_subject' => 'service'    // доставка это услуга, не товар
+            ];
+        }
+
+        return $itemsForReceipt;
+    }
+
+    // Вспомогательный приватный метод для проверки схождения сумм заказа из объекта order и массива itemsForReceipt
+    private function checkReceiptTotalMatch(array $itemsForReceipt, float $orderTotal): void {
+        // Проверяем итоговую стоимость (должна сходиться с чеком)
+        $receiptTotal = 0;
+        foreach ($itemsForReceipt as $item) {
+            $receiptTotal += (float)$item['amount']['value'] * $item['quantity'];
+        }
+    
+        if (abs($receiptTotal - $orderTotal) > 0.01) {
+            throw new \RuntimeException('Receipt total mismatch');
+        }
+    }
+
+    // Вспомогательный приватный метод для пометки платежа как неудачного (создан черновик в бд, не создался в юкассе)
+    private function markPaymentFailed(
+        int $paymentId, 
+        string $errorCode,
+        string $errorMessage
+    ): void {
+        if ($paymentId <= 0) {
+            throw new \InvalidArgumentException('Invalid paymentId');
+        }
+
+        // Вносим в строку платежа статус failed и код + сообщение ошибки 
+        $sql = "
+            UPDATE payments
+            SET status = 'failed',
+                error_code = ?,
+                error_message = ?
+            WHERE id = ?
+                AND status = 'creating'
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ssi", $errorCode, $errorMessage, $paymentId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+        
+        $stmt->close();
+    }
+
+    // Вспомогательный приватный метод для маппинга ошибки создания платежа в юкассе
+    private function mapToErrorCode(\Throwable $e): string {
+        // Ошибки запроса/данных
+        if ($e instanceof \YooKassa\Common\Exceptions\BadApiRequestException) {
+            return 'BAD_REQUEST';
+        }
+
+        // Проблемы соединения/таймауты
+        if ($e instanceof \YooKassa\Common\Exceptions\ApiConnectionException) {
+            return 'PAYMENT_SERVICE_UNAVAILABLE';
+        }
+
+        // Общая ошибка API
+        if ($e instanceof \YooKassa\Common\Exceptions\ApiException) {
+            return 'PAYMENT_SYSTEM_ERROR';
+        }
+
+        // Всё остальное это внутренняя ошибка
+        return 'INTERNAL_ERROR';
     }
 }

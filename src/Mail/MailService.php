@@ -15,40 +15,6 @@ class MailService {
         $this->resendGateway = $resendGateway;
     }
 
-    // Вспомогательный приватный метод для рендера шалона 
-    // Подставляет переменные из data в шаблон и возвращает его в виде строки
-    private function renderTemplate(string $templatePath, array $data = []): string {
-        // Проверяем что файл шаблона существует
-        if (!is_file($templatePath)) {
-            throw new \RuntimeException('Template file not found: ' . $templatePath);
-        }
-
-        // Через буфер начинаем записывать контент шаблона
-        ob_start();
-
-        // Пробуем передать инфу из data в шаблон записать его в переменную
-        try {
-            // Достаем из ассоц. массива удобные локальные переменные
-            // EXTR_SKIP - не перезаписываем уже заданные переменные
-            extract($data, EXTR_SKIP);
-
-            // Подключаем шаблон письма
-            require $templatePath;
-
-            // Записываем все из буфера в переменную и проверяем что удалось
-            $output = ob_get_clean();
-            if ($output === false) {
-                throw new \RuntimeException('Failed to render template: ' . $templatePath);
-            }
-
-            return $output;
-        } catch (\Throwable $e) {
-            // Если какая-либо ошибка - очищаем буфер и пробрасываем дальше
-            ob_end_clean();
-            throw $e;
-        }
-    }
-
     // Метод для отправки письма с ссылкой для верификации почты
     public function sendEmailVerificationLink(string $userEmail, string $userName, string $verifyUrl): void {
         if (trim($userEmail) === '' || trim($userName) === '' || trim($verifyUrl) === '') {
@@ -116,6 +82,40 @@ class MailService {
             $this->resendGateway->send($message);
         } catch (\Throwable $e) {
             throw new \RuntimeException('Cannot send password reset email', 0, $e);
+        }
+    }
+
+    // Вспомогательный приватный метод для рендера шалона 
+    // Подставляет переменные из data в шаблон и возвращает его в виде строки
+    private function renderTemplate(string $templatePath, array $data = []): string {
+        // Проверяем что файл шаблона существует
+        if (!is_file($templatePath)) {
+            throw new \RuntimeException('Template file not found: ' . $templatePath);
+        }
+
+        // Через буфер начинаем записывать контент шаблона
+        ob_start();
+
+        // Пробуем передать инфу из data в шаблон записать его в переменную
+        try {
+            // Достаем из ассоц. массива удобные локальные переменные
+            // EXTR_SKIP - не перезаписываем уже заданные переменные
+            extract($data, EXTR_SKIP);
+
+            // Подключаем шаблон письма
+            require $templatePath;
+
+            // Записываем все из буфера в переменную и проверяем что удалось
+            $output = ob_get_clean();
+            if ($output === false) {
+                throw new \RuntimeException('Failed to render template: ' . $templatePath);
+            }
+
+            return $output;
+        } catch (\Throwable $e) {
+            // Если какая-либо ошибка - очищаем буфер и пробрасываем дальше
+            ob_end_clean();
+            throw $e;
         }
     }
 }

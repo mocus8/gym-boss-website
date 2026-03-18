@@ -27,36 +27,6 @@ class StoreController {
     //     $this->logger = $logger;
     // }
 
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
     // Метод для получения всех магазинов
     // Обработчик запроса GET /api/stores
     public function getAll(): void {
@@ -107,5 +77,35 @@ class StoreController {
             // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
             $this->error();
         }
+    }
+
+    // Приватная функция для отправки успеха
+    private function success(int $status = 200, array $data = []): void {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data,
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    // Приватная функция для отправки ошибки
+    // Возможно логгер сюда переместить
+    private function error(
+        int $status = 500,
+        string $code = 'INTERNAL_SERVER_ERROR',
+        string $message = 'Internal server error'
+    ): void {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+    
+        echo json_encode([
+            'success' => false,
+            'error' => [
+                'code' => $code,
+                'message' => $message,
+            ],
+        ], JSON_UNESCAPED_UNICODE);
     }
 }

@@ -31,6 +31,270 @@ class AuthController {
     //     $this->logger = $logger;
     // }
 
+    // Метод для старта регистрации:
+    // Проверяет что пользователь не залогинен
+    // Принимает и валидирует поля пользователя (email, password, name)
+    // Вызывает метод сервиса для регистрации
+    // Формирует ответ
+    // Обработчик запроса POST /api/auth/register
+    public function register(): void {
+        try {
+            if ($this->authSession->getUserId() !== null) {
+                // Пользователь уже залогинен
+                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
+                return;
+            }
+
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Проверяем входные поля через приватный метод
+            $validData = $this->validateRegisterInput($data);
+            if ($validData === null) return;
+
+            $email = $validData['email'];
+            $password = $validData['password'];
+            $name = $validData['name'];
+
+            // Вызываем метод регистрации в auth сервисе
+            $userId = $this->authService->register($email, $password, $name);
+
+            // Если получилось - логиним пользователя
+            $this->authSession->login($userId);
+
+            $this->success(201, [
+                'user_id' => $userId,
+                'email' => $email,
+                'name' => $name,
+                'is_email_verified' => false
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+        
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+            $this->error(422, $e->getErrorCode(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для повторной отправки письма для подтверждения почты
+    // Обработчик запроса POST /api/auth/email/resend
+    public function resendVerification(): void {
+        try {
+            // Получаем id пользователя
+            $userId = $this->authSession->getUserId();
+
+            // Если null - ошибку
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Вызываем метод повторной отправки письма для подтерждения
+            $this->authService->resendVerification($userId);
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+
+            // Если есть значение кулдауна - передаем его в заголовке
+            if ($e->getRetryAfter() !== null) {
+                header('Retry-After: ' . $e->getRetryAfter());
+            }
+
+            $this->error(422, $e->getErrorCode(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для входа в аккаунт
+    // Обработчик запроса POST /api/auth/login
+    public function login(): void {
+        try {
+            if ($this->authSession->getUserId() !== null) {
+                // Пользователь уже залогинен
+                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
+                return;
+            }
+
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Проверяем входные поля через приватный метод
+            $validData = $this->validateLoginInput($data);
+            if ($validData === null) return;
+
+            $email = $validData['email'];
+            $password = $validData['password'];
+
+            // Вызываем метод логина в auth сервисе (получаем инфу о пользователе)
+            $userInfo = $this->authService->login($email, $password);
+
+            // Если получилось - логиним пользователя
+            $this->authSession->login($userInfo['id']);
+
+            $this->success(200, [
+                'user_id' => $userInfo['id'],
+                'email' => $email,
+                'name' => $userInfo['name'],
+                'is_email_verified' => $userInfo['is_verified']
+            ]);
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+
+            $this->error(401, $e->getErrorCode(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для логаута
+    // Обработчик запроса POST /api/auth/logout
+    public function logout(): void {
+        try {
+            // Если пользователь не залогинен
+            if ($this->authSession->getUserId() === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Чистим сессию
+            $this->authSession->logout();
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для получения информации о текущем пользователе в сессии
+    // Обработчик запроса GET /api/auth/me
+    public function me(): void  {
+        try {
+            $userId = $this->authSession->getUserId();
+
+            // Если пользователь не залогинен
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Получаем информацию о пользователе через метод сервиса
+            $userInfo = $this->authService->getUserInfo($userId);
+
+            // Возвращаем информацию
+            $this->success(200, [
+                'user_id' => $userId,
+                'email' => $userInfo['email'],
+                'name' => $userInfo['name'],
+                'is_email_verified' => $userInfo['is_verified']
+            ]);
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для начала сброса пароля, принимает email, ответ одинаковый для всех исходов (защита от user-enumeration)
+    // Обработчик запроса POST /api/auth/password/forgot
+    public function forgotPassword(): void {
+        try {
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Валидируем email через метод
+            $email = isset($data['email']) ? (string)$data['email'] : null;
+            $email = $this->validateEmail($email);
+            if ($email === null) return;
+    
+            // Начинаем процесс сброса пароля через метод сервиса
+            $this->authService->sendPasswordResetLink($email);
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+            // Для защиты от user-enumeration тут показываем только ошибку по лимиту отправки писем
+
+            $this->error(429, 'EMAIL_RATE_LIMIT', $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для сброса пароля 
+    // Обработчик запроса POST /api/auth/password/reset
+
     // Приватная функция для отправки успеха
     private function success(int $status = 200, array $data = []): void {
         http_response_code($status);
@@ -201,107 +465,6 @@ class AuthController {
         ];
     }
 
-    // Метод для старта регистрации:
-    // Проверяет что пользователь не залогинен
-    // Принимает и валидирует поля пользователя (email, password, name)
-    // Вызывает метод сервиса для регистрации
-    // Формирует ответ
-    // Обработчик запроса POST /api/auth/register
-    public function register(): void {
-        try {
-            if ($this->authSession->getUserId() !== null) {
-                // Пользователь уже залогинен
-                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
-                return;
-            }
-
-            // Получаем json тело запроса и декодируем его через приватный метод
-            $data = $this->getJsonBody();
-            if ($data === null) return;
-
-            // Проверяем входные поля через приватный метод
-            $validData = $this->validateRegisterInput($data);
-            if ($validData === null) return;
-
-            $email = $validData['email'];
-            $password = $validData['password'];
-            $name = $validData['name'];
-
-            // Вызываем метод регистрации в auth сервисе
-            $userId = $this->authService->register($email, $password, $name);
-
-            // Если получилось - логиним пользователя
-            $this->authSession->login($userId);
-
-            $this->success(201, [
-                'user_id' => $userId,
-                'email' => $email,
-                'name' => $name,
-                'is_email_verified' => false
-            ]);
-
-        } catch (\InvalidArgumentException $e) {
-            // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
-        
-        } catch (AuthException $e) {
-            // Кастомный класс для ошибки в бизнес логике
-            $this->error(422, $e->getErrorCode(), $e->getMessage());
-
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
-        }
-    }
-
-    // Метод для повторной отправки письма для подтверждения почты
-    public function resendVerification(): void {
-        try {
-            // Получаем id пользователя
-            $userId = $this->authSession->getUserId();
-
-            // Если null - ошибку
-            if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
-                return;
-            }
-
-            // Вызываем метод повторной отправки письма для подтерждения
-            $this->authService->resendVerification($userId);
-
-            // Возвращаем успех через приватную функцию
-            $this->success();
-
-        } catch (AuthException $e) {
-            // Кастомный класс для ошибки в бизнес логике
-
-            // Если есть значение кулдауна - передаем его в заголовке
-            if ($e->getRetryAfter() !== null) {
-                header('Retry-After: ' . $e->getRetryAfter());
-            }
-
-            $this->error(422, $e->getErrorCode(), $e->getMessage());
-
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
-        }
-    }
-
     // Метод для валидации входных полей при входе в аккаунт
     // Возвращает проверенный массив либо null
     private function validateLoginInput(array $data): ?array {
@@ -324,160 +487,5 @@ class AuthController {
             'email' => $email,
             'password' => $password
         ];
-    }
-
-    // Метод для входа в аккаунт
-    public function login(): void {
-        try {
-            if ($this->authSession->getUserId() !== null) {
-                // Пользователь уже залогинен
-                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
-                return;
-            }
-
-            // Получаем json тело запроса и декодируем его через приватный метод
-            $data = $this->getJsonBody();
-            if ($data === null) return;
-
-            // Проверяем входные поля через приватный метод
-            $validData = $this->validateLoginInput($data);
-            if ($validData === null) return;
-
-            $email = $validData['email'];
-            $password = $validData['password'];
-
-            // Вызываем метод логина в auth сервисе (получаем инфу о пользователе)
-            $userInfo = $this->authService->login($email, $password);
-
-            // Если получилось - логиним пользователя
-            $this->authSession->login($userInfo['id']);
-
-            $this->success(200, [
-                'user_id' => $userInfo['id'],
-                'email' => $email,
-                'name' => $userInfo['name'],
-                'is_email_verified' => $userInfo['is_verified']
-            ]);
-
-        } catch (AuthException $e) {
-            // Кастомный класс для ошибки в бизнес логике
-
-            $this->error(401, $e->getErrorCode(), $e->getMessage());
-
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
-        }
-    }
-
-    // Метод для логаута
-    public function logout(): void {
-        try {
-            // Если пользователь не залогинен
-            if ($this->authSession->getUserId() === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
-                return;
-            }
-
-            // Чистим сессию
-            $this->authSession->logout();
-
-            // Возвращаем успех через приватную функцию
-            $this->success();
-
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
-        }
-    }
-
-    // Метод для получения информации о текущем пользователе в сессии
-    public function me(): void  {
-        try {
-            $userId = $this->authSession->getUserId();
-
-            // Если пользователь не залогинен
-            if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
-                return;
-            }
-
-            // Получаем информацию о пользователе через метод сервиса
-            $userInfo = $this->authService->getUserInfo($userId);
-
-            // Возвращаем информацию
-            $this->success(200, [
-                'user_id' => $userId,
-                'email' => $userInfo['email'],
-                'name' => $userInfo['name'],
-                'is_email_verified' => $userInfo['is_verified']
-            ]);
-
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
-        }
-    }
-
-    // Метод для начала сброса пароля, принимает email, ответ одинаковый для всех исходов (защита от user-enumeration)
-    public function forgotPassword(): void {
-        try {
-            // Получаем json тело запроса и декодируем его через приватный метод
-            $data = $this->getJsonBody();
-            if ($data === null) return;
-
-            // Валидируем email через метод
-            $email = isset($data['email']) ? (string)$data['email'] : null;
-            $email = $this->validateEmail($email);
-            if ($email === null) return;
-    
-            // Начинаем процесс сброса пароля через метод сервиса
-            $this->authService->sendPasswordResetLink($email);
-
-            // Возвращаем успех через приватную функцию
-            $this->success();
-
-        } catch (\InvalidArgumentException $e) {
-            // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
-
-        } catch (AuthException $e) {
-            // Кастомный класс для ошибки в бизнес логике
-            // Для защиты от user-enumeration тут показываем только ошибку по лимиту отправки писем
-
-            $this->error(429, 'EMAIL_RATE_LIMIT', $e->getMessage());
-
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
-        }
     }
 }

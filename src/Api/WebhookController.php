@@ -37,6 +37,49 @@ class WebhookController {
     //     $this->logger = $logger;
     // }
 
+    // Метод для обработки уведомления от юкассы 
+    // Обработчик запроса POST /webhook/yookassa от юкассы
+    public function handleNotification(): void {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        if (!$this->isIpAllowed($ip)) {
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Notification from uknown ip', [
+            //     'ip' => $ip,
+            // ]);
+
+            http_response_code(403);
+            return;
+        }
+
+        // Получаем json тело запроса и декодируем его через приватный метод
+        $payload = $this->getJsonBody();
+        if ($payload === null) {
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Store getAll  failed', [
+            //     'exception' => $e,
+            // ]);
+
+            http_response_code(200);
+            return;
+        }
+
+        try {
+            // Синхронизируем статус заказа через метод контроллера
+            $this->webhookService->handleNotification($payload);
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Store getAll  failed', [
+            //     'exception' => $e,
+            // ]);
+        } finally {
+            // В любом случае возвращаем успех (статус 200)
+            http_response_code(200);
+        }
+    }
+
     // Приватный метод для проверки принадлежности ip к CIDR-диапозону
     private function ipInCidr(string $ip, string $cidr): bool {
         // Если это IPv6 (есть двоеточие) - пропускаем
@@ -86,48 +129,5 @@ class WebhookController {
         }
     
         return $data;
-    }
-
-    // Метод для обработки уведомления от юкассы 
-    // Обработчик запроса POST /webhook/yookassa от юкассы
-    public function handleNotification(): void {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-        if (!$this->isIpAllowed($ip)) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Notification from uknown ip', [
-            //     'ip' => $ip,
-            // ]);
-
-            http_response_code(403);
-            return;
-        }
-
-        // Получаем json тело запроса и декодируем его через приватный метод
-        $payload = $this->getJsonBody();
-        if ($payload === null) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Store getAll  failed', [
-            //     'exception' => $e,
-            // ]);
-
-            http_response_code(200);
-            return;
-        }
-
-        try {
-            // Синхронизируем статус заказа через метод контроллера
-            $this->webhookService->handleNotification($payload);
-        } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
-
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Store getAll  failed', [
-            //     'exception' => $e,
-            // ]);
-        } finally {
-            // В любом случае возвращаем успех (статус 200)
-            http_response_code(200);
-        }
     }
 }

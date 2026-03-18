@@ -100,18 +100,6 @@ class OrderService {
         return $id;
     }
 
-    // Вспомогательный приватный метод для получения цены доставки
-    private function getDeliveryPrice(int $deliveryTypeId, float $totalPrice): float {
-
-        // Если курьерский тип доставки и стоимость товаров меньше порога - возвращаем стоимость доставки
-        if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER && $totalPrice < $this->deliveryFreeThreshold) {
-            return $this->deliveryCourierPrice;
-        }
-
-        // Иначе стоимость ноль
-        return 0.00;
-    }
-
     // Метод создания order на основе cart (возвращает id созданного заказа)
     public function createFromCart(
         int $cartId,
@@ -978,5 +966,17 @@ class OrderService {
         }
 
         return $items;
+    }
+
+    // Вспомогательный приватный метод для получения цены доставки
+    private function getDeliveryPrice(int $deliveryTypeId, float $totalPrice): float {
+
+        // Если курьерский тип доставки и стоимость товаров меньше порога - возвращаем стоимость доставки
+        if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER && $totalPrice < $this->deliveryFreeThreshold) {
+            return $this->deliveryCourierPrice;
+        }
+
+        // Иначе стоимость ноль
+        return 0.00;
     }
 }
