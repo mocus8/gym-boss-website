@@ -346,6 +346,16 @@ export function setButtonLoading(btn, isLoading) {
     btn.setAttribute("aria-disabled", String(isLoading));
 }
 
+// Функция для отключение кликабельности кнопки (disabled + disabled-класс)
+export function setButtonDisable(btn, isDisabled) {
+    // Отключаем кликабельность
+    btn.disabled = isDisabled;
+    // Визуал через css-класс
+    btn.classList.toggle("is-disabled", isDisabled);
+    // Aria-атрибут для доступности
+    btn.setAttribute("aria-disabled", String(isDisabled));
+}
+
 // Функция для экранирования html перед выводом
 export function escapeHtml(value) {
     return String(value ?? "")

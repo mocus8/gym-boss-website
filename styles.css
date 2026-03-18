@@ -95,17 +95,17 @@ input:autofill:active {
     }
 }
 
-button.is-loading {
+.is-loading {
     position: relative;
 }
 
 /* Применяется для дочерних элементов */
-button.is-loading > * {
+.is-loading > * {
     opacity: 0.35;
 }
 
 /* Псевдоэлемент */
-button.is-loading::after {
+.is-loading::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -118,6 +118,14 @@ button.is-loading::after {
     animation: spin 1.5s linear infinite;
 }
 
+.is-disabled {
+    position: relative;
+}
+
+.is-disabled > * {
+    opacity: 0.35;
+}
+
 a {
     color: inherit;
     display: contents;
@@ -126,6 +134,26 @@ a {
 
 button {
     all: unset;
+}
+
+.form_error {
+    width: min-content;
+    min-height: 3vw;
+    background-color: white;
+    border-radius: 0.25vw;
+    border: 0.025vw solid black;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5vw;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.form_error_hidden {
+    visibility: hidden;
+    opacity: 0;
 }
 
 .body {
@@ -2849,4 +2877,15 @@ button {
 .btn:active {
     transform: scale(1);
     filter: drop-shadow(0.2vw 0.2vw 0.4vw rgba(0, 0, 0, 0.5));
+}
+
+.password_reset_form {
+    position: absolute;
+    top: 5vw;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40vw;
+    background-color: #b42318;
+    padding: 3vw;
+    border-radius: 0.5vw;
 }
