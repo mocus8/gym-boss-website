@@ -294,6 +294,46 @@ class AuthController {
 
     // Метод для сброса пароля 
     // Обработчик запроса POST /api/auth/password/reset
+    public function resetPassword(): void {
+        try {
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Проверяем входные поля через приватный метод
+            $validData = $this->validateResetPasswordInput($data);
+            if ($validData === null) return;
+
+            $token = $validData['token'];
+            $password = $validData['password'];
+    
+            // Начинаем процесс сброса пароля через метод сервиса
+            $this->authService->resetPassword($token, $password);
+
+            // Возвращаем успех через приватную функцию
+            $this->success();
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибка пользователя/некорректные данные - 422 + честное описание
+            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+
+        } catch (AuthException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+
+            $this->error(422, $e->getErrorCode(), $e->getMessage());
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
 
     // Приватная функция для отправки успеха
     private function success(int $status = 200, array $data = []): void {
@@ -485,6 +525,38 @@ class AuthController {
         // Если все проверки прошли - возвращаем проверенный ассоциативный массив
         return [
             'email' => $email,
+            'password' => $password
+        ];
+    }
+
+    // Метод для валидации входных полей при сбросе пароля
+    // Возвращает проверенный массив либо null
+    private function validateResetPasswordInput(array $data): ?array {
+        // Проверяем что токен не пустой
+        $token = isset($data['token']) ? (string)$data['token'] : null;
+        if ($token === null || $token === '') {
+            $this->error(422, 'TOKEN_INVALID', 'Token is required');
+            return null;
+        }
+
+        // Проверяем валидность пароля через метод
+        $password = isset($data['password']) ? (string)$data['password'] : null;
+        $password = $this->validatePassword($password);
+        if ($password === null) {
+            return null;
+        }
+
+        $passwordConfirmation = isset($data['password_confirmation']) ? (string)$data['password_confirmation'] : null;
+
+        // Проверяем что пароли совпадают
+        if ($password !== $passwordConfirmation) {
+            $this->error(422, 'PASSWORD_MISMATCH', 'Passwords do not match');
+            return null;
+        }
+
+        // Если все проверки прошли - возвращаем проверенный ассоциативный массив
+        return [
+            'token' => $token,
             'password' => $password
         ];
     }
