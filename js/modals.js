@@ -1,6 +1,6 @@
 /* global grecaptcha */
 /* global Inputmask */
-import { searchProducts } from "./product/products.api.js";
+import { searchProducts } from "./products/products.api.js";
 import { getErrorMessage } from "./utils.js";
 
 // универсальная функция для распознавания ответа
