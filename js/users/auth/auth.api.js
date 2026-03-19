@@ -13,7 +13,7 @@ async function requestAuth(path, options = {}) {
 // Функция для сброса пароля
 // Отправляет на бэк оба введеных пароля для дополнительной проверки на совпадение
 // Отправляет запрос POST /api/auth/password/reset
-export function resetPassword({ token, password, passwordConfirmation }) {
+export function resetPassword(token, password, passwordConfirmation) {
     return requestAuth("/password/reset", {
         method: "POST",
         body: JSON.stringify({

@@ -78,6 +78,7 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
         try {
             // Добавляем залипание на кнопку
             setButtonLoading(submitButton, true);
+
             // Отправляем запрос
             await resetPassword(token, password, confirmPassword);
 
