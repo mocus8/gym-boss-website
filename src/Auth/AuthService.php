@@ -789,7 +789,26 @@ class AuthService {
             $stmt->close();
 
             // Удаляем использованный токен
-            $this->deletePasswordResetToken($email);
+            $sql = "
+                DELETE FROM password_reset_tokens
+                WHERE email = ?
+            ";
+        
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+        
+            $stmt->bind_param('s', $email);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+        
+            $stmt->close();
 
             // Комитим транзакцию
             $this->db->commit();
@@ -1022,29 +1041,5 @@ class AuthService {
         } catch (\Throwable $e) {
             throw new \RuntimeException('Failed to send password reset email', 0, $e);
         }
-    }
-
-    // Приватный вспомагательный метод для удаления токена по email
-    private function deletePasswordResetToken(string $email): void {
-        $sql = "
-            DELETE FROM password_reset_tokens
-            WHERE email = ?
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('s', $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
     }
 }
