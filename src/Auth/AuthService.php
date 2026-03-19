@@ -17,10 +17,11 @@ class AuthService {
 
     private array $verifiedEmailsCache = [];    // кэш с верификацией пользователей: userId -> bool
     private const SEND_EMAIL_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
-    private const VERIFY_TOKEN_TTL_SECONDS = 900;    // константа с временем жизни токена подверждения (15 минут)
+    private const VERIFY_TOKEN_TTL_SECONDS = 86400;    // константа с временем жизни токена подверждения (24 часа)
     private const LOGIN_ATTEMPTS_WINDOW = 900; // константа с окном для ввода непраивльного пароля (15 минут)
     private const MAX_LOGIN_ATTEMPTS = 5;    // константа с кол-вом попыток ввода пароля
     private const LOGIN_ATTEMPTS_TTL = 86400;    // константа с временем жизни попыток входа, для аналитики
+    private const RESET_PASSWORD_TOKEN_TTL_SECONDS = 3600;    // константа с временем жизни токена подверждения (60 минут)
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(\mysqli $db, MailService $mailService, string $baseUrl) {
@@ -310,7 +311,7 @@ class AuthService {
     // Метод для верификации почты пользователя 
     public function verify(string $rawToken): void {
         // Валидируем токен
-        validateToken($rawToken);
+        $this->validateToken($rawToken);
 
         // Хэшируем токен через sha256
         $hashedToken = hash('sha256', $rawToken);
@@ -688,7 +689,117 @@ class AuthService {
         $this->createAndSendPasswordResetLink($rawToken, $email, $name);
     }
 
-    // TODO: метод сброса пароля, валидировать токен validateToken()
+    // Метод сброса пароля
+    public function resetPassword(string $rawToken, string $password): void {
+        // Валидируем токен
+        $this->validateToken($rawToken);
+        
+        // Хэшируем токен через sha256
+        $hashedToken = hash('sha256', $rawToken);
+
+        // Получаем инфу о токене из бд
+        $sql = "
+            SELECT
+                email,
+                created_at
+            FROM password_reset_tokens
+            WHERE token = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $hashedToken);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Токен не найден
+        if ($row === null) {
+            throw new AuthException('TOKEN_INVALID', 'Token not found');
+        }
+
+        $email = $row['email'];
+        $tokenCreatedAtRaw = $row['created_at'];
+
+        // Находим время, прошедшее с момента создания токена
+        $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
+        $now = new \DateTimeImmutable('now');
+        $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
+
+        // Если ttl токена истекло - ошибку
+        if ($diffSeconds > self::RESET_PASSWORD_TOKEN_TTL_SECONDS ) {
+            throw new AuthException('TOKEN_EXPIRED', 'Password reset token has expired');
+        }
+
+        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
+        $this->db->begin_transaction();
+
+        try {
+            // Хэшируем пароль и проверям что удалось
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            if ($hashedPassword === false) {
+                throw new \RuntimeException('Password hashing failed');
+            }
+
+            // Меняем пароль пользователя на новый
+            $sql = "
+                UPDATE users
+                SET password = ?
+                WHERE email = ?
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("ss", $hashedPassword, $email);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            // Проверяем, что пароль действительно изменен
+            if ($stmt->affected_rows === 0) {
+                $stmt->close();
+                throw new \RuntimeException('User not found for token email');
+            }
+
+            $stmt->close();
+
+            // Удаляем использованный токен
+            $this->deletePasswordResetToken($email);
+
+            // Комитим транзакцию
+            $this->db->commit();
+
+        } catch (\Throwable $e) {
+            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
+            $this->db->rollback();
+            throw $e;
+        } 
+    }
 
     // Приватный вспомагательный метод для генерации токена подтверждения почты, его хеширования и записи в бд
     private function createEmailVerificationToken(int $userId): string {
@@ -911,5 +1022,29 @@ class AuthService {
         } catch (\Throwable $e) {
             throw new \RuntimeException('Failed to send password reset email', 0, $e);
         }
+    }
+
+    // Приватный вспомагательный метод для удаления токена по email
+    private function deletePasswordResetToken(string $email): void {
+        $sql = "
+            DELETE FROM password_reset_tokens
+            WHERE email = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('s', $email);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
     }
 }
