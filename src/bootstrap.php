@@ -66,7 +66,7 @@ $dotenv->safeLoad();
 
 // Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
-require_once __DIR__ . '/support/helpers.php';    // подключаем файл с вспомогательными утилитами
+require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Auth/AuthException.php';
 require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
