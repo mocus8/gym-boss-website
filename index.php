@@ -32,11 +32,9 @@ if (strpos($uri, '/api/') === 0) {
             '/auth/me',
             '/orders',
         ],
-        'PUT' => [
-            '/account/password',
-        ],
         'PATCH' => [
             '/account/profile',
+            '/account/password',
         ],
         'DELETE' => [
             '/account',
@@ -89,12 +87,10 @@ if (strpos($uri, '/api/') === 0) {
             '/orders' => [$orderController, 'getUserOrders'],
             '/stores' => [$storeController, 'getAll'],
         ],
-        // 'PUT' => [
-        //     '/account/profile' => [$accountController, 'updateProfile'],    // TODO
-        // ],
-        // 'PATCH' => [
-        //     '/account/password' => [$accountController, 'updatePassword'],    // TODO
-        // ],
+        'PATCH' => [
+            '/account/profile' => [$accountController, 'updateProfile'],    // TODO
+        //   '/account/password' => [$accountController, 'updatePassword'],    // TODO
+        ],
         // 'DELETE' => [
         //     '/account' => [$accountController, 'delete'],    // TODO
         // ]
