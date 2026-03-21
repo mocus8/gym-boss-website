@@ -11,13 +11,11 @@ namespace App\Api;
 use App\Auth\AuthException;
 use App\Auth\AuthSession;
 use App\Auth\AuthService;
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления аутентификацией пользователей (через методы сервиса)
-class AuthController {
+class AuthController extends BaseController {
     private AuthSession $authSession;    // приватное свойство (переменная класса), привязанная к объекту
     private AuthService $authService;
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     public function __construct(AuthSession $authSession, AuthService $authService) {
         $this->authSession = $authSession;
@@ -25,10 +23,10 @@ class AuthController {
     }
 
     // Будующий конструктор (с логером)
-    // public function __construct(CartService $cartService, Logger $logger) {
+    // public function __construct(AuthSession $authSession, AuthService $authService, Logger $logger) {
     //    $this->authSession = $authSession;
     //    $this->authService = $authService;
-    //     $this->logger = $logger;
+    //    parent::__construct($logger);    // передаем логгер в родительский класс
     // }
 
     // Метод для старта регистрации:
@@ -333,144 +331,6 @@ class AuthController {
 
             $this->error();
         }
-    }
-
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватный метод для получения, декодирования и проверки json входных данных
-    private function getJsonBody(): ?array {
-        $rawBody = file_get_contents('php://input');
-        $data = json_decode($rawBody, true);
-    
-        if (!is_array($data)) {
-            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
-            return null;
-        }
-    
-        return $data;
-    }
-
-    // Приватный метод для валидации почты, возвращает null или валидированный email
-    private function validateEmail(mixed $rawEmail): ?string {
-        $email = trim((string)$rawEmail);
-
-        // Проверяем наличие email
-        if (!$email) {
-            $this->error(422, 'EMAIL_REQUIRED', 'Email is required');
-            return null;
-        }
-
-        // Защита от скрытых символов и пробелов внутри
-        if (preg_match("/[\r\n\t\0]/", $email) || strpos($email, ' ') !== false) {
-            $this->error(422, 'EMAIL_INVALID', 'Email contains invalid characters');
-            return null;
-        }
-
-        // Проверяем общую длинну email
-        if (strlen($email) > 254) {
-            $this->error(422, 'EMAIL_TOO_LONG', 'Email is too long');
-            return null;
-        }
-
-        // Проверяем синтаксис email
-        $validatedEmail = filter_var($email, FILTER_VALIDATE_EMAIL);
-        if ($validatedEmail === false) {
-            $this->error(422, 'EMAIL_INVALID', 'Invalid email');
-            return null;
-        }
-
-        // Проверяем длинну local-части email
-        [$local, $domain] = explode('@', $validatedEmail, 2);
-        if ($local === '' || strlen($local) > 63) {
-            $this->error(422, 'EMAIL_INVALID', 'Email local part empty or too long');
-            return null;
-        }
-
-        // Возвращаем валидированный email
-        return $validatedEmail;
-    }
-
-    // Приватный метод для проверки валидности пароля
-    private function validatePassword(mixed $rawPassword): ?string {
-        $password = (string)$rawPassword;
-
-        // Проверяем наличие пароля
-        if (!$password) {
-            $this->error(422, 'PASSWORD_REQUIRED', 'Password is required');
-            return null;
-        }
-
-        // Проверяем длинну пароля
-        if (strlen($password) < 8) {
-            $this->error(422, 'PASSWORD_TOO_SHORT', 'Password is too short');
-            return null;
-        } else if (strlen($password) > 64) {
-            $this->error(422, 'PASSWORD_TOO_LONG', 'Password is too long');
-            return null;
-        }
-
-        // Проверяем, что пароль содержит только печатаемые ASCII-символы
-        if (!preg_match('/^[\x20-\x7E]+$/', $password)) {
-            $this->error(422, 'PASSWORD_INVALID_CHARS', 'Password contains invalid characters');
-            return null;
-        }
-
-        // Возвращаем валидированный пароль
-        return $password;
-    }
-
-    // Приватный метод для проверки валидности имени
-    private function validateName(mixed $rawName): ?string {
-        $name = trim((string)$rawName);
-
-        // Проверяем наличие имени
-        if (!$name) {
-            $this->error(422, 'NAME_REQUIRED', 'Name is required');
-            return null;
-        }
-
-        // Проверяем длинну имени
-        if (mb_strlen($name, 'UTF-8') > 100) {
-            $this->error(422, 'NAME_TOO_LONG', 'Name is too long');
-            return null;
-        }
-
-        // Проверяем допустимые символы в имени (буквы (любой язык), пробел, точка, дефис, апостроф)
-        if (!preg_match("/^[\p{L}\s\.\'-]+$/u", $name)) {
-            $this->error(422, 'NAME_INVALID_CHARS', 'Name contains invalid characters');
-            return null;
-        }
-
-        // Возвращаем валидированное имя
-        return $name;
     }
 
     // Приватный метод для валидации входных полей при регистрации

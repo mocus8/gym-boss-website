@@ -11,9 +11,8 @@ namespace App\Api;
 use App\Payments\WebhookService;    // используем класс StoreService из пространства имен App\Payments
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
-class WebhookController {
+class WebhookController extends BaseController{
     private WebhookService $webhookService;    // приватное свойство (переменная класса), привязанная к объекту
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Константа с разрешенными CIDR-диапазонами для приема уведомлений
     private const ALLOWED_CIDRS = [
@@ -34,7 +33,7 @@ class WebhookController {
     // Будущий конструктор (с логером)
     // public function __construct(WebhookService $webhookService, Logger $logger) {
     //     $this->webhookService = $webhookService;
-    //     $this->logger = $logger;
+    //     parent::__controller($logger);
     // }
 
     // Метод для обработки уведомления от юкассы 
@@ -117,17 +116,5 @@ class WebhookController {
         }
 
         return false;
-    }
-
-    // Приватный метод для получения, декодирования и проверки json входных данных
-    private function getJsonBody(): ?array {
-        $rawBody = file_get_contents('php://input');
-        $data = json_decode($rawBody, true);
-    
-        if (!is_array($data)) {
-            return null;
-        }
-    
-        return $data;
     }
 }

@@ -18,7 +18,7 @@ use App\Payments\PaymentStatusSyncService;
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления заказами пользователей (через методы сервиса)
-class OrderController {
+class OrderController extends BaseController {
     // Приватные свойства (переменные класса), привязанные к объекту
     private AuthSession $authSession;
     private OrderService $orderService;
@@ -27,7 +27,6 @@ class OrderController {
     private CartService $cartService;
     private PaymentService $paymentService;
     private PaymentStatusSyncService $paymentStatusSyncService;
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Конструктор (магический метод), присваиваем внеший экземпляр OrderService в переменные создоваемого объекта
     public function __construct(
@@ -66,7 +65,7 @@ class OrderController {
     //     $this->cartService = $cartService;
     //     $this->paymentService = $paymentService;
     //     $this->paymentStatusSyncService = $paymentStatusSyncService;
-    //     $this->logger = $logger;
+    //     parent::__controller($logger);
     // }
 
     // Метод для создания заказа на основе корзины, корзину помечает как конвертированную, возвращает id заказа
@@ -301,48 +300,5 @@ class OrderController {
             // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
             $this->error();
         }
-    }
-
-    // Приватный метод для получения, декодирования и проверки json входных данных
-    private function getJsonBody(): ?array {
-        $rawBody = file_get_contents('php://input');
-        $data = json_decode($rawBody, true);
-    
-        if (!is_array($data)) {
-            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
-            return null;
-        }
-    
-        return $data;
-    }
-
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
     }
 }

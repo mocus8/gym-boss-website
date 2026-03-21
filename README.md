@@ -1,6 +1,6 @@
 # Интернет-магазин GymBoss | Full-stack учебный проект
 
-**Стек:** PHP, MySQL, JavaScript, HTML/CSS, Docker, Nginx.  
+**Стек:** PHP, JavaScript, MySQL, HTML/CSS, Docker, Nginx.  
 **Статус:** Основной функционал реализован. Проект в активной разработке.
 
 ## Описание проекта

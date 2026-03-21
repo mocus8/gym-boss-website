@@ -14,11 +14,10 @@ use App\Cart\CartService;    // используем класс CartService из
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления корзинами пользователей (через методы сервиса)
-class CartController {
+class CartController extends BaseController {
     private CartSession $cartSession;    // приватное свойство (переменная класса), привязанная к объекту
     private AuthSession $authSession;    // приватное свойство (переменная класса), привязанная к объекту
     private CartService $cartService;    // приватное свойство (переменная класса), привязанная к объекту
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Конструктор (магический метод), присваиваем внеший экземпляр CartService и CartSession в переменные создоваемого объекта
     public function __construct(CartSession $cartSession, AuthSession $authSession, CartService $cartService) {
@@ -32,7 +31,7 @@ class CartController {
     //     $this->cartSession = $cartSession;
     //     $this->authSession = $authSession;
     //     $this->cartService = $cartService;
-    //     $this->logger = $logger;
+    //     parent::__construct($logger);
     // }
 
     // Метод для получения данных о корзине, возвращает массив - список товаров, общее кол-во, стоимость
@@ -217,19 +216,6 @@ class CartController {
         }
     }
 
-    // Приватный метод для получения, декодирования и проверки json входных данных
-    private function getJsonBody(): ?array {
-        $rawBody = file_get_contents('php://input');
-        $data = json_decode($rawBody, true);
-    
-        if (!is_array($data)) {
-            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
-            return null;
-        }
-    
-        return $data;
-    }
-
     // Приватный метод для сборки состояния корзины 
     private function buildCartData(int $cartId): array {
         $items = $this->cartService->getItems($cartId);
@@ -241,35 +227,5 @@ class CartController {
             'count' => $count,
             'total' => $total
         ];
-    }
-
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
     }
 }

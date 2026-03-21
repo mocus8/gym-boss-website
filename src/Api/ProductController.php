@@ -12,9 +12,8 @@ use App\Products\ProductService;    // используем класс ProductSe
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для подгрузки инфы о товарах (через методы сервиса)
-class ProductController {
+class ProductController extends BaseController {
     private ProductService $productService;    // приватное свойство (переменная класса), привязанная к объекту
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Конструктор (магический метод), присваиваем внеший экземпляр ProductService в переменные создоваемого объекта
     public function __construct(ProductService $productService) {
@@ -24,7 +23,7 @@ class ProductController {
     // Будущий конструктор (с логером)
     // public function __construct(ProductService $productService, Logger $logger) {
     //     $this->productService = $productService;
-    //     $this->logger = $logger;
+    //     parent::__construct($logger);
     // }
 
     // Метод для получения каталога, возвращает массив - категории, товары в них, инфа о товарах
@@ -108,35 +107,5 @@ class ProductController {
             // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
             $this->error();
         }
-    }
-
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
     }
 }

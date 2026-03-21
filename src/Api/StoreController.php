@@ -12,9 +12,8 @@ use App\Stores\StoreService;    // используем класс StoreService 
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для подгрузки инфы о магазинах (через методы сервиса)
-class StoreController {
+class StoreController extends BaseController {
     private StoreService $storeService;    // приватное свойство (переменная класса), привязанная к объекту
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
 
     // Конструктор (магический метод), присваиваем внеший экземпляр StoreService в переменные создоваемого объекта
     public function __construct(StoreService $storeService) {
@@ -24,7 +23,7 @@ class StoreController {
     // Будущий конструктор (с логером)
     // public function __construct(StoreService $storeService, Logger $logger) {
     //     $this->storeService = $storeService;
-    //     $this->logger = $logger;
+    //     parent::__controller($logger);
     // }
 
     // Метод для получения всех магазинов
@@ -77,35 +76,5 @@ class StoreController {
             // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
             $this->error();
         }
-    }
-
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
     }
 }

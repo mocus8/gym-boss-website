@@ -12,10 +12,9 @@ use App\Integrations\Dadata\DadataClient;   // используем класс D
 // use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для получения подсказок (через методы клиента)
-class DadataController {
+class DadataController extends BaseController {
     // Приватные свойства (переменные класса), привязанные к объекту
-    private DadataClient $dadataClient;    
-    // private Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
+    private DadataClient $dadataClient;
 
     // Конструктор (магический метод), присваиваем внеший экземпляр DadataClient в переменные создоваемого объекта
     public function __construct(DadataClient $dadataClient) {
@@ -25,7 +24,7 @@ class DadataController {
     // Будующий конструктор (с логером)
     // public function __construct(DadataClient $dadataClient, Logger $logger) {
     //     $this->dadataClient = $dadataClient;
-    //     $this->logger = $logger;
+    //     parent::__construct($logger);
     // }
 
     // Метод для получения DaData подсказок по адресу
@@ -78,48 +77,5 @@ class DadataController {
             // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
             $this->error();
         }
-    }
-
-    // Приватный метод для получения, декодирования и проверки json входных данных
-    private function getJsonBody(): ?array {
-        $rawBody = file_get_contents('php://input');
-        $data = json_decode($rawBody, true);
-    
-        if (!is_array($data)) {
-            $this->error(400, 'INVALID_REQUEST', 'Invalid JSON body');
-            return null;
-        }
-    
-        return $data;
-    }
-
-    // Приватная функция для отправки успеха
-    private function success(int $status = 200, array $data = []): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-
-        echo json_encode([
-            'success' => true,
-            'data' => $data,
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    // Приватная функция для отправки ошибки
-    // Возможно логгер сюда переместить
-    private function error(
-        int $status = 500,
-        string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
-    ): void {
-        http_response_code($status);
-        header('Content-Type: application/json; charset=utf-8');
-    
-        echo json_encode([
-            'success' => false,
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], JSON_UNESCAPED_UNICODE);
     }
 }
