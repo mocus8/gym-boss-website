@@ -92,7 +92,7 @@ if (strpos($uri, '/api/') === 0) {
             '/account/password' => [$accountController, 'updatePassword'],
         ],
          'DELETE' => [
-             '/account' => [$accountController, 'delete'],    // TODO
+             '/account' => [$accountController, 'delete'],
          ]
     ];
 

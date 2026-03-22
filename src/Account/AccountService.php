@@ -121,4 +121,34 @@ class AccountService {
     
         $stmt->close();
     }
+
+    // Метод для удаления пользователя 
+    public function deleteUser(int $userId): void {
+        // Удаляем пользователя
+        $sql = "
+            DELETE FROM users
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('i', $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        if ($stmt->affected_rows === 0) {
+            $stmt->close();
+            throw new \RuntimeException('User not found');
+        }
+    
+        $stmt->close();
+    }
 }

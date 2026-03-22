@@ -112,6 +112,39 @@ class AccountController extends BaseController {
         }
     }
 
+    // Метод для удаления аккаунта пользователя
+    public function delete(): void {
+        try {
+            // Получаем id пользователя
+            $userId = $this->authSession->getUserId();
+
+            // Если null - ошибку
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Удаляем аккаунт через метод сервиса
+            $this->accountService->deleteUser($userId);
+
+            // Очищаем сессию
+            $this->authSession->logout();
+
+            $this->success(204);
+
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
     // Метод для валидации входных полей при смене пароля
     // Возвращает проверенный массив либо null
     private function validateUpdatePasswordInput(array $data): ?array {
