@@ -2,10 +2,10 @@
 // Класс-исключение
 // Обертка над базовым Exception с дополнительным полем errorCode
 
-namespace App\Auth;
+namespace App\Support;
 
 // Наследование от базового Exception
-class AuthException extends \Exception {
+class AppException extends \Exception {
     private string $errorCode;
     private ?int $retryAfter = null;
 

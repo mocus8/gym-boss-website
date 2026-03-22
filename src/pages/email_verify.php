@@ -12,7 +12,7 @@ try {
     $authService->verify($rawToken);
     $status = 'success';
 
-} catch (\App\Auth\AuthException $e) {
+} catch (\App\Support\AppException $e) {
     // Переводим ошибку сервиса в статус
     $status = match ($e->getErrorCode()) {
         'TOKEN_INVALID' => 'token_invalid',

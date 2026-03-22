@@ -6,6 +6,8 @@
 
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Auth;
+
+use App\Support\AppException;
 use App\Mail\MailService;
 
 // Класс для управления авторизацией пользователей
@@ -68,7 +70,7 @@ class AuthService {
 
         // Если строчка нашлась - ошибку
         if ($row) {
-            throw new AuthException('EMAIL_TAKEN', 'User with this email already exists');
+            throw new AppException('EMAIL_TAKEN', 'User with this email already exists');
         }
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
@@ -106,7 +108,7 @@ class AuthService {
 
                 // Защита от гонок по созданию пользователя с одинаковым email (при duplicate entry)
                 if ($errno === 1062) {
-                    throw new AuthException('EMAIL_TAKEN', 'User with this email already exists');
+                    throw new AppException('EMAIL_TAKEN', 'User with this email already exists');
                 }
 
                 throw new \RuntimeException('DB execute failed: ' . $error);
@@ -184,7 +186,7 @@ class AuthService {
         }
 
         if ($row['email_verified_at'] !== null) {
-            throw new AuthException('EMAIL_ALREADY_VERIFIED', 'Users email is already verified');
+            throw new AppException('EMAIL_ALREADY_VERIFIED', 'Users email is already verified');
         }
 
         $email = $row['email'];
@@ -243,7 +245,7 @@ class AuthService {
 
             // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
             if ($diffSeconds < self::SEND_EMAIL_COOLDOWN_SECONDS) {
-                throw new AuthException('EMAIL_RATE_LIMIT', 'Email resend attempt too soon', $retryAfter);
+                throw new AppException('EMAIL_RATE_LIMIT', 'Email resend attempt too soon', $retryAfter);
             }
         }
         
@@ -352,7 +354,7 @@ class AuthService {
 
         // Токен не найден
         if ($row === null) {
-            throw new AuthException('TOKEN_INVALID', 'Token not found');
+            throw new AppException('TOKEN_INVALID', 'Token not found');
         }
 
         $userId = $row['user_id'];
@@ -360,7 +362,7 @@ class AuthService {
 
         // Если у пользователя уже подтвержденная почта - ошибку
         if ($this->isEmailVerified($userId)) {
-            throw new AuthException('EMAIL_ALREADY_VERIFIED', 'Users email already verified');
+            throw new AppException('EMAIL_ALREADY_VERIFIED', 'Users email already verified');
         }
 
         // Находим время, прошедшее с момента создания токена
@@ -370,7 +372,7 @@ class AuthService {
 
         // Если ttl токена истекло - ошибку
         if ($diffSeconds > self::VERIFY_TOKEN_TTL_SECONDS ) {
-            throw new AuthException('TOKEN_EXPIRED', 'Verify token has expired');
+            throw new AppException('TOKEN_EXPIRED', 'Verify token has expired');
         }
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
@@ -479,7 +481,7 @@ class AuthService {
 
         // Если пользователь не нашелся - ошибку
         if (!$row) {
-            throw new AuthException('INVALID_CREDENTIALS', 'Wrong password or email');
+            throw new AppException('INVALID_CREDENTIALS', 'Wrong password or email');
         }
 
         $id = $row["id"];
@@ -491,7 +493,7 @@ class AuthService {
         if (!password_verify($inputPassword, $password)) {
             // Если пароль не подходит - записываем неудачную попытку и выкидываем исключение
             $this->addLoginAttempt($email);
-            throw new AuthException('INVALID_CREDENTIALS', 'Wrong password or email');
+            throw new AppException('INVALID_CREDENTIALS', 'Wrong password or email');
         }
 
         // Удаляем записи о попытках для этого email
@@ -678,7 +680,7 @@ class AuthService {
 
             // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
             if ($diffSeconds < self::SEND_EMAIL_COOLDOWN_SECONDS) {
-                throw new AuthException('EMAIL_RATE_LIMIT', 'Email resend password attempt too soon', $retryAfter);
+                throw new AppException('EMAIL_RATE_LIMIT', 'Email resend password attempt too soon', $retryAfter);
             }
         }
         
@@ -733,7 +735,7 @@ class AuthService {
 
         // Токен не найден
         if ($row === null) {
-            throw new AuthException('TOKEN_INVALID', 'Token not found');
+            throw new AppException('TOKEN_INVALID', 'Token not found');
         }
 
         $email = $row['email'];
@@ -746,7 +748,7 @@ class AuthService {
 
         // Если ttl токена истекло - ошибку
         if ($diffSeconds > self::RESET_PASSWORD_TOKEN_TTL_SECONDS ) {
-            throw new AuthException('TOKEN_EXPIRED', 'Password reset token has expired');
+            throw new AppException('TOKEN_EXPIRED', 'Password reset token has expired');
         }
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
@@ -876,14 +878,14 @@ class AuthService {
             $this->mailService->sendEmailVerificationLink($email, $name, $verifyUrl);
         } catch (\Throwable $e) {
             // Создаем класс используя именованные аргументы (можно пропустить один, не по порядку)
-            throw new AuthException('EMAIL_SEND_FAILURE', 'Failed to send verification email', previous: $e);
+            throw new AppException('EMAIL_SEND_FAILURE', 'Failed to send verification email', previous: $e);
         }
     }
 
     // Приватный вспомагательный метод для валидации токена
     private function validateToken(string $token): void {
         if (strlen($token) !== 64 || !preg_match('/^[0-9a-f]{64}$/i', $token)) {
-            throw new AuthException('TOKEN_INVALID', 'Invalid token format');
+            throw new AppException('TOKEN_INVALID', 'Invalid token format');
         }
     }
 
@@ -933,7 +935,7 @@ class AuthService {
 
         // Если превысили лимит - ошибку 
         if ($count >= self::MAX_LOGIN_ATTEMPTS) {
-            throw new AuthException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts');
+            throw new AppException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts');
         }
     }
 

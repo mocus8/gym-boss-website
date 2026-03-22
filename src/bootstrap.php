@@ -68,7 +68,7 @@ $dotenv->safeLoad();
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
-require_once __DIR__ . '/Auth/AuthException.php';
+require_once __DIR__ . '/Support/AppException.php';
 require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
 require_once __DIR__ . '/Integrations/Resend/ResendGateway.php';    // файл с gateway-ем Resend-а, оберткой над его sdk
 require_once __DIR__ . '/Mail/MailService.php';    // подключаем файл с классом-сервисом для отправки писем

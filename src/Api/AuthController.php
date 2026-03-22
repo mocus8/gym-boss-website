@@ -8,7 +8,7 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Auth\AuthException;
+use App\Support\AppException;
 use App\Auth\AuthSession;
 use App\Auth\AuthService;
 
@@ -72,7 +72,7 @@ class AuthController extends BaseController {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
             $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
         
-        } catch (AuthException $e) {
+        } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
             $this->error(422, $e->getErrorCode(), $e->getMessage());
 
@@ -108,7 +108,7 @@ class AuthController extends BaseController {
             // Возвращаем успех через приватную функцию
             $this->success();
 
-        } catch (AuthException $e) {
+        } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
 
             // Если есть значение кулдауна - передаем его в заголовке
@@ -165,7 +165,7 @@ class AuthController extends BaseController {
                 'is_email_verified' => $userInfo['is_verified']
             ]);
 
-        } catch (AuthException $e) {
+        } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
 
             $this->error(401, $e->getErrorCode(), $e->getMessage());
@@ -271,7 +271,7 @@ class AuthController extends BaseController {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
             $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
 
-        } catch (AuthException $e) {
+        } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
             // Для защиты от user-enumeration тут показываем только ошибку по лимиту отправки писем
 
@@ -315,7 +315,7 @@ class AuthController extends BaseController {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
             $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
 
-        } catch (AuthException $e) {
+        } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
 
             $this->error(422, $e->getErrorCode(), $e->getMessage());

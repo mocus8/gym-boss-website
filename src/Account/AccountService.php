@@ -7,6 +7,8 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Account;
 
+use App\Support\AppException;
+
 // Класс для управления аккаунтами пользователей
 class AccountService {
     // Приватное свойство (переменная класса), привязанная к объекту
