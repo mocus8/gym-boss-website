@@ -9,7 +9,6 @@
 namespace App\Api;
 
 use App\Integrations\Dadata\DadataClient;   // используем класс DadataClient из пространства имен App\Integrations\Dadata
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для получения подсказок (через методы клиента)
 class DadataController extends BaseController {

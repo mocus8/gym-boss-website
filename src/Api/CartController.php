@@ -11,7 +11,6 @@ namespace App\Api;
 use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
 use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления корзинами пользователей (через методы сервиса)
 class CartController extends BaseController {

@@ -6,6 +6,8 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
+// use App\Support\Logger;
+
 // Базовый класс для контроллеров, abstract - нельзя создать экземпляр напрямую, только через наследников
 abstract class BaseController {
     // protected Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить

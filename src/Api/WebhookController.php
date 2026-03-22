@@ -9,7 +9,6 @@
 namespace App\Api;
 
 use App\Payments\WebhookService;    // используем класс StoreService из пространства имен App\Payments
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 class WebhookController extends BaseController{
     private WebhookService $webhookService;    // приватное свойство (переменная класса), привязанная к объекту

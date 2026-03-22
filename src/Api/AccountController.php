@@ -10,7 +10,6 @@ namespace App\Api;
 
 use App\Auth\AuthSession;
 use App\Account\AccountService;
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления классами пользователей (через методы сервиса)
 class AccountController extends BaseController {

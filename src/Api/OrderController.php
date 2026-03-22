@@ -15,7 +15,6 @@ use App\Cart\CartSession;    // используем класс CartSession из
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 use App\Payments\PaymentService;
 use App\Payments\PaymentStatusSyncService;
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для управления заказами пользователей (через методы сервиса)
 class OrderController extends BaseController {

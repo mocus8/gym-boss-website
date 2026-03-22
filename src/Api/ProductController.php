@@ -9,7 +9,6 @@
 namespace App\Api;
 
 use App\Products\ProductService;    // используем класс ProductService из пространства имен App\Products
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для подгрузки инфы о товарах (через методы сервиса)
 class ProductController extends BaseController {

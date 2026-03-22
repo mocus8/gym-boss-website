@@ -9,7 +9,6 @@
 namespace App\Api;
 
 use App\Stores\StoreService;    // используем класс StoreService из пространства имен App\Stores
-// use App\Support\Logger;    // пространство имен для логгера, на будующее
 
 // Класс для подгрузки инфы о магазинах (через методы сервиса)
 class StoreController extends BaseController {

@@ -34,7 +34,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Подключаем пространства имен
 use Dotenv\Dotenv;    // библиотека для прочтения .env файла
 use App\Db\Db;    // используем класс Db из пространства имен App\Db
-use Ap\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
+// use App\Support\Logger;
+use App\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
 use App\Integrations\Resend\ResendGateway;
 use App\Mail\MailService;
 use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
@@ -67,6 +68,7 @@ $dotenv->safeLoad();
 // Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
+// require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Support/AppException.php';
 require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
