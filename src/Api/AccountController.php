@@ -54,9 +54,50 @@ class AccountController extends BaseController {
 
             $this->success(200, ['name' => $name]);
 
-        } catch (\InvalidArgumentException $e) {
-            // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+        } catch (\Throwable $e) {
+            // Вместо Exception, Throwable - более обширное, все поймает
+            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+
+            // Релизовать во время добавления логирования, также добавить контекст
+            // $this->logger->error('Auth register failed', [
+            //     'exception' => $e,
+            // ]);
+
+            $this->error();
+        }
+    }
+
+    // Метод для смены пароля, зная текущий
+    public function updatePassword(): void {
+        try {
+            // Получаем id пользователя
+            $userId = $this->authSession->getUserId();
+
+            // Если null - ошибку
+            if ($userId === null) {
+                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                return;
+            }
+
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Проверяем входные поля через приватный метод
+            $validData = $this->validateUpdatePasswordInput($data);
+            if ($validData === null) return;
+
+            $currentPassword = $validData['current_password'];
+            $newPassword = $validData['new_password'];
+
+            // Меняем пароль через метод сервиса
+            $this->accountService->updatePassword($userId, $currentPassword, $newPassword);
+
+            $this->success();
+
+        } catch (AppException $e) {
+            // Кастомный класс для ошибки в бизнес логике
+            $this->error(422, $e->getErrorCode(), $e->getMessage());
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
@@ -69,5 +110,43 @@ class AccountController extends BaseController {
 
             $this->error();
         }
+    }
+
+    // Метод для валидации входных полей при смене пароля
+    // Возвращает проверенный массив либо null
+    private function validateUpdatePasswordInput(array $data): ?array {
+        // Проверяем валидность старого пароля
+        $currentPassword = isset($data['current_password']) ? (string)$data['current_password'] : null;
+        $currentPassword = $this->validatePassword($currentPassword);
+        if ($currentPassword === null) {
+            return null;
+        }
+
+        // Проверяем валидность нового пароля
+        $newPassword = isset($data['new_password']) ? (string)$data['new_password'] : null;
+        $newPassword = $this->validatePassword($newPassword);
+        if ($newPassword === null) {
+            return null;
+        }
+
+        // Проверяем что новый и старый пароли разные
+        if ($currentPassword === $newPassword) {
+            $this->error(422, 'SAME_PASSWORD', 'New and current passwords are the same');
+            return null;
+        }
+
+        $passwordConfirmation = isset($data['new_password_confirmation']) ? (string)$data['new_password_confirmation'] : null;
+
+        // Проверяем что пароли совпадают
+        if ($newPassword !== $passwordConfirmation) {
+            $this->error(422, 'PASSWORD_MISMATCH', 'Passwords do not match');
+            return null;
+        }
+
+        // Если все проверки прошли - возвращаем проверенный ассоциативный массив
+        return [
+            'current_password' => $currentPassword,
+            'new_password' => $newPassword
+        ];
     }
 }

@@ -88,12 +88,12 @@ if (strpos($uri, '/api/') === 0) {
             '/stores' => [$storeController, 'getAll'],
         ],
         'PATCH' => [
-            '/account/profile' => [$accountController, 'updateProfile'],    // TODO
-        //   '/account/password' => [$accountController, 'updatePassword'],    // TODO
+            '/account/profile' => [$accountController, 'updateProfile'],
+            '/account/password' => [$accountController, 'updatePassword'],
         ],
-        // 'DELETE' => [
-        //     '/account' => [$accountController, 'delete'],    // TODO
-        // ]
+         'DELETE' => [
+             '/account' => [$accountController, 'delete'],    // TODO
+         ]
     ];
 
     // Если маршрут есть в списке, подключаем соответствующий метод

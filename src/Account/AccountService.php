@@ -43,4 +43,82 @@ class AccountService {
     
         $stmt->close();
     }
+
+    // Метод для смены пароля
+    public function updatePassword(int $userId, string $currentPassword, string $newPassword): void {
+        // Находим в бд по userId старый пароль
+        $sql = "
+            SELECT
+                password
+            FROM users
+            WHERE id = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если пользователь не нашелся - ошибку
+        if (!$row) {
+            throw new \RuntimeException('User not found');
+        }
+
+        $password = $row["password"];
+
+        // Сравниваем пароли из бд и введеный через password_verify (сравнивает введеный с хешем из бд)
+        if (!password_verify($currentPassword, $password)) {
+            throw new AppException('WRONG_PASSWORD', 'Wrong current password');
+        }
+
+        // Хэшируем пароль и проверям что удалось
+        $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        if ($hashedNewPassword === false) {
+            throw new \RuntimeException('Password hashing failed');
+        }
+
+        // Обновляем пароль в бд на новый
+        $sql = "
+            UPDATE users
+            SET password = ?
+            WHERE id = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('si', $hashedNewPassword, $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
 }

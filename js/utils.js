@@ -134,6 +134,9 @@ const ERROR_CODE_MESSAGES = {
     PASSWORD_TOO_LONG: "Слишком длинный пароль",
     PASSWORD_INVALID_CHARS: "Пароль содержит недопустимые символы",
     PASSWORD_MISMATCH: "Пароли не совпадают, проверьте пароль",
+    WRONG_PASSWORD: "Неверный пароль, попробуйте еще раз",
+    SAME_PASSWORD:
+        "Новый пароль должен отличаться от предыдущего, введите новый пароль",
     NAME_REQUIRED: "Требуется имя",
     NAME_TOO_LONG: "Слишком длинное имя",
     NAME_INVALID_CHARS: "Имя содержит недопустимые символы",
