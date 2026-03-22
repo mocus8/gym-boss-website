@@ -197,7 +197,7 @@ class AuthController extends BaseController {
             $this->authSession->logout();
 
             // Возвращаем успех через приватную функцию
-            $this->success();
+            $this->success(204);
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
