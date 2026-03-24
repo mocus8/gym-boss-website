@@ -1,0 +1,72 @@
+### Регистрация
+POST http://localhost/api/auth/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "mocus8@gmail.com",
+  "password": "11111111",
+  "name": "Ilya Testovich"
+}
+
+
+
+### Повторная отправка письма
+POST http://localhost/api/auth/email/resend HTTP/1.1
+
+
+
+### Вход в аккаунт
+POST http://localhost/api/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "mocus8@gmail.com",
+  "password": "11111111"
+}
+
+
+
+### Выход из аккаунта
+POST http://localhost/api/auth/logout HTTP/1.1
+
+
+
+### Получить инфу
+GET http://localhost/api/auth/me HTTP/1.1
+
+
+
+### Сбросить пароль
+POST http://localhost/api/auth/password/forgot HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "mocus8@gmail.com"
+}
+
+
+
+### Сменить данные профиля (имя)
+PATCH http://localhost/api/account/profile HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Ilya Ilya change"
+}
+
+
+
+### Сменить пароль, зная текущий
+PATCH http://localhost/api/account/password HTTP/1.1
+Content-Type: application/json
+
+{
+  "current_password": "11111111",
+  "new_password": "11111111",
+  "new_password_confirmation": "11111111"
+}
+
+
+
+### Удаление аккаунта
+DELETE http://localhost/api/account HTTP/1.1
