@@ -6,7 +6,7 @@ namespace App\Orders;
 use App\Orders\OrderService;
 use App\Payments\PaymentService;
 
-// Класс для управления корзинами пользователей
+// Класс для управления отменами заказов
 class CancelOrderUseCase {
     // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;

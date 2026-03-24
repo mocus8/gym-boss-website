@@ -719,7 +719,7 @@ class OrderService {
 
     // Метод пометки заказа как оплаченного: только логика, должен вызываться только внутри открытой транзакции
     public function markPaidInTx(int $orderId): bool {
-        // Получаем статус, тип доставкии и время оплаты заказа с блокировкой строки (FOR UPDATE)
+        // Получаем статус, тип доставки и время оплаты заказа с блокировкой строки (FOR UPDATE)
         $sql = "
             SELECT 
                 status_id,
@@ -858,6 +858,204 @@ class OrderService {
             $this->db->commit();
 
             return $justMarked;
+        } catch (\Throwable $e) {
+            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
+            $this->db->rollback();
+            throw $e;
+        }
+    }
+
+    // Метод для пометки заказа как отправленого 
+    public function markShipped(int $orderId): bool {
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
+        $this->db->begin_transaction();
+        
+        try {
+
+            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
+            $sql = "
+                SELECT 
+                    status_id
+                FROM orders
+                WHERE order_id = ?
+                FOR UPDATE
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $orderId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $result = $stmt->get_result();
+
+            if (!$result) {
+                $stmt->close();
+                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+            }
+
+            $row = $result->fetch_assoc();
+
+            $stmt->close();
+
+            if (!$row) {
+                throw new \InvalidArgumentException('Order not found');
+            }
+
+            $orderStatusId = (int)$row["status_id"];
+
+            $shippedStatusId = $this->getStatusIdByCode('shipped');
+            $paidStatusId = $this->getStatusIdByCode('paid');
+
+            // Уже отправлен 
+            if ($orderStatusId === $shippedStatusId) {
+                $this->db->commit();
+                return false;
+            }
+
+            // Еще не оплачен
+            if ($orderStatusId !== $paidStatusId) {
+                throw new \RuntimeException('Order status is not paid');
+            }
+
+            // Обновляем статус заказа на shipped
+            $sql = "
+                UPDATE orders
+                SET status_id = ?
+                WHERE order_id = ?
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("ii", $shippedStatusId, $orderId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $stmt->close();
+
+            // Комитим транзакцию
+            $this->db->commit();
+
+            return true;
+        } catch (\Throwable $e) {
+            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
+            $this->db->rollback();
+            throw $e;
+        }
+    }
+
+    // Метод для пометки заказа как готового к самовывозу 
+    public function markReadyForPickup(int $orderId): bool {
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
+        $this->db->begin_transaction();
+        
+        try {
+
+            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
+            $sql = "
+                SELECT 
+                    status_id
+                FROM orders
+                WHERE order_id = ?
+                FOR UPDATE
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $orderId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $result = $stmt->get_result();
+
+            if (!$result) {
+                $stmt->close();
+                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+            }
+
+            $row = $result->fetch_assoc();
+
+            $stmt->close();
+
+            if (!$row) {
+                throw new \InvalidArgumentException('Order not found');
+            }
+
+            $orderStatusId = (int)$row["status_id"];
+
+            $readyForPickupStatusId = $this->getStatusIdByCode('ready_for_pickup');
+            $paidStatusId = $this->getStatusIdByCode('paid');
+
+            // Уже готов для получения 
+            if ($orderStatusId === $readyForPickupStatusId) {
+                $this->db->commit();
+                return false;
+            }
+
+            // Еще не оплачен
+            if ($orderStatusId !== $paidStatusId) {
+                throw new \RuntimeException('Order status is not paid');
+            }
+
+            // Обновляем статус заказа на ready_for_pickup
+            $sql = "
+                UPDATE orders
+                SET status_id = ?
+                WHERE order_id = ?
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("ii", $readyForPickupStatusId, $orderId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+
+            $stmt->close();
+
+            // Комитим транзакцию
+            $this->db->commit();
+
+            return true;
         } catch (\Throwable $e) {
             // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
             $this->db->rollback();
