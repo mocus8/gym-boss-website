@@ -190,5 +190,45 @@ class AccountService {
         $stmt->close();
     }
 
-    // TODO: метод getLogin()
+    // Метод для получения email пользователя по его id
+    public function getEmail(int $userId): string {
+        $sql = "
+            SELECT email
+            FROM users
+            WHERE id = ?
+            LIMIT 1        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $email = $row['email'] ?? null;
+
+        if ($email === null) {
+            throw new \RuntimeException('User email not found');
+        }
+
+        $stmt->close();
+    }
 }

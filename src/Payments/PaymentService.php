@@ -7,6 +7,7 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Payments;
 use App\Orders\OrderService;
+use App\Account\AccountService;
 use App\Integrations\Yookassa\YookassaGateway;
 
 // Класс для управления платежами
@@ -15,6 +16,7 @@ class PaymentService {
     private \mysqli $db;
     private string $baseUrl;
     private OrderService $orderService;    // экземпляр сервиса для заказов (dependency injection)
+    private AccountService $accountService;
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
     private int $deliveryVatCode;    // код НДС для доставки
 
@@ -27,12 +29,14 @@ class PaymentService {
         \mysqli $db,
         string $baseUrl,
         OrderService $orderService,
+        AccountService $accountService,
         YookassaGateway $yookassaGateway,
         int $deliveryVatCode
     ) {
         $this->db = $db;
         $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
+        $this->accountService = $accountService;
         $this->yookassaGateway = $yookassaGateway;
         $this->deliveryVatCode = $deliveryVatCode;
     }
@@ -88,35 +92,7 @@ class PaymentService {
             // 3. если платеж в юкассе создан - дополняем запись платежа в бд, если нет - помечаем как failed
 
             // Получаем логин пользователя через метод AccountService для формирования чека
-            // $email = $this->AccountService->getEmailForReceipt($userId);
-
-            // TODO потом заменить на то, что выше
-            // Пока через простой запрос
-            $sql = "
-                SELECT email
-                FROM users
-                WHERE id = ?
-                LIMIT 1        
-            ";
-            $stmt = $this->db->prepare($sql);
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-            $stmt->bind_param("i", $userId);
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-            $result = $stmt->get_result();
-            if (!$result) {
-                $stmt->close();
-                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-            }
-            $row = $result->fetch_assoc();
-            $email = $row['email'] ?? null;
-            $stmt->close();
-
+            $email = $this->accountService->getEmail($userId);
             // Получаем залоченые позиции заказа из order_items
             $items = $this->orderService->getItemsForReceipt($orderId);
             // Cоздаём массив товаров в нужном для чека формате
