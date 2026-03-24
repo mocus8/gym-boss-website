@@ -49,6 +49,7 @@ class AccountService {
         // Находим в бд по userId старый пароль
         $sql = "
             SELECT
+                email,
                 password
             FROM users
             WHERE id = ?
@@ -85,41 +86,78 @@ class AccountService {
             throw new \RuntimeException('User not found');
         }
 
+        $email = $row["email"];
         $password = $row["password"];
 
-        // Сравниваем пароли из бд и введеный через password_verify (сравнивает введеный с хешем из бд)
-        if (!password_verify($currentPassword, $password)) {
-            throw new AppException('WRONG_PASSWORD', 'Wrong current password');
-        }
+        // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
+        $this->db->begin_transaction();
 
-        // Хэшируем пароль и проверям что удалось
-        $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        if ($hashedNewPassword === false) {
-            throw new \RuntimeException('Password hashing failed');
-        }
+        try {
+            // Сравниваем пароли из бд и введеный через password_verify (сравнивает введеный с хешем из бд)
+            if (!password_verify($currentPassword, $password)) {
+                throw new AppException('WRONG_PASSWORD', 'Wrong current password');
+            }
 
-        // Обновляем пароль в бд на новый
-        $sql = "
-            UPDATE users
-            SET password = ?
-            WHERE id = ?
-        ";
-    
-        $stmt = $this->db->prepare($sql);
+            // Хэшируем пароль и проверям что удалось
+            $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            if ($hashedNewPassword === false) {
+                throw new \RuntimeException('Password hashing failed');
+            }
 
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('si', $hashedNewPassword, $userId);
+            // Обновляем пароль в бд на новый
+            $sql = "
+                UPDATE users
+                SET password = ?
+                WHERE id = ?
+            ";
+        
+            $stmt = $this->db->prepare($sql);
 
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+        
+            $stmt->bind_param('si', $hashedNewPassword, $userId);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+        
             $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
+
+            // Если остался токен для сброса пароля - удаляем его 
+            // TODO: удаление токена сброса пароля потом вынести в репозиторий и вызывать из Auth и Account серисов
+            $sql = "
+                DELETE FROM password_reset_tokens
+                WHERE email = ?
+            ";
+        
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+        
+            $stmt->bind_param('s', $email);
+
+            if (!$stmt->execute()) {
+                $error = $stmt->error ?: $this->db->error;
+                $stmt->close();
+                throw new \RuntimeException('DB execute failed: ' . $error);
+            }
+        
+            $stmt->close();
+
+            // Комитим транзакцию
+            $this->db->commit();
+
+        } catch (\Throwable $e) {
+            // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
+            $this->db->rollback();
+            throw $e;
+        } 
     }
 
     // Метод для удаления пользователя 
@@ -151,4 +189,6 @@ class AccountService {
     
         $stmt->close();
     }
+
+    // TODO: метод getLogin()
 }

@@ -308,6 +308,9 @@ class AuthController extends BaseController {
             // Начинаем процесс сброса пароля через метод сервиса
             $this->authService->resetPassword($token, $password);
 
+            // Защищаем от фиксаций на сессии по регенерации id
+            $this->authSession->regenerateId();
+
             // Возвращаем успех через приватную функцию
             $this->success();
 

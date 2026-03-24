@@ -39,6 +39,11 @@ class AuthSession {
         session_destroy();
     }
 
+    // Метод для регенерирования id сессии (защита от фиксации - подмены session_id)
+    public function regenerateId(): void {
+        session_regenerate_id(true);
+    }
+
     // Метод для получение текущего user id из сессии
     public function getUserId(): ?int {
         // Если в сессии есть userId и он валидный - возвращаем

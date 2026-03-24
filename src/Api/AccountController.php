@@ -93,6 +93,9 @@ class AccountController extends BaseController {
             // Меняем пароль через метод сервиса
             $this->accountService->updatePassword($userId, $currentPassword, $newPassword);
 
+            // Защищаем от фиксаций на сессии по регенерации id
+            $this->authSession->regenerateId();
+
             $this->success();
 
         } catch (AppException $e) {

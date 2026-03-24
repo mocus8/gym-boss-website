@@ -791,6 +791,7 @@ class AuthService {
             $stmt->close();
 
             // Удаляем использованный токен
+            // TODO: удаление токена сброса пароля потом вынести в репозиторий и вызывать из Auth и Account серисов
             $sql = "
                 DELETE FROM password_reset_tokens
                 WHERE email = ?

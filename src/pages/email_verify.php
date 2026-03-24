@@ -10,6 +10,10 @@ $status = 'token_invalid';
 // Вызываем верификацию почты по токену
 try {
     $authService->verify($rawToken);
+
+    // Защищаем от фиксаций на сессии по регенерации id
+    $authSession->regenerateId();
+
     $status = 'success';
 
 } catch (\App\Support\AppException $e) {
