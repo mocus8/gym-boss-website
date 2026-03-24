@@ -714,7 +714,7 @@ class OrderService {
     }
 
     // Метод пометки заказа как оплаченного: только логика, должен вызываться только внутри открытой транзакции
-    public function markPaidInTx(int $orderId): void {
+    public function markPaidInTx(int $orderId): bool {
         // Получаем статус, тип доставкии и время оплаты заказа с блокировкой строки (FOR UPDATE)
         $sql = "
             SELECT 
@@ -762,9 +762,9 @@ class OrderService {
         $pendingStatusId = $this->getStatusIdByCode('pending_payment');
         $paidStatusId = $this->getStatusIdByCode('paid');
 
-        // Уже оплачен (тихо выходим из метода)
+        // Уже оплачен
         if ($orderStatusId === $paidStatusId) {
-            return;
+            return false;
         }
 
         // Статус не pending_payment
@@ -833,10 +833,12 @@ class OrderService {
         }
 
         $stmt->close();
+
+        return true;
     }
 
     // Метод пометки заказа как оплаченного (оболочка метода markPaidInTx с транзакцией)
-    public function markPaid(int $orderId): void {
+    public function markPaid(int $orderId): bool {
 
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
@@ -846,11 +848,12 @@ class OrderService {
         $this->db->begin_transaction();
         
         try {
-            $this->markPaidInTx($orderId);
+            $justMarked = $this->markPaidInTx($orderId);
 
             // Комитим транзакцию
             $this->db->commit();
 
+            return $justMarked;
         } catch (\Throwable $e) {
             // Если где-то выпало исключение откатываем изменения в бд и выкидываем исключения дальше
             $this->db->rollback();

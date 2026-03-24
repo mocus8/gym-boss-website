@@ -38,15 +38,22 @@ class PaymentStatusSyncService {
 
             try {
                 $orderId = $this->paymentService->getOrderIdByExternalId($externalPaymentId);
-                $this->orderService->markPaidInTx($orderId);
+                $justMarked = $this->orderService->markPaidInTx($orderId);
                 $this->paymentService->updateStatusByExternalId($externalPaymentId, 'succeeded', $providerStatus);
 
                 $this->db->commit();
-                return;
             } catch (\Throwable $e) {
                 $this->db->rollback();
                 throw $e;
             }
+
+            // Если статус реально поменялся - отпарвляем письмо 
+            if ($justMarked) {
+                // TODO: сделать метод, добавить параметры, сделать нужный DI
+                $this->mailService->sendOrderConfirmation();
+            }
+
+            return;
         } 
         // Если платеж отменен
         else if ($providerStatus === 'canceled') {
