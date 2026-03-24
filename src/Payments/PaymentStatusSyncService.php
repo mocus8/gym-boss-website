@@ -47,7 +47,7 @@ class PaymentStatusSyncService {
                 throw $e;
             }
 
-            // Если статус реально поменялся - отпарвляем письмо 
+            // Если статус реально поменялся - отправляем письмо 
             if ($justMarked) {
                 // TODO: сделать метод, добавить параметры, сделать нужный DI
                 $this->mailService->sendOrderConfirmation();

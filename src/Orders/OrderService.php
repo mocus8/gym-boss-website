@@ -540,7 +540,7 @@ class OrderService {
     }
 
     // Метод для пометки заказа как отменненого (должен вызываться только внутри транзакции)
-    public function markCancelByUserInTx(int $orderId, int $userId): void {
+    public function markCancelByUserInTx(int $orderId, int $userId): bool {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
@@ -593,7 +593,7 @@ class OrderService {
 
         // Уже отменен (тихо выходим из метода)
         if ($orderStatusId === $canceledStatusId) {
-            return;
+            return false;
         }
 
         // Статус не pending_payment
@@ -625,11 +625,13 @@ class OrderService {
         }
 
         $stmt->close();
+
+        return true;
     }
 
     
     // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука, должен вызываться внутри транзакции) 
-    public function markCancelFromPaymentProviderInTx(int $orderId): void {
+    public function markCancelFromPaymentProviderInTx(int $orderId): bool {
 
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
@@ -679,7 +681,7 @@ class OrderService {
 
         // Уже отменен (тихо выходим из метода)
         if ($orderStatusId === $canceledStatusId) {
-            return;
+            return false;
         }
 
         // Статус не pending_payment
@@ -711,6 +713,8 @@ class OrderService {
         }
 
         $stmt->close();
+
+        return true;
     }
 
     // Метод пометки заказа как оплаченного: только логика, должен вызываться только внутри открытой транзакции

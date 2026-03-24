@@ -38,7 +38,7 @@ class CancelOrderUseCase {
 
         try {
             // Помечаем сам заказ как отмененный
-            $this->orderService->markCancelByUserInTx($orderId, $userId);
+            $justMarked = $this->orderService->markCancelByUserInTx($orderId, $userId);
             // Помечаем в бд все его платежи как отмененные
             $this->paymentService->cancelAllByOrderId($orderId, 'CANCELED_BY_USER', 'Canceled by user');
 
@@ -49,9 +49,17 @@ class CancelOrderUseCase {
             $this->db->rollback();
             throw $e;
         }
+
+        // Если статус реально поменялся - отправляем письмо 
+        if ($justMarked) {
+            // TODO: сделать метод, добавить параметры, сделать нужный DI
+            $this->mailService->sendOrderCanceled();
+        }
+
+        return;
     }
 
-    // Метод для отмены заказа пользователем, объеденяет (координирует) методы двух других сервисов внутри транзакции
+    // Метод для отмены заказа провайдером, объеденяет (координирует) методы двух других сервисов внутри транзакции
     public function markCancelFromPaymentProvider(int $orderId): void {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
@@ -61,9 +69,9 @@ class CancelOrderUseCase {
         $this->db->begin_transaction();
 
         try {
-            // Тут вызываем два метода: markCancelFromPaymentProviderInTx и новый метод для отмены платежей из PaymentService 
+            // Тут вызываем два метода: markCancelFromPaymentProviderInTx и метод для отмены платежей из PaymentService 
             // Помечаем сам заказ как отмененный
-            $this->orderService->markCancelFromPaymentProviderInTx($orderId);
+            $justMarked = $this->orderService->markCancelFromPaymentProviderInTx($orderId);
             // Помечаем в бд все его платежи как отмененные
             $this->paymentService->cancelAllByOrderId($orderId, 'CANCELED_BY_PROVIDER', 'Canceled by provider');
 
@@ -74,5 +82,13 @@ class CancelOrderUseCase {
             $this->db->rollback();
             throw $e;
         }
+
+        // Если статус реально поменялся - отправляем письмо 
+        if ($justMarked) {
+            // TODO: сделать метод, добавить параметры, сделать нужный DI
+            $this->mailService->sendOrderCanceled();
+        }
+
+        return;
     }
 }
