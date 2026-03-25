@@ -118,13 +118,13 @@ class MailService {
 
         // Задаем html-версию письма
         $html = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-confirmation.html.php',    // TODO: сделать шаблон
+            __DIR__ . '/../templates/email/order-confirmation.html.php',
             $templateData
         );
 
         // Задаем text-версию письма
         $text = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-confirmation.text.php',    // TODO: сделать шаблон
+            __DIR__ . '/../templates/email/order-confirmation.text.php',
             $templateData
         );
 
@@ -136,6 +136,48 @@ class MailService {
             $this->resendGateway->send($message);
         } catch (\Throwable $e) {
             throw new \RuntimeException('Cannot send order confirmation email', 0, $e);
+        }
+    }
+
+    // Метод для отправки письма об отмене заказа
+    public function sendOrderCanceled(array $orderInfo, array $orderItems, string $canceledBy, string $orderUrl): void {
+        if (empty($orderInfo) || empty($orderItems) || empty($canceledBy) || empty($orderUrl)) {
+            throw new \InvalidArgumentException('Missing required data for order canceled email');
+        }
+
+        // Задаем тему письма
+        $subject = "Ваш заказ №{$orderInfo['order_id']} отменен";
+
+        // Собираем массив инфы для рендера шаблона письма
+        $templateData = [
+            'userName' => $orderInfo['user_name'],
+            'orderId' => $orderInfo['order_id'],
+            'items' => $orderItems,
+            'itemsPrice' => $orderInfo['total_price'],
+            'canceledBy' => $canceledBy,
+            'orderUrl' => $orderUrl
+        ];
+
+        // Задаем html-версию письма
+        $html = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-canceled.html.php',
+            $templateData
+        );
+
+        // Задаем text-версию письма
+        $text = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-canceled.text.php',
+            $templateData
+        );
+
+        // Оформляем инфу о письме в DTO
+        $message = new EmailMessageDto($orderInfo['user_email'], $subject, $html, $text);
+
+        // Через метод gateway-я пробуем отправить письмо
+        try {
+            $this->resendGateway->send($message);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Cannot send order canceled email', 0, $e);
         }
     }
 
