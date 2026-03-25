@@ -291,6 +291,8 @@ class OrderService {
             SELECT
                 o.order_id,
                 o.user_id,
+                u.name AS user_name,
+                u.email AS user_email,
                 o.total_qty,
                 o.total_price,
                 o.delivery_type_id,
@@ -313,6 +315,7 @@ class OrderService {
                 o.paid_at,
                 o.canceled_at
             FROM orders AS o
+            LEFT JOIN users AS u ON o.user_id = u.id
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
             LEFT JOIN stores AS s ON o.store_id = s.id
             LEFT JOIN order_statuses AS os ON o.status_id = os.id
