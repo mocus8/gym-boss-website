@@ -5,25 +5,32 @@
 namespace App\Payments;
 use App\Orders\OrderService;
 use App\Payments\PaymentService;
+use App\Mail\MailService;
 use App\Integrations\Yookassa\YookassaGateway;
 
 class PaymentStatusSyncService {
     // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;
+    private string $baseUrl;
     private OrderService $orderService;    // экземпляр сервиса для заказов (dependency injection)
     private PaymentService $paymentService;
+    private MailService $mailService;
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(
         \mysqli $db,
+        string $baseUrl,
         OrderService $orderService,
         PaymentService $paymentService,
+        MailService $mailService,
         YookassaGateway $yookassaGateway
     ) {
         $this->db = $db;
+        $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
         $this->paymentService = $paymentService;
+        $this->mailService = $mailService;
         $this->yookassaGateway = $yookassaGateway;
     }
 
@@ -49,8 +56,18 @@ class PaymentStatusSyncService {
 
             // Если статус реально поменялся - отправляем письмо 
             if ($justMarked) {
-                // TODO: сделать метод, добавить параметры, сделать нужный DI
-                $this->mailService->sendOrderConfirmation();
+                // Получаем данные о заказе
+                $orderData = $this->orderService->getById($orderId, $userId);
+
+                // Собираем ссылку на страницу заказа
+                $orderUrl = $this->baseUrl . '/orders/' . $orderId;
+
+                // Отправляем письмо
+                $this->mailService->sendOrderConfirmation(
+                    $orderData['order'],
+                    $orderData['items'],
+                    $orderUrl
+                );
             }
 
             return;

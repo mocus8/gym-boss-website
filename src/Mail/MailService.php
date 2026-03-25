@@ -85,6 +85,60 @@ class MailService {
         }
     }
 
+    // Метод для отправки письма с подтверждением об оплате
+    public function sendOrderConfirmation(array $orderInfo, array $orderItems, string $orderUrl): void {
+        if (empty($orderInfo) || empty($orderItems) || empty($orderUrl)) {
+            throw new \InvalidArgumentException('Missing required data for order confirmation email');
+        }
+
+        // Задаем тему письма
+        $subject = "Ваш заказ №{$orderInfo['order_id']} оплачен";
+
+        // Собираем массив инфы для рендера шаблона письма
+        $templateData = [
+            'userName' => $orderInfo['user_name'],
+            'orderId' => $orderInfo['order_id'],
+            'items' => $orderItems,
+            'itemsPrice' => $orderInfo['total_price'],
+            'deliveryTypeCode' => $orderInfo['delivery_type_code'],
+            'deliveryCost' => $orderInfo['delivery_cost'],
+            'totalPrice' => (float)$orderInfo['total_price'] + (float)$orderInfo['delivery_cost'],
+            'deliveryTypeName'  => $orderInfo['delivery_type_name'],
+
+            'deliveryAddressText'  => $orderInfo['delivery_address_text'],
+            'courierDeliveryFrom'  => formatDateForEmail($orderInfo['courier_delivery_from']),
+            'courierDeliveryTo'  => formatDateForEmail($orderInfo['courier_delivery_to']),
+
+            'storeAddress'  => $orderInfo['store_address'],
+            'readyForPickupFrom'  => formatDateForEmail($orderInfo['ready_for_pickup_from']),
+            'readyForPickupTo'  => formatDateForEmail($orderInfo['ready_for_pickup_to']),
+
+            'orderUrl' => $orderUrl
+        ];
+
+        // Задаем html-версию письма
+        $html = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-confirmation.html.php',    // TODO: сделать шаблон
+            $templateData
+        );
+
+        // Задаем text-версию письма
+        $text = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-confirmation.text.php',    // TODO: сделать шаблон
+            $templateData
+        );
+
+        // Оформляем инфу о письме в DTO
+        $message = new EmailMessageDto($orderInfo['user_email'], $subject, $html, $text);
+
+        // Через метод gateway-я пробуем отправить письмо
+        try {
+            $this->resendGateway->send($message);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Cannot send order confirmation email', 0, $e);
+        }
+    }
+
     // Вспомогательный приватный метод для рендера шалона 
     // Подставляет переменные из data в шаблон и возвращает его в виде строки
     private function renderTemplate(string $templatePath, array $data = []): string {

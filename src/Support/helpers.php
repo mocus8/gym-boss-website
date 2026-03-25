@@ -82,6 +82,13 @@ function mapIsoFields(array $row, array $fields): array {
     return $row;
 }
 
+// Форматирование числе в формат для email-писем
+function formatDateForEmail(?string $dateStr): string {
+    if (empty($dateStr)) return '';
+    $date = new \DateTime($dateStr);
+    return $date->format('d.m.Y, H:i');
+}
+
 // Форматирование цены товара
 function formatPrice(float $value): string {
     return number_format($value, 2, ',', ' ');
