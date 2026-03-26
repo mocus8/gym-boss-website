@@ -241,6 +241,7 @@ class MailService {
             'orderId' => $orderInfo['order_id'],
             'items' => $orderItems,
             'storeAddress'  => $orderInfo['store_address'],
+            'storeWorkHours' => $orderInfo['store_work_hours'],
             'orderUrl' => $orderUrl,
             'supportEmail' => self::SUPPORT_EMAIL
         ];

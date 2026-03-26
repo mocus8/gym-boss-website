@@ -54,8 +54,13 @@
                                     </p>
                                 <?php } ?>
 
-                                <p style="margin:0 0 8px;">
-                                Вы можете получить заказ в выбранном вами магазине: <?= htmlspecialchars($storeAddress, ENT_QUOTES, 'UTF-8') ?>, время работы уточняйте на нашем сайте.
+                                <p style="margin:8px 0 8px;">
+                                    Вы можете получить заказ в выбранном вами магазине: <?= htmlspecialchars($storeAddress, ENT_QUOTES, 'UTF-8') ?>.
+                                </p>
+
+                                <p style="margin:0 0 16px;">
+                                    Время работы магазина:<br>
+                                    <?= nl2br(htmlspecialchars($storeWorkHours, ENT_QUOTES, 'UTF-8')) ?>
                                 </p>
 
                                 <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">

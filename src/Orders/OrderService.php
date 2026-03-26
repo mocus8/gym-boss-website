@@ -303,6 +303,7 @@ class OrderService {
                 o.delivery_postal_code,
                 o.store_id,
                 s.address AS store_address,
+                s.work_hours AS store_work_hours,
                 o.courier_delivery_from,
                 o.courier_delivery_to,
                 o.ready_for_pickup_from,
