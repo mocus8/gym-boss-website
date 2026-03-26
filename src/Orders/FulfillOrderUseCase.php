@@ -9,11 +9,13 @@ use App\Mail\MailService;
 // Класс для пометки заказов как готовых к самовывозу или отправленых
 class FulfillOrderUseCase {
     // Приватное свойство (переменная класса), привязанная к объекту
+    private string $baseUrl;
     private OrderService $orderService;
     private MailService $mailService;
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
-    public function __construct(OrderService $orderService, MailService $mailService) {
+    public function __construct(string $baseUrl, OrderService $orderService, MailService $mailService) {
+        $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
         $this->mailService = $mailService;
     }
@@ -29,8 +31,18 @@ class FulfillOrderUseCase {
 
         // Если статус реально поменялся - отправляем письмо 
         if ($justMarked) {
-            // TODO: сделать метод, добавить параметры, сделать нужный DI
-            $this->mailService->sendOrderShipped();
+            // Получаем данные о заказе
+            $orderData = $this->orderService->getById($orderId, $userId);
+
+            // Собираем ссылку на страницу заказа
+            $orderUrl = $this->baseUrl . '/orders/' . $orderId;
+
+            // Отправляем письмо
+            $this->mailService->sendOrderShipped(
+                $orderData['order'],
+                $orderData['items'],
+                $orderUrl
+            );
         }
     }
     // Метод для пометки заказа как готового к получению, объеденяет (координирует) методы двух других сервисов
@@ -44,8 +56,19 @@ class FulfillOrderUseCase {
 
         // Если статус реально поменялся - отправляем письмо 
         if ($justMarked) {
-            // TODO: сделать метод, добавить параметры, сделать нужный DI
-            $this->mailService->sendOrderReadyForPickup();
+            // Получаем данные о заказе
+            $orderData = $this->orderService->getById($orderId, $userId);
+
+            // Собираем ссылку на страницу заказа
+            $orderUrl = $this->baseUrl . '/orders/' . $orderId;
+
+            // Отправляем письмо
+            // TODO: сделать метод
+            $this->mailService->sendOrderReadyForPickup(
+                $orderData['order'],
+                $orderData['items'],
+                $orderUrl
+            );
         }
     }
 }

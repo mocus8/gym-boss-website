@@ -9,6 +9,7 @@ use App\Integrations\Resend\ResendGateway;
 
 class MailService {
     private ResendGateway $resendGateway;    // экземпляр ResendGateway для взаимодействия с sdk resend-а
+    private const SUPPORT_EMAIL = 'mocus8@gmail.com';
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(ResendGateway $resendGateway) {
@@ -178,6 +179,92 @@ class MailService {
             $this->resendGateway->send($message);
         } catch (\Throwable $e) {
             throw new \RuntimeException('Cannot send order canceled email', 0, $e);
+        }
+    }
+
+    // Метод для пометки заказа как отправленного курьером
+    public function sendOrderShipped(array $orderInfo, array $orderItems, string $orderUrl): void {
+        if (empty($orderInfo) || empty($orderItems) || empty($orderUrl)) {
+            throw new \InvalidArgumentException('Missing required data for order shipped email');
+        }
+
+        // Задаем тему письма
+        $subject = "Заказ №{$orderInfo['order_id']} передан в доставку";
+
+        // Собираем массив инфы для рендера шаблона письма
+        $templateData = [
+            'userName' => $orderInfo['user_name'],
+            'orderId' => $orderInfo['order_id'],
+            'items' => $orderItems,
+            'deliveryAddressText'  => $orderInfo['delivery_address_text'],
+            'courierDeliveryFrom'  => formatDateForEmail($orderInfo['courier_delivery_from']),
+            'courierDeliveryTo'  => formatDateForEmail($orderInfo['courier_delivery_to']),
+            'orderUrl' => $orderUrl,
+            'supportEmail' => self::SUPPORT_EMAIL
+        ];
+
+        // Задаем html-версию письма
+        $html = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-shipped.html.php',
+            $templateData
+        );
+
+        // Задаем text-версию письма
+        $text = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-shipped.text.php',
+            $templateData
+        );
+
+        // Оформляем инфу о письме в DTO
+        $message = new EmailMessageDto($orderInfo['user_email'], $subject, $html, $text);
+
+        // Через метод gateway-я пробуем отправить письмо
+        try {
+            $this->resendGateway->send($message);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Cannot send order shipped email', 0, $e);
+        }
+    }
+
+    // Метод для пометки заказа как готового к получению
+    public function sendOrderReadyForPickup(array $orderInfo, array $orderItems, string $orderUrl): void {
+        if (empty($orderInfo) || empty($orderItems) || empty($orderUrl)) {
+            throw new \InvalidArgumentException('Missing required data for order ready for pickup email');
+        }
+
+        // Задаем тему письма
+        $subject = "Заказ №{$orderInfo['order_id']} готов к получению";
+
+        // Собираем массив инфы для рендера шаблона письма
+        $templateData = [
+            'userName' => $orderInfo['user_name'],
+            'orderId' => $orderInfo['order_id'],
+            'items' => $orderItems,
+            'storeAddress'  => $orderInfo['store_address'],
+            'orderUrl' => $orderUrl,
+            'supportEmail' => self::SUPPORT_EMAIL
+        ];
+
+        // Задаем html-версию письма
+        $html = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-ready-for-pickup.html.php',
+            $templateData
+        );
+
+        // Задаем text-версию письма
+        $text = $this->renderTemplate(
+            __DIR__ . '/../templates/email/order-ready-for-pickup.text.php',
+            $templateData
+        );
+
+        // Оформляем инфу о письме в DTO
+        $message = new EmailMessageDto($orderInfo['user_email'], $subject, $html, $text);
+
+        // Через метод gateway-я пробуем отправить письмо
+        try {
+            $this->resendGateway->send($message);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Cannot send order ready for pickup email', 0, $e);
         }
     }
 
