@@ -39,7 +39,7 @@
         </div>
     </div>
     
-    <?php if ($userId === null) { ?>
+    <?php if (!$isAuthenticated) { ?>
         <a class="order_start hidden" id="start-order-btn" data-open-modal="registration">
             <div class="order_start_text">
                 Перейти к оформлению

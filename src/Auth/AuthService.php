@@ -537,6 +537,7 @@ class AuthService {
         // Находим в бд по email инфу о пользователе
         $sql = "
             SELECT
+                id,
                 email,
                 email_verified_at,
                 name

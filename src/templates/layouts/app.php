@@ -10,14 +10,14 @@ $defaultCanonical = $baseUrl . $path;
 $canonical = $canonical ?? $defaultCanonical;
 
 // Получаем id юзера
-$userId = $userId ?? $authSession->getUserId();
+$userId = $currentUser['id'] ?? null;
 
 // Получаем инфу о корзине пользователя для счетчиков в хедере
 $cartCount = 0;    // ноль по умолчанию
 // Если есть сессия корзины и сервис корзины - то получаем cartCount
 if (isset($cartSession, $cartService)) {
     $cartSessionId = $cartSession->getId();    // получаем id сеанса корзины
-    $cartId = $cartService->getOrCreateCartId($cartSessionId, $userId);    // получаем id корзины из бд
+    $cartId = $cartService->getOrCreateCartId($cartSessionId, $currentUser['id']);    // получаем id корзины из бд
     $cartCount = $cartService->getItemsCount($cartId);    // получаем кол-во товаров в корзине (для отображения в хедере)
 }
 ?>

@@ -1,24 +1,3 @@
-<?php
-// Задаем дефолты
-$email = '';
-$name  = '';
-$userId = $userId ?? null;
-
-if ($userId !== null) {
-    //ищем пользователя в бд
-    $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    // Вытаскиваем логин и имя из бд
-    foreach ($result as $item) {
-        $email = $item['email'];
-        $name = $item['name'];
-    }
-}
-?>
-
 <header class="header">
     <a href="/" class="icon_href">
         <div class="internet_shop">
@@ -39,31 +18,25 @@ if ($userId !== null) {
                 </div>
             </div>
         </a>
-        <?php
-        if ($userId === null) {
-        ?>
-        <a data-open-modal="authorization" style="cursor: pointer;">
-            <div class="header_button">
-                <img class="header_button_icon" src="/img/box.png">
-                <div class="header_button_text">
-                    Мои заказы
+        <?php if ($currentUser === null) { ?>
+            <a data-open-modal="authorization" style="cursor: pointer;">
+                <div class="header_button">
+                    <img class="header_button_icon" src="/img/box.png">
+                    <div class="header_button_text">
+                        Мои заказы
+                    </div>
                 </div>
-            </div>
-        </a>
-        <?php
-        } else {
-        ?>
-        <a href="/account/orders">
-            <div class="header_button">
-                <img class="header_button_icon" src="/img/box.png">
-                <div class="header_button_text">
-                    Мои заказы
+            </a>
+        <?php } else { ?>
+            <a href="/account/orders">
+                <div class="header_button">
+                    <img class="header_button_icon" src="/img/box.png">
+                    <div class="header_button_text">
+                        Мои заказы
+                    </div>
                 </div>
-            </div>
-        </a>
-        <?php
-        }
-        ?>
+            </a>
+        <?php } ?>
         <a href="/contacts">
             <div class="header_button">
                 <img class="header_button_icon" src="/img/phone.png">
@@ -100,9 +73,7 @@ if ($userId !== null) {
             <div class="query_products_container hidden" id="query-products-container"></div>
         </div>
     </div>
-    <?php
-    if (!$userId) {
-    ?>
+    <?php if ($currentUser === null) { ?>
         <div class="header_account">
             <img class="header_account_icon" src="/img/person.png">
             <button class="header_account_button_guest"  id="open-authorization-modal">
@@ -112,17 +83,15 @@ if ($userId !== null) {
                 Зарегистрироваться
             </button>
         </div>
-    <?php
-    } else {
-    ?>
+    <?php } else { ?>
         <div class="header_account">
             <img class="header_account_icon" src="/img/person.png">
             <div class="header_account_data">
                 <div class="header_account_inf">
-                    <?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
                 </div>
                 <div class="header_account_inf">
-                    <?= htmlspecialchars($email, ENT_QUOTES, 'UTF-8') ?>
+                    <?= htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') ?>
                 </div>
             </div>
             <div class="header_account_buttons_logged_in">

@@ -140,7 +140,7 @@
 </div>
 
 <!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога, времени доставки/самовывоза
-через глобальный объект, делаем это через навешивание объекта GYM_BOSS_DELIVERY на wondow -->
+через глобальный объект, делаем это через навешивание объекта GYM_BOSS_DELIVERY на window -->
 <script>
   window.GYM_BOSS_DELIVERY = {
     courierFreeThreshold: <?= (int)$deliveryConfig['free_delivery_threshold'] ?>,

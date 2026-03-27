@@ -63,7 +63,7 @@ $pageData = match ($status) {
 };
 
 // Смотрим, залогинен ли пользователь 
-$isAuthenticated = $authSession->isAuthenticated();
+$isAuthenticated = $currentUser !== null;
 
 $title  = "Подтверждение почты - Gym Boss";
 $robots = 'noindex, nofollow';

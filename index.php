@@ -170,6 +170,20 @@ if (strpos($uri, '/api/') === 0) {
 
 // Web-маршруты
 
+// Получаем текущего пользователя
+$currentUser = null;
+$userId = $authSession->getUserId();
+if ($userId !== null) {
+    try {
+        $currentUser = $authService->getUserInfo($userId);
+    } catch (\Throwable $e) {
+        // TODO: потом сделать правильно через логер (с контекстом)
+        error_log('Failed to get current user: ' . $e->getMessage());
+
+        $currentUser = null;
+    }
+}
+
 // Web маршруты, требуещие авторизации
 $protectedWebRoutes = [
     '/account/orders',

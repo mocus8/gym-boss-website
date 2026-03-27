@@ -5,8 +5,8 @@ $title  = 'Корзина товаров - Gym Boss';
 $robots = 'noindex,nofollow';
 $pageModuleScripts = ['/js/cart/cart.page.js'];
 
-// Получаем id пользователя 
-$userId = $authSession->getUserId();
+// Смотрим, залогинен ли пользователь 
+$isAuthenticated = $currentUser !== null;
 
 // Через буфер записываем в переменную контент страницы
 ob_start();
