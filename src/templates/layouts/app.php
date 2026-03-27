@@ -84,7 +84,9 @@ if (isset($cartSession, $cartService)) {
             <?php } ?>
         <?php } ?>
 
-        <!-- универсальная модалка подтверждения -->
+        <!-- Универсальная модалка подтверждения -->
         <?php require __DIR__ . '/../partials/modals/confirmation_modal.php' ?>
+        <!-- Модалка входа/регистрации -->
+        <?php require __DIR__ . '/../partials/modals/auth_modal.php' ?>
 	</body>
 </html>

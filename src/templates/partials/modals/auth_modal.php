@@ -1,0 +1,125 @@
+<div
+    id="auth-modal"
+    class="modal"
+    data-modal
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="auth-modal-title"
+>
+    <div class="modal-overlay" data-modal-overlay></div>
+
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal__tabs">
+                <button type="button" class="btn chosen" data-modal-open-login>Войти</button>
+                <button type="button" class="btn" data-modal-open-register>Зарегистрироваться</button>
+            </div>
+
+            <button type="button" class="modal-close" data-modal-close aria-label="Закрыть модальное окно">×</button>
+        </div>
+
+        <div class="modal-body">
+            <form action="api/auth/login" method="POST" id="login-form">
+                <div class="registration_modal_input_back">
+                    <span class="registration_modal_input_text">
+                        Ваш email:
+                    </span>
+
+                    <input required class="registration_modal_input" type="email" name="email" autocomplete="email">
+                </div>
+
+                <div class="form_error form_error_hidden">
+                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <div class="error_modal_text"></div>
+                </div>
+
+                <div class="registration_modal_input_back">
+                    <span class="registration_modal_input_text">
+                        Ваш пароль:
+                    </span>
+
+                    <input required class="registration_modal_input" type="password" name="password" autocomplete="current-password">
+                </div>
+
+                <div class="form_error form_error_hidden">
+                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <div class="error_modal_text"></div>
+                </div>
+
+                <div class="registration_modal_buttons">
+                    <button class="btn" type="submit">
+                        Войти
+                    </button>
+                </div>
+            </form>
+
+            <form action="api/auth/register" method="POST" id="register-form" class="hidden">
+                <div class="registration_modal_input_back">
+                    <span class="registration_modal_input_text">
+                        Ваши имя и фамилия:
+                    </span>
+
+                    <input required class="registration_modal_input" type="text" name="name" autocomplete="name">
+                </div>
+
+                <div class="form_error form_error_hidden">
+                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <div class="error_modal_text"></div>
+                </div>
+
+                <div class="registration_modal_input_back">
+                    <span class="registration_modal_input_text">
+                        Ваш email:
+                    </span>
+
+                    <input required class="registration_modal_input" type="email" name="email" autocomplete="email">
+                </div>
+
+                <div class="form_error form_error_hidden">
+                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <div class="error_modal_text"></div>
+                </div>
+
+                <div class="registration_modal_input_back">
+                    <span class="registration_modal_input_text">
+                        Ваш пароль:
+                    </span>
+
+                    <input required class="registration_modal_input" type="password" name="password" autocomplete="new-password">
+                </div>
+
+                <div class="form_error form_error_hidden">
+                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <div class="error_modal_text"></div>
+                </div>
+
+                <div class="registration_modal_input_back">
+                    <span class="registration_modal_input_text">
+                        Введите пароль еще раз:
+                    </span>
+
+                    <input required class="registration_modal_input" type="password" name="confirm-password">
+                </div>
+
+                <div class="form_error form_error_hidden">
+                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <div class="error_modal_text"></div>
+                </div>
+
+                <div class="registration_modal_buttons">
+                    <button class="btn" type="submit">
+                        Зарегестрироваться
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn" id="forgot-password-btn">Забыли пароль?</button>
+
+            <button type="button" class="btn" data-modal-open-register>Нет аккаунта? Зарегестрируйтесь</button>
+
+            <button type="button" class="btn hidden" data-modal-open-login>Уже есть аккаунт? Авторизируйтесь</button>
+        </div>
+    </div>
+</div>
