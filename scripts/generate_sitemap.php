@@ -16,7 +16,7 @@ if (!$appUrl || !$baseUrl) {
 $urls = [
     ['loc' => $baseUrl . '/'],
     ['loc' => $baseUrl . '/contacts'],
-    ['loc' => $baseUrl . '/kwork-customers'],
+    ['loc' => $baseUrl . '/about'],
     ['loc' => $baseUrl . '/privacy'],
     ['loc' => $baseUrl . '/stores']
 ];
