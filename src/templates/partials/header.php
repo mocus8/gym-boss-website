@@ -3,324 +3,108 @@
         <div class="internet_shop">
             Интернет-магазин спортивной атрибутики
         </div>
+
         <div class="gym_boss">
             “Gym Boss”
         </div>
+
         <img class="billy" src="/img/billy.svg" alt="Мужик, качёк, крутой парень, Билли Харрингтон">
 <!--                                                                        Добавлять этот атрибут для CEO-->
     </a>
+
     <div class="header_buttons">
-        <a href="/cart">
+        <a href="/">
             <div class="header_button">
-                <img class="header_button_icon" src="/img/cart.png">
+                <img class="header_button_icon" src="/img/catalog.png">
+                
                 <div class="header_button_text">
-                    Корзина (<span id="header-cart-counter"><?= $cartCount ?></span>)
+                    Каталог
                 </div>
             </div>
         </a>
-        <?php if ($currentUser === null) { ?>
-            <a data-open-modal="authorization" style="cursor: pointer;">
-                <div class="header_button">
-                    <img class="header_button_icon" src="/img/box.png">
-                    <div class="header_button_text">
-                        Мои заказы
-                    </div>
-                </div>
-            </a>
-        <?php } else { ?>
-            <a href="/account/orders">
-                <div class="header_button">
-                    <img class="header_button_icon" src="/img/box.png">
-                    <div class="header_button_text">
-                        Мои заказы
-                    </div>
-                </div>
-            </a>
-        <?php } ?>
-        <a href="/contacts">
-            <div class="header_button">
-                <img class="header_button_icon" src="/img/phone.png">
-                <div class="header_button_text">
-                    Контакты
-                </div>
-            </div>
-        </a>
+
         <a href="/stores">
             <div class="header_button">
                 <img class="header_button_icon" src="/img/map.png">
+
                 <div class="header_button_text">
                     Наши магазины
                 </div>
             </div>
         </a>
-        <a href="/kwork-customers">
+
+        <a href="/contacts">
             <div class="header_button">
-                <img class="header_button_icon" src="/img/kwork.png">
+                <img class="header_button_icon" src="/img/phone.png">
+
                 <div class="header_button_text">
-                    Для заказчиков
+                    Контакты
                 </div>
             </div>
         </a>
-    </div>
+
+        <a href="/about">
+            <div class="header_button">
+                <img class="header_button_icon" src="/img/info.png">
+
+                <div class="header_button_text">
+                    О сайте
+                </div>
+            </div>
+        </a>
+     </div>
+
     <div class="header_search" id="header-search">
         <div class="header_search_click">
             <img class="header_search_icon" src="/img/glass.png">
+
             <label for="header-search-input" class="header_search_text">
                 Поиск товаров:
             </label>
+
             <input type="search" id="header-search-input" name="q" placeholder="гриф для штанги ..." class="header_search_input" autocomplete="off" maxlength="150">
+            
             <button class="header_search_cancel_button hidden" id="header-search-cancel-button">✕</button>
+
             <div class="query_products_container hidden" id="query-products-container"></div>
         </div>
     </div>
-    <?php if ($currentUser === null) { ?>
-        <div class="header_account">
+
+    <div class="header_account">
+        <div class="header_account_up">
             <img class="header_account_icon" src="/img/person.png">
-            <button class="header_account_button_guest"  id="open-authorization-modal">
-                Войти в аккаунт
-            </button>
-            <button class="header_account_button_guest" id="open-registration-modal">
-                Зарегистрироваться
-            </button>
+
+            <a href="/cart">
+                <div class="header_button account">
+                    <img class="header_button_icon" src="/img/cart.png">
+
+                    <div class="header_button_text">
+                        Корзина (<span id="header-cart-counter"><?= $cartCount ?></span>)
+                    </div>
+                </div>
+            </a>
         </div>
-    <?php } else { ?>
-        <div class="header_account">
-            <img class="header_account_icon" src="/img/person.png">
+
+        <?php if ($currentUser === null) { ?>
+            <button class="header_account_button_guest"  data-modal-open="auth-modal">
+                Войти
+            </button>
+        <?php } else { ?>
             <div class="header_account_data">
-                <div class="header_account_inf">
-                    <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
-                </div>
-                <div class="header_account_inf">
-                    <?= htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') ?>
-                </div>
-            </div>
-            <div class="header_account_buttons_logged_in">
-                <button class="header_account_button_logged_in" id="open-account-editior-modal">
-                    <img class="header_account_button_logged_in_icon"src="/img/edit.png">
+                <button class="header_account_trigger" type="button">
+                    <div class="header_account_inf">
+                        <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
+                    </div>
                 </button>
-                <button class="header_account_button_logged_in" id="open-account-exit-modal">
-                    <img class="header_account_button_logged_in" src="/img/exit.png">
-                </button>
-                <button class="header_account_button_logged_in" id="open-account-edit-modal">
-                    <img class="header_account_button_logged_in_icon"src="/img/trash.png">
-                </button>
-            </div>
-        </div>
-    <?php
-    }
-    ?>
-    <div class="header_modal hidden" id="header-modal">
-        <button class="header_modal_close_btn" id="header-modal-close">✕</button>
-        <div class="header_modal_top">
-            <img class="header_modal_icon"src="/img/inf.png">
-            <div class="header_modal_text" id="header-modal-text"></div>
-        </div>
-        <div class="header_modal_progress">
-            <div class="header_modal_text_progress_fill" id="header-modal-progress-fill"></div>
-        </div>
-    </div>
-    <div class="registration_modal_blur" id="registration-modal">
-        <div class="registration_modal">
-            <div class="registration_modal_entry_text">
-                Регистрация
-            </div>
-            <form action="src/registration.php" method="POST" class="registration_modal_form" data-recaptcha-site-key="<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>">
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Ваше имя и фамилия:
-                    </span>
-                    <input required class="registration_modal_input" type="text" name="name" autocomplete="name" maxlength="30">
-                </div>
-                <div class="registration_modal_sms_code_section">
-                    <div class="registration_modal_input_back short">
-                        <span class="registration_modal_input_text">
-                            Ваш телефон:
-                        </span>
-                        <input required class="registration_modal_input" type="tel" placeholder="+7 (XXX) XXX-XX-XX" name="login" autocomplete="tel">
-                    </div>
-                    <div class="registration_modal_input_back short hidden">
-                        <span class="registration_modal_input_text">
-                            Код подтверждения:
-                        </span>
-                        <input class="registration_modal_input" type="text" placeholder="12345" name="sms_code" maxlength="5">
-                    </div>
-                    <button class="registration_modal_sms_code_button" type="button" id="first-sms-code">
-                        <span class="first_sms_code_btn_text">Получить код</span> <span data-action="retry-sms-code-timer"></span> 
-                    </button>
-                    <button class="registration_modal_sms_code_button hidden" type="button" id="retry-sms-code">
-                    <span class="retry_sms_code_btn_text">Отправить снова</span> <span data-action="retry-sms-code-timer"></span> 
-                    </button>
-                    <button class="registration_modal_sms_code_button hidden" type="button" id="phone-change">
-                        Ред. номер
-                    </button>
-                </div>
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Ваш пароль:
-                    </span>
-                    <input required class="registration_modal_input" type="password" name="password" autocomplete="new-password">
-                </div>
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Подтверждение пароля:
-                    </span>
-                    <input required class="registration_modal_input" type="password" name="confirm-password" autocomplete="new-password">
-                </div>
-                <div class="registration_modal_buttons">
-                    <button class="registration_modal_button" type="button" id="close-registration-modal">
-                        Закрыть
-                    </button>
-                    <button class="registration_modal_button" type="submit" id="submit-registration">
-                        Зарегистрироваться
-                    </button>
-                </div>
-                <div class="user_already_exists_back" id="user-already-exists-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Пользователь уже зарегистрирован.
-                    </div>
-                </div>
-                <div class="incorrect_sms_code_back" id="incorrect-sms-code-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Неверный код подтверждения.
-                    </div>
-                </div>
-                <div class="incorrect_phone_number_back" id="incorrect-phone-number-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Неверный формат номера.
-                    </div>
-                </div>
-                <div class="password_mismatch_back" id="password-mismatch-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Пароли не совпадают.
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="authorization_modal_blur" id="authorization-modal">
-        <div class="authorization_modal">
-            <div class="authorization_modal_entry_text">
-                Вход в аккаунт
-            </div>
-            <form action="/src/authorization.php" method="POST" class="authorization_modal_form">
-                <div class="authorization_modal_input_back">
-                    <span class="authorization_modal_input_text">
-                        Ваш телефон:
-                    </span>
-                    <input required class="authorization_modal_input" type="tel" placeholder="+7 (XXX) XXX-XX-XX" name="login" autocomplete="tel">
-                </div>
-                <div class="authorization_modal_input_back">
-                    <span class="authorization_modal_input_text">
-                        Ваш пароль:
-                    </span>
-                    <input required class="authorization_modal_input" type="password" name="password" autocomplete="current-password">
-                </div>
-                <div class="authorization_modal_buttons">
-                    <button class="authorization_modal_button" type="button" id="close-authorization-modal">
-                        Закрыть
-                    </button>
-                    <button class="authorization_modal_button" type="submit">
-                        Войти
-                    </button>
-                </div>
-                <div class="uknown_user_back" id="uknown-user-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Пользователь с таким телефоном не зарегистрирован.
-                    </div>
-                </div>
-                <div class="wrong_password_back" id="wrong-password-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Неверный пароль.
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="registration_modal_blur" id="account-edit-modal">
-        <div class="account_edit_modal">
-            <div class="account_edit_modal_entry_text">
-                Редактирование аккаунта
-            </div>
-            <form action="src/editAccount.php" method="POST" class="registration_modal_form">
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Ваше имя:
-                    </span>
-                    <input required class="registration_modal_input" type="text" value="<?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>" name="name" autocomplete="name" maxlength="30">
-                </div>
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Ваш старый пароль:
-                    </span>
-                    <input required class="registration_modal_input" type="password" name="oldPassword" id="password-input-1" autocomplete="current-password">
-                    <div class="account_edit_modal_password_button" id="account-edit-modal-password-button-1">
-                        Показать
-                    </div>
-                </div>
-                <div class="registration_modal_input_back">
-                    <span class="registration_modal_input_text">
-                        Ваш новый пароль:
-                    </span>
-                    <input required class="registration_modal_input" type="password" name="newPassword" id="password-input-2" autocomplete="new-password">
-                    <div class="account_edit_modal_password_button" id="account-edit-modal-password-button-2">
-                        Показать
-                    </div>
-                </div>
-                <div class="old_password_missmatch_back" id="old-password-missmatch-modal">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
-                    <div class="error_modal_text">
-                        Старый пароль не совпадает.
-                    </div>
-                </div>
-                <div class="registration_modal_buttons">
-                    <button class="registration_modal_button" type="button" id="close-account-edit-modal">
-                        Отмена
-                    </button>
-                    <button class="registration_modal_button" type="submit">
-                        Сохранить
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="registration_modal_blur" id="account-exit-modal">
-        <div class="account_delete_modal">
-            <div class="account_delete_modal_entry_text">
-                Вы уверены что выйти из аккаунта?
-            </div>
-            <div class="registration_modal_form">
-                <div class="registration_modal_buttons">
-                    <button class="registration_modal_button" type="button" id="close-account-exit-modal">
-                        Отмена
-                    </button>
-                    <a href="/src/logout.php" class="registration_modal_button">
-                        Выйти
-                    </a>
+
+                <div class="header_account_dropdown">
+                    <a href="/account">Профиль</a>
+
+                    <a href="/account/orders">Мои заказы</a>
+
+                    <button data-modal-open="logout-modal">Выйти</button>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="registration_modal_blur" id="account-delete-modal">
-        <div class="account_delete_modal">
-            <div class="account_delete_modal_entry_text">
-                Вы уверены что хотите удалить аккаунт?
-            </div>
-            <div class="registration_modal_form">
-                <div class="registration_modal_buttons">
-                    <button class="registration_modal_button" type="button" id="close-account-delete-modal">
-                        Отмена
-                    </button>
-                    <a href="/src/deleteAccount.php" class="registration_modal_button">
-                        Удалить
-                    </a>
-                </div>
-            </div>
-        </div>
+        <?php } ?>
     </div>
 </header>

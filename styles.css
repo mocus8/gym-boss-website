@@ -270,7 +270,7 @@ button {
     position: absolute;
     left: 24%;
     top: 3.75%;
-    width: 73%;
+    width: 50%;
     height: 25%;
     display: flex;
 }
@@ -428,35 +428,114 @@ button {
     right: 1.5%;
     bottom: 0;
     width: 20.25%;
-    height: 63.5%;
-    background-image: url("./img/header_account_back.svg");
-    background-size: 100% 100%;
-    background-repeat: no-repeat;
+    height: 80%;
+    background-color: #bd1b1b;
+    border: 0.1vw solid black;
+    border-radius: 0.5vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.header_account_up {
+    display: flex;
+    flex-direction: row;
 }
 
 .header_account_icon {
-    position: absolute;
     width: 15%;
     left: 15%;
 }
 
 .header_account_data {
-    position: absolute;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
     margin-top: 0.5vw;
-    margin-left: 6.7vw;
-    width: 60%;
+    width: 15vw;
+    display: inline-block;
+}
+
+.header_account_trigger {
+    position: relative;
+    width: 100%;
+    background-color: #4b4b4b;
+    border: 0.1vw solid black;
+    border-radius: 0.5vw;
+    padding: 0 1vw;
+    display: flex;
+    box-sizing: border-box;
+    flex-direction: row;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.header_account_trigger::after {
+    content: "";
+    display: inline-block;
+    margin-left: 6px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.16s ease;
+    align-self: center;
+}
+
+.header_account_data:hover .header_account_trigger::after {
+    transform: rotate(-135deg);
 }
 
 .header_account_inf {
     position: relative;
-    left: 50%;
-    transform: translateX(-50%);
     white-space: nowrap;
     overflow-x: hidden;
     text-overflow: ellipsis;
     font-size: 1.2vw;
     font-family: "Jost", Arial;
-    text-align: center;
+}
+
+.header_account_dropdown {
+    z-index: 100;
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    padding: 8px 0;
+    background-color: #4b4b4b;
+    border: 0.1vw solid black;
+    border-radius: 0.5vw;
+    font-size: 1.2vw;
+    font-family: "Jost", Arial;
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.header_account_data:hover .header_account_dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.header_account_dropdown > * {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+
+    color: #111;
+    cursor: pointer;
+}
+
+.header_account_dropdown > *:hover,
+.header_account_button_logged_in:hover {
+    background: #f3f4f6;
 }
 
 .header_account_buttons_logged_in {
@@ -2888,4 +2967,10 @@ button {
     background-color: #b42318;
     padding: 3vw;
     border-radius: 0.5vw;
+}
+
+.account {
+    margin-left: auto;
+    width: 12.5vw;
+    height: 2.5vw;
 }
