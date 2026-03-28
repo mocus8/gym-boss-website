@@ -35,7 +35,6 @@ class Notification {
             !this.#progress ||
             !this.#closeBtn
         ) {
-            // тут потом правильное логирование
             console.error("[Notification] Необходимые элементы не найдены");
             return;
         }

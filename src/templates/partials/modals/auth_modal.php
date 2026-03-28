@@ -11,8 +11,8 @@
     <div class="modal-content">
         <div class="modal-header">
             <div class="modal__tabs">
-                <button type="button" class="btn chosen" data-modal-open-login>Войти</button>
-                <button type="button" class="btn" data-modal-open-register>Зарегистрироваться</button>
+                <button type="button" class="btn chosen" data-auth-tab="login">Войти</button>
+                <button type="button" class="btn" data-auth-tab="register">Зарегистрироваться</button>
             </div>
 
             <button type="button" class="modal-close" data-modal-close aria-label="Закрыть модальное окно">×</button>
@@ -25,7 +25,14 @@
                         Ваш email:
                     </span>
 
-                    <input required class="registration_modal_input" type="email" name="email" autocomplete="email">
+                    <input
+                        required
+                        class="registration_modal_input"
+                        type="email"
+                        name="email"
+                        autocomplete="email"
+                        maxlength="254"
+                    >
                 </div>
 
                 <div class="form_error form_error_hidden">
@@ -38,7 +45,14 @@
                         Ваш пароль:
                     </span>
 
-                    <input required class="registration_modal_input" type="password" name="password" autocomplete="current-password">
+                    <input
+                        required
+                        class="registration_modal_input"
+                        type="password"
+                        name="password"
+                        autocomplete="current-password"
+                        maxlength="254"
+                    >
                 </div>
 
                 <div class="form_error form_error_hidden">
@@ -59,7 +73,14 @@
                         Ваши имя и фамилия:
                     </span>
 
-                    <input required class="registration_modal_input" type="text" name="name" autocomplete="name">
+                    <input
+                        required
+                        class="registration_modal_input"
+                        type="text"
+                        name="name"
+                        autocomplete="name"
+                        maxlength="100"
+                    >
                 </div>
 
                 <div class="form_error form_error_hidden">
@@ -72,7 +93,14 @@
                         Ваш email:
                     </span>
 
-                    <input required class="registration_modal_input" type="email" name="email" autocomplete="email">
+                    <input
+                        required
+                        class="registration_modal_input"
+                        type="email"
+                        name="email"
+                        autocomplete="email"
+                        maxlength="254"
+                    >
                 </div>
 
                 <div class="form_error form_error_hidden">
@@ -85,7 +113,15 @@
                         Ваш пароль:
                     </span>
 
-                    <input required class="registration_modal_input" type="password" name="password" autocomplete="new-password">
+                    <input
+                        required
+                        class="registration_modal_input"
+                        type="password"
+                        name="password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        maxlength="64"
+                    >
                 </div>
 
                 <div class="form_error form_error_hidden">
@@ -98,7 +134,14 @@
                         Введите пароль еще раз:
                     </span>
 
-                    <input required class="registration_modal_input" type="password" name="confirm-password">
+                    <input
+                        required
+                        class="registration_modal_input"
+                        type="password"
+                        name="confirm-password"
+                        minlength="8"
+                        maxlength="64"
+                    >
                 </div>
 
                 <div class="form_error form_error_hidden">
@@ -117,9 +160,9 @@
         <div class="modal-footer">
             <button type="button" class="btn" id="forgot-password-btn">Забыли пароль?</button>
 
-            <button type="button" class="btn" data-modal-open-register>Нет аккаунта? Зарегестрируйтесь</button>
+            <button type="button" class="btn" data-auth-switch-to="register">Нет аккаунта? Зарегестрируйтесь</button>
 
-            <button type="button" class="btn hidden" data-modal-open-login>Уже есть аккаунт? Авторизируйтесь</button>
+            <button type="button" class="btn hidden" data-auth-switch-to="login">Уже есть аккаунт? Авторизируйтесь</button>
         </div>
     </div>
 </div>
