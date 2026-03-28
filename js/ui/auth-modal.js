@@ -1,7 +1,7 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
 import { login, register, forgotPassword } from "../users/auth/auth.api.js";
 import { getErrorMessage, setButtonLoading } from "../utils.js";
-import { notification } from "./ui/notification.js";
+import { notification } from "./notification.js";
 
 // Класс для управления модалкой аутонтификации (вход/регистрация)
 class AuthModal {
@@ -44,6 +44,16 @@ class AuthModal {
 
         // Вешаем обработчик всех клавиш на функцию
         document.addEventListener("keydown", (e) => this.#handleKeydown(e));
+
+        // Вешаем обработчики для открытия модалки (делигирование событий)
+        document.addEventListener("click", (e) => {
+            const target = e.target;
+
+            if (target.closest('[data-modal-open="auth-modal"]')) {
+                this.#setAuthMode("login");
+                this.open();
+            }
+        });
     }
 
     // Метод открытия модалки
@@ -258,9 +268,9 @@ class AuthModal {
         this.#registerForm.classList.toggle("hidden", isLogin);
 
         // Переключаем видимость опций в футере модалки
-        this.#forgotPassBtn.classList.toggle("hidden", isLogin);
-        this.#footerSwitchToLoginBtn.classList.toggle("hidden", !isLogin);
-        this.#footerSwitchToRegisterBtn.classList.toggle("hidden", isLogin);
+        this.#forgotPassBtn.classList.toggle("hidden", !isLogin);
+        this.#footerSwitchToLoginBtn.classList.toggle("hidden", isLogin);
+        this.#footerSwitchToRegisterBtn.classList.toggle("hidden", !isLogin);
     }
 
     // Подтверждение формы входа
@@ -517,16 +527,6 @@ class AuthModal {
         }
     }
 
-    // Скрытие всех ошибок на формах
-    #hideErrors() {
-        const authErrors = this.#authModal.querySelectorAll(".form_error");
-
-        authErrors.forEach((errorEl) => {
-            errorEl.querySelector(".error_modal_text").textContent = "";
-            errorEl.classList.add("form_error_hidden");
-        });
-    }
-
     // Показ ошибки под конкретным input-ом
     #showInputError(inputEl, errorMessage) {
         const inputElWrapper = inputEl.closest(
@@ -543,6 +543,26 @@ class AuthModal {
 
         inputErrorTextEl.textContent = errorMessage;
         inputErrorEl.classList.remove("form_error_hidden");
+
+        // Навешиваем обработчик для закрытия ошибки при исправлении в input-е
+        inputEl.addEventListener(
+            "input",
+            () => {
+                inputErrorEl.classList.add("form_error_hidden");
+                inputErrorTextEl.textContent = "";
+            },
+            { once: true },
+        );
+    }
+
+    // Скрытие всех ошибок на формах
+    #hideErrors() {
+        const authErrors = this.#authModal.querySelectorAll(".form_error");
+
+        authErrors.forEach((errorEl) => {
+            errorEl.querySelector(".error_modal_text").textContent = "";
+            errorEl.classList.add("form_error_hidden");
+        });
     }
 }
 
