@@ -30,6 +30,7 @@ export async function requestApi(baseUrl, path, options = {}) {
         const error = new Error(message); // понятное сообщение
         error.status = response.status; // HTTP-код
         error.code = apiError && apiError.code; // бизнес-код с бэка
+        error.retryAfter = response.headers.get("Retry-After"); // хедер с временем кулдауна
         error.payload = data; // весь ответ
         throw error;
     }

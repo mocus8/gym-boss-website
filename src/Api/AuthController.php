@@ -168,6 +168,11 @@ class AuthController extends BaseController {
         } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
 
+            // Если есть значение кулдауна - передаем его в заголовке
+            if ($e->getRetryAfter() !== null) {
+                header('Retry-After: ' . $e->getRetryAfter());
+            }
+
             $this->error(401, $e->getErrorCode(), $e->getMessage());
 
         } catch (\Throwable $e) {

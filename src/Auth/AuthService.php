@@ -895,7 +895,7 @@ class AuthService {
     private function checkLoginLimit(string $email): void {
         // Находим кол-во попыток за время (задано в константе)
         $sql = "
-            SELECT COUNT(*)
+            SELECT COUNT(*) AS attempts, MIN(attempted_at) AS first_attempt
             FROM login_attempts
             WHERE email = ?
                 AND attempted_at > NOW() - INTERVAL ? SECOND             
@@ -923,7 +923,7 @@ class AuthService {
             throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
         }
 
-        $row = $result->fetch_row();
+        $row = $result->fetch_assoc();
 
         if ($row === null) {
             $stmt->close();
@@ -933,11 +933,15 @@ class AuthService {
         $stmt->close();
 
         // Кол-во попыток за последние LOGIN_ATTEMPTS_WINDOW секунд
-        $count = (int)$row[0];
+        $count = (int)$row['attempts'];
 
         // Если превысили лимит - ошибку 
         if ($count >= self::MAX_LOGIN_ATTEMPTS) {
-            throw new AppException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts');
+            $firstAttemptAt = strtotime($row['first_attempt']);    // переводится в unix-timestamp
+            $fromFirstAttempt = time() - $firstAttemptAt;    // сколько секунд прошло с первой попытки
+            $retryAfter = max($window - $fromFirstAttempt, 1);    // сколько ещё ждать (минимум 1 секунда)
+
+            throw new AppException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts', $retryAfter);
         }
     }
 
