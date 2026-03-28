@@ -10,6 +10,42 @@ async function requestAuth(path, options = {}) {
     return requestApi(AUTH_BASE_URL, path, options);
 }
 
+// Функция для входа в аккаунт
+// Отправляет запрос POST /api/auth/login
+export function login(email, password) {
+    return requestAuth("/login", {
+        method: "POST",
+        body: JSON.stringify({
+            email: email,
+            password: password,
+        }),
+    });
+}
+
+// Функция для регистрации
+// Отправляет запрос POST /api/auth/register
+export function register(email, password, name) {
+    return requestAuth("/register", {
+        method: "POST",
+        body: JSON.stringify({
+            email: email,
+            password: password,
+            name: name,
+        }),
+    });
+}
+
+// Функция для старта сброса пароля
+// Отправляет запрос POST /api/auth/password/forgot
+export function forgotPassword(email) {
+    return requestAuth("/password/forgot", {
+        method: "POST",
+        body: JSON.stringify({
+            email: email,
+        }),
+    });
+}
+
 // Функция для сброса пароля
 // Отправляет на бэк оба введеных пароля для дополнительной проверки на совпадение
 // Отправляет запрос POST /api/auth/password/reset
