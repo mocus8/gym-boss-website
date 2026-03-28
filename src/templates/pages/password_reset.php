@@ -20,14 +20,30 @@
         <span class="registration_modal_input_text">
             Новый пароль:
         </span>
-        <input required class="registration_modal_input" type="password" name="password" autocomplete="new-password">
+        <input
+            required
+            class="registration_modal_input"
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="64"
+        >
     </div>
 
     <div class="registration_modal_input_back">
         <span class="registration_modal_input_text">
             Подтверждение пароля:
         </span>
-        <input required class="registration_modal_input" type="password" name="confirm-password" autocomplete="new-password">
+        <input
+            required
+            class="registration_modal_input"
+            type="password"
+            name="confirm-password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="64"
+        >
     </div>
 
     <div class="form_error form_error_hidden">

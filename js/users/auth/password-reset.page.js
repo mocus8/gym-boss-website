@@ -59,18 +59,13 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
             return;
         }
 
+        if (!resetPassForm.checkValidity()) {
+            showPassError("Пароль должен быть от 8 до 64 символов");
+            return;
+        }
+
         if (password !== confirmPassword) {
             showPassError("Пароли не совпадают");
-            return;
-        }
-
-        if (password.length < 8) {
-            showPassError("Пароль слишком короткий");
-            return;
-        }
-
-        if (password.length > 64) {
-            showPassError("Пароль слишком длинный");
             return;
         }
 
