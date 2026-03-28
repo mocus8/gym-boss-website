@@ -1,6 +1,6 @@
 <div
     id="auth-modal"
-    class="modal"
+    class="modal hidden"
     data-modal
     role="dialog"
     aria-modal="true"

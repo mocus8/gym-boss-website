@@ -66,6 +66,8 @@ if (isset($cartSession, $cartService)) {
 
         <!-- Обязательные для всех страниц -->
         <script defer src="/js/loader.js"></script>
+        <script type="module" src="/js/ui/auth-modal.js"></script>
+        <script type="module" src="/js/header/header.js"></script>
         <script type="module" src="/js/modals.js"></script>
         <script defer src="https://www.google.com/recaptcha/api.js?render=<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"></script>
         <script defer src="/js/inputmask.min.js"></script>
