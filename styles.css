@@ -2984,3 +2984,21 @@ button {
     width: 12.5vw;
     height: 2.5vw;
 }
+
+.account_wrapper {
+    padding-top: 1.25vw;
+    padding-bottom: 1.5vw;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vw;
+}
+
+.account_form {
+    margin-left: auto;
+    margin-right: auto;
+    width: 40vw;
+    background-color: #b42318;
+    padding: 3vw;
+    border-radius: 0.5vw;
+}
