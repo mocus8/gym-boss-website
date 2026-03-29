@@ -47,7 +47,7 @@ Content-Type: application/json
 
 
 ### Сменить данные профиля (имя)
-PATCH http://localhost/api/account/profile HTTP/1.1
+POST http://localhost/api/account/profile HTTP/1.1
 Content-Type: application/json
 
 {
@@ -57,7 +57,7 @@ Content-Type: application/json
 
 
 ### Сменить пароль, зная текущий
-PATCH http://localhost/api/account/password HTTP/1.1
+POST http://localhost/api/account/password HTTP/1.1
 Content-Type: application/json
 
 {

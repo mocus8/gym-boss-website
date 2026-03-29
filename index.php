@@ -25,16 +25,14 @@ if (strpos($uri, '/api/') === 0) {
         'POST' => [
             '/auth/email/resend',
             '/auth/logout',
+            '/account/profile',
+            '/account/password',
             '/orders/create-from-cart',
             '/dadata/suggest/address',
         ],
         'GET' => [
             '/auth/me',
             '/orders',
-        ],
-        'PATCH' => [
-            '/account/profile',
-            '/account/password',
         ],
         'DELETE' => [
             '/account',
@@ -73,6 +71,8 @@ if (strpos($uri, '/api/') === 0) {
             '/auth/logout' => [$authController, 'logout'],
             '/auth/password/forgot' => [$authController, 'forgotPassword'],
             '/auth/password/reset' => [$authController, 'resetPassword'],
+            '/account/profile' => [$accountController, 'updateProfile'],
+            '/account/password' => [$accountController, 'updatePassword'],
             '/cart/add-item' => [$cartController, 'addItem'],
             '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
             '/cart/remove-item' => [$cartController, 'removeItem'],
@@ -86,10 +86,6 @@ if (strpos($uri, '/api/') === 0) {
             '/products' => [$productController, 'getCatalog'],
             '/orders' => [$orderController, 'getUserOrders'],
             '/stores' => [$storeController, 'getAll'],
-        ],
-        'PATCH' => [
-            '/account/profile' => [$accountController, 'updateProfile'],
-            '/account/password' => [$accountController, 'updatePassword'],
         ],
          'DELETE' => [
              '/account' => [$accountController, 'delete'],
@@ -216,6 +212,7 @@ $routes = [
     '/cart' => 'cart.php',
     '/contacts' => 'contacts.php',
     '/about' => 'about.php',
+    '/account' => 'account.php',
     '/account/orders' => 'orders.php',
     '/checkout' => 'checkout.php',
     '/privacy' => 'privacy.php',
