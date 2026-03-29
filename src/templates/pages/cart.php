@@ -40,7 +40,7 @@
     </div>
     
     <?php if (!$isAuthenticated) { ?>
-        <a class="order_start hidden" id="start-order-btn" data-open-modal="registration">
+        <a class="order_start hidden" id="start-order-btn" data-modal-open="auth-modal">
             <div class="order_start_text">
                 Перейти к оформлению
             </div>
