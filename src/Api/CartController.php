@@ -43,7 +43,12 @@ class CartController extends BaseController {
 
             $cartId = $this->cartService->getCart($cartSessionId, $userId);
             if ($cartId === null) {
-                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                // Если корзина не найдена возвращаем пустую и выходим
+                $this->success(200, [
+                    'items' => [],
+                    'count' => 0,
+                    'total' => 0.00
+                ]);
                 return;
             }
 
