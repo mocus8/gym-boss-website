@@ -21,27 +21,26 @@ class CartService {
         $this->productService = $productService;
     }
 
-    // Поиск корзины по cart_session_id или user_id, нашли - возвращаем ее $cartId, нет - создаем и возвращаем $cartId новой
-    public function getOrCreateCartId(string $cartSessionId, ?int $userId): int {
-        // Проверяем аргументы 
-        if ($userId === null && $cartSessionId === '') {
-            throw new \InvalidArgumentException('Empty cartSessionId and userId');
-        }
-
+    // Поиск корзины по cart_session_id или user_id
+    public function getCart(?string $cartSessionId, ?int $userId): ?int {
         // Выбираем выражение исходя исходя из значения аргументов
-        if ($userId) {
+        if ($userId !== null) {
             $sql = "
                 SELECT id
                 FROM carts
                 WHERE user_id = ? AND is_converted = 0
                 LIMIT 1
             ";
+
             $stmt = $this->db->prepare($sql);
+
             if (!$stmt) {
                 throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
             }
+
             $stmt->bind_param("i", $userId);
-        } else {
+
+        } elseif ($cartSessionId !== null && $cartSessionId !== '') {
             $sql = "
                 SELECT id
                 FROM carts
@@ -56,6 +55,8 @@ class CartService {
             }
 
             $stmt->bind_param("s", $cartSessionId);
+        } else {
+            return null;
         }
 
         // Выполняем
@@ -76,16 +77,29 @@ class CartService {
 
         $stmt->close();
 
-        // Если строчка нашлась - возвращаем,
-        if ($row) {
-            return (int)$row['id'];
+        $cartId = $row ? (int)$row['id'] : null;
+
+        return $cartId;
+    }
+
+    // Поиск корзины по cart_session_id или user_id, нашли - возвращаем ее $cartId, нет - создаем и возвращаем $cartId новой
+    public function getOrCreateCart(?string $cartSessionId, ?int $userId): int {
+        // Проверяем аргументы 
+        if ($userId === null && ($cartSessionId === null || $cartSessionId === '')) {
+            throw new \InvalidArgumentException('Empty cartSessionId and userId');
+        }
+
+        $cartId = $this->getCart($cartSessionId, $userId);
+
+        if ($cartId !== null) {
+            return $cartId;
         }
 
         // Не нашли - заносим в таблицу новую строку
-        if ($userId) {
+        if ($userId !== null) {
             $sql = "
-                INSERT INTO carts (user_id, session_id)
-                VALUES (?, ?)
+                INSERT INTO carts (user_id)
+                VALUES (?)
             ";
 
             $stmt = $this->db->prepare($sql);
@@ -94,8 +108,9 @@ class CartService {
                 throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
             }
 
-            $stmt->bind_param("is", $userId, $cartSessionId);
-        } else {
+            $stmt->bind_param("i", $userId);
+
+        } elseif ($cartSessionId !== null && $cartSessionId !== '') {
             $sql = "
                 INSERT INTO carts (session_id)
                 VALUES (?)
@@ -118,6 +133,9 @@ class CartService {
 
         // Получаем id как последний вставленный в бд и возвращаем его
         $cartId = $this->db->insert_id;
+
+        $stmt->close();
+        
         return $cartId;
     }
 
