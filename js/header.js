@@ -7,11 +7,6 @@ import { logout } from "./users/auth/auth.api";
 import { ConfirmationModal } from "./ui/confirmation-modal.js";
 import { notification } from "./ui/notification.js";
 
-// TODO: доделать это файл:
-// сюда перенести все по поиску
-// сделать обработчик кнопки выхода с модалкой подтверждения
-// проверить старый modals.js
-
 // Инициализация поиска
 function initHeaderSearch() {
     const searchBlock = document.getElementById("header-search");
