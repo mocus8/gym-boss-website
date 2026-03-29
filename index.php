@@ -169,6 +169,7 @@ if (strpos($uri, '/api/') === 0) {
 }
 
 // Web-маршруты
+// Именно для web части получаем контекст запроса для отображения на странице (пользователя и его корзину)
 
 // Получаем текущего пользователя
 $currentUser = null;
@@ -181,6 +182,18 @@ if ($userId !== null) {
         error_log('Failed to get current user: ' . $e->getMessage());
 
         $currentUser = null;
+    }
+}
+
+// Получаем инфу о корзине пользователя для счетчиков в хедере
+$cartCount = 0;
+if (isset($cartSession, $cartService)) {
+    $cartSessionId = $cartSession->getId();    // получаем id сеанса корзины
+    $cartId = $cartService->getCart($cartSessionId, $userId);    // получаем id корзины из бд
+    
+    // Если нашелся $cartId - то получаем кол-во товаров в корзине (для отображения в хедере)
+    if ($cartId !== null) {
+        $cartCount = $cartService->getItemsCount($cartId);  
     }
 }
 
