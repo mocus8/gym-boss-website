@@ -41,7 +41,11 @@ class CartController extends BaseController {
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
-            $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
+            $cartId = $this->cartService->getCart($cartSessionId, $userId);
+            if ($cartId === null) {
+                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                return;
+            }
 
             // Собираем состояние корзины
             $data = $this->buildCartData($cartId);
@@ -69,7 +73,7 @@ class CartController extends BaseController {
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
-            $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
+            $cartId = $this->cartService->getOrCreateCart($cartSessionId, $userId);
 
             // Получаем json тело запроса и декодируем его через приватный метод
             $data = $this->getJsonBody();
@@ -77,11 +81,11 @@ class CartController extends BaseController {
                 return;
             }
 
-            $productId = isset($data['productId']) ? (int) $data['productId'] : 0;
+            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
             $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
 
             if ($productId <= 0 || $qty <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid productId or qty');
+                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
                 return;
             }
 
@@ -115,17 +119,21 @@ class CartController extends BaseController {
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
-            $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
+            $cartId = $this->cartService->getCart($cartSessionId, $userId);
+            if ($cartId === null) {
+                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                return;
+            }
 
             $data = $this->getJsonBody();
             if ($data === null) {
                 return;
             }
 
-            $productId = isset($data['productId']) ? (int) $data['productId'] : 0;
+            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
 
             if ($productId <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid productId');
+                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id');
                 return;
             }
 
@@ -155,18 +163,22 @@ class CartController extends BaseController {
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
-            $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
+            $cartId = $this->cartService->getCart($cartSessionId, $userId);
+            if ($cartId === null) {
+                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                return;
+            }
 
             $data = $this->getJsonBody();
             if ($data === null) {
                 return;
             }
 
-            $productId = isset($data['productId']) ? (int) $data['productId'] : 0;
+            $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
             $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
 
             if ($productId <= 0 || $qty < 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid productId or qty');
+                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
                 return;
             }
 
@@ -196,7 +208,11 @@ class CartController extends BaseController {
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
-            $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
+            $cartId = $this->cartService->getCart($cartSessionId, $userId);
+            if ($cartId === null) {
+                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                return;
+            }
 
             // Через метод класса CartService очищаем в бд корзину
             $this->cartService->clear($cartId);

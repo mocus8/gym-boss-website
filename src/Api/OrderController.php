@@ -75,7 +75,11 @@ class OrderController extends BaseController {
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
-            $cartId = $this->cartService->getOrCreateCartId($cartSessionId, $userId);
+            $cartId = $this->cartService->getCart($cartSessionId, $userId);
+            if ($cartId === null) {
+                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                return;
+            }
 
             // Получаем json тело запроса и декодируем его через приватный метод
             $data = $this->getJsonBody();
