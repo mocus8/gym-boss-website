@@ -311,7 +311,7 @@ class AuthModal {
 
             await login(email, password);
 
-            window.location.reload();
+            window.location.href = "/";
         } catch (e) {
             console.error("[auth-modal] Не удалось выполнить вход", {
                 message: e.message,

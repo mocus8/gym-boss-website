@@ -24,13 +24,9 @@ export function login(email, password) {
 
 // Функция для выхода из аккаунта
 // Отправляет запрос POST /api/auth/login
-export function logout(email, password) {
-    return requestAuth("/login", {
+export function logout() {
+    return requestAuth("/logout", {
         method: "POST",
-        body: JSON.stringify({
-            email: email,
-            password: password,
-        }),
     });
 }
 

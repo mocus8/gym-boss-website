@@ -63,7 +63,7 @@
         Пароль успешно изменен
     </div>
 
-    <a href="/auth/login" class="registration_modal_button">
+    <a class="registration_modal_button" data-modal-open="auth-modal">
         Войти в аккаунт
     </a>
 </div>

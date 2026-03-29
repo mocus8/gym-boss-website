@@ -3,7 +3,7 @@
 
 import { debounce, getErrorMessage } from "./utils.js";
 import { searchProducts } from "./products/products.api.js";
-import { logout } from "./users/auth/auth.api";
+import { logout } from "./users/auth/auth.api.js";
 import { ConfirmationModal } from "./ui/confirmation-modal.js";
 import { notification } from "./ui/notification.js";
 
