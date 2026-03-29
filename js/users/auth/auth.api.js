@@ -22,6 +22,18 @@ export function login(email, password) {
     });
 }
 
+// Функция для выхода из аккаунта
+// Отправляет запрос POST /api/auth/login
+export function logout(email, password) {
+    return requestAuth("/login", {
+        method: "POST",
+        body: JSON.stringify({
+            email: email,
+            password: password,
+        }),
+    });
+}
+
 // Функция для регистрации
 // Отправляет запрос POST /api/auth/register
 export function register(email, password, name) {

@@ -66,7 +66,7 @@
             
             <button class="header_search_cancel_button hidden" id="header-search-cancel-button">✕</button>
 
-            <div class="query_products_container hidden" id="query-products-container"></div>
+            <div class="query_products_container hidden" id="search-results-container"></div>
         </div>
     </div>
 
