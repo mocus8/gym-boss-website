@@ -135,7 +135,7 @@ class CartService {
         $cartId = $this->db->insert_id;
 
         $stmt->close();
-        
+
         return $cartId;
     }
 
@@ -143,9 +143,46 @@ class CartService {
     public function attachGuestCartToUser(string $cartSessionId, int $userId): void {
         // Проверяем аргументы 
         if ($userId <= 0 || $cartSessionId === '') {
-            throw new \InvalidArgumentException('Empty cartSessionId or invalid userId');
+            throw new \InvalidArgumentException('Invalid userId or empty cartSessionId');
         }
 
+        // Смотрим, есть ли уже у этого пользователя корзина
+        $sql = "
+            SELECT id
+            FROM carts
+            WHERE user_id = ? AND is_converted = 0
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если есть - просто выходим, гостевую корзину не трогаем
+        if ($row) return;
+
+        // Если нет - находим гостевую по session_id
         $sql = "
             SELECT id
             FROM carts
@@ -161,7 +198,6 @@ class CartService {
 
         $stmt->bind_param("s", $cartSessionId);
 
-        // Выполняем
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
             $stmt->close();
@@ -184,6 +220,7 @@ class CartService {
 
         $cartId = (int)$row['id'];
 
+        // У гостевой карзины записываем user id и удаляем session id
         $sql = "
             UPDATE carts
             SET user_id = ?, session_id = NULL

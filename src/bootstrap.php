@@ -123,22 +123,18 @@ $resendGateway = new ResendGateway(
 );
 $mailService = new MailService($resendGateway);
 
-// Работаем с сессией и пользователями
-$authSession = new AuthSession();
-$authService = new AuthService($db, $mailService, $baseUrl);
-$authController = new AuthController($authSession, $authService);
-
-// Работаем с аккаунтами пользователей
-$accountService = new AccountService($db);
-$accountController = new AccountController($authSession, $accountService);
-
 // Работаем с сервисом и контроллером товара
 $productService = new ProductService($db);    // создаем экземпляр класса
 $productController = new ProductController($productService);    // создаем экземпляр класса
 
-// Работаем с сервисом, контроллером и сессией корзины
+// Работаем с корзинами и пользователями
+$authSession = new AuthSession();
+$authService = new AuthService($db, $mailService, $baseUrl);
+$accountService = new AccountService($db);
+$accountController = new AccountController($authSession, $accountService);
 $cartSession = new CartSession();
 $cartService = new CartService($db, $productService);
+$authController = new AuthController($authSession, $authService, $cartSession, $cartService);
 $cartController = new CartController($cartSession, $authSession, $cartService);
 
 // Создаем сервис заказов

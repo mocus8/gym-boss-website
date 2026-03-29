@@ -11,29 +11,44 @@ namespace App\Api;
 use App\Support\AppException;
 use App\Auth\AuthSession;
 use App\Auth\AuthService;
+use App\Cart\CartSession;
+use App\Cart\CartService;
 
 // Класс для управления аутентификацией пользователей (через методы сервиса)
 class AuthController extends BaseController {
     private AuthSession $authSession;    // приватное свойство (переменная класса), привязанная к объекту
     private AuthService $authService;
+    private CartSession $cartSession;
+    private CartService $cartService;
 
-    public function __construct(AuthSession $authSession, AuthService $authService) {
+    public function __construct(
+        AuthSession $authSession,
+        AuthService $authService,
+        CartSession $cartSession,
+        CartService $cartService
+    ) {
         $this->authSession = $authSession;
         $this->authService = $authService;
+        $this->cartSession = $cartSession;
+        $this->cartService = $cartService;
     }
 
     // Будующий конструктор (с логером)
-    // public function __construct(AuthSession $authSession, AuthService $authService, Logger $logger) {
-    //    $this->authSession = $authSession;
-    //    $this->authService = $authService;
-    //    parent::__construct($logger);    // передаем логгер в родительский класс
+    // public function __construct(
+    //     AuthSession $authSession,
+    //     AuthService $authService,
+    //     CartSession $cartSession,
+    //     CartService $cartService,
+    //     Logger $logger
+    // ) {
+    //     $this->authSession = $authSession;
+    //     $this->authService = $authService;
+    //     $this->cartSession = $cartSession;
+    //     $this->cartService = $cartService;
+    //     parent::__construct($logger);    // передаем логгер в родительский класс
     // }
 
-    // Метод для старта регистрации:
-    // Проверяет что пользователь не залогинен
-    // Принимает и валидирует поля пользователя (email, password, name)
-    // Вызывает метод сервиса для регистрации
-    // Формирует ответ
+    // Метод для старта регистрации
     // Обработчик запроса POST /api/auth/register
     public function register(): void {
         try {
@@ -58,8 +73,12 @@ class AuthController extends BaseController {
             // Вызываем метод регистрации в auth сервисе
             $userId = $this->authService->register($email, $password, $name);
 
-            // Если получилось - логиним пользователя
+            //Логиним пользователя
             $this->authSession->login($userId);
+
+            // Обновляем карзину пользователя
+            $cartSessionId = $this->$cartSession->getId(); 
+            $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
             $this->success(201, [
                 'user_id' => $userId,
@@ -155,8 +174,12 @@ class AuthController extends BaseController {
             // Вызываем метод логина в auth сервисе (получаем инфу о пользователе)
             $userInfo = $this->authService->login($email, $password);
 
-            // Если получилось - логиним пользователя
+            // Логиним пользователя
             $this->authSession->login($userInfo['id']);
+
+            // Обновляем карзину пользователя
+            $cartSessionId = $this->$cartSession->getId(); 
+            $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
             $this->success(200, [
                 'user_id' => $userInfo['id'],
