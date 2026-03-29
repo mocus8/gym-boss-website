@@ -11,7 +11,7 @@
 
 <?php if ($canceledBy === 'user') { ?>
     Заказ был отменён по вашему запросу
-<?php } else if ($canceledBy === 'provider') { ?>
+<?php } elseif ($canceledBy === 'provider') { ?>
     Ваш заказ был отменён со стороны магазина. Приносим извинения за неудобства.
 <?php } ?>
 

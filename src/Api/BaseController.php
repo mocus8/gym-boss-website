@@ -115,7 +115,7 @@ abstract class BaseController {
         if (strlen($password) < 8) {
             $this->error(422, 'PASSWORD_TOO_SHORT', 'Password is too short');
             return null;
-        } else if (strlen($password) > 64) {
+        } elseif (strlen($password) > 64) {
             $this->error(422, 'PASSWORD_TOO_LONG', 'Password is too long');
             return null;
         }

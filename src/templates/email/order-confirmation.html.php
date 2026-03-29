@@ -78,7 +78,7 @@
                                     <p style="margin:0 0 16px;">
                                         Примерный срок доставки: с <?= $courierDeliveryFrom ?> до <?= $courierDeliveryTo ?>
                                     </p>
-                                <?php } else if ($deliveryTypeCode === 'pickup') { ?>
+                                <?php } elseif ($deliveryTypeCode === 'pickup') { ?>
                                     <p style="margin:0 0 16px;">
                                         Итоговая стоимость заказа: <?= $totalPrice ?>
                                     </p>

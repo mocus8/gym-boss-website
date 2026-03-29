@@ -73,12 +73,12 @@ class PaymentStatusSyncService {
             return;
         } 
         // Если платеж отменен
-        else if ($providerStatus === 'canceled') {
+        elseif ($providerStatus === 'canceled') {
             $this->paymentService->updateStatusByExternalId($externalPaymentId, 'canceled', $providerStatus);
             return;
         }
         // Если платеж ожидается
-        else if ($providerStatus === 'pending' || $providerStatus === 'waiting_for_capture') {
+        elseif ($providerStatus === 'pending' || $providerStatus === 'waiting_for_capture') {
             $this->paymentService->updateStatusByExternalId($externalPaymentId, 'pending', $providerStatus);
             return;
         }

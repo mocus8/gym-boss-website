@@ -16,7 +16,7 @@
     Адрес доставки: <?= htmlspecialchars($deliveryAddressText, ENT_QUOTES, 'UTF-8') ?>
 
     Примерный срок доставки: с <?= $courierDeliveryFrom ?> до <?= $courierDeliveryTo ?>
-<?php } else if ($deliveryTypeCode === 'pickup') { ?>
+<?php } elseif ($deliveryTypeCode === 'pickup') { ?>
     Итоговая стоимость заказа: <?= $totalPrice ?>
 
     Тип доставки: <?= htmlspecialchars($deliveryTypeName, ENT_QUOTES, 'UTF-8') ?>
