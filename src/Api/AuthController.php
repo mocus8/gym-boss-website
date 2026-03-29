@@ -77,7 +77,7 @@ class AuthController extends BaseController {
             $this->authSession->login($userId);
 
             // Обновляем карзину пользователя
-            $cartSessionId = $this->$cartSession->getId(); 
+            $cartSessionId = $this->cartSession->getId(); 
             $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
             $this->success(201, [
@@ -173,12 +173,13 @@ class AuthController extends BaseController {
 
             // Вызываем метод логина в auth сервисе (получаем инфу о пользователе)
             $userInfo = $this->authService->login($email, $password);
+            $userId = $userInfo['id'];
 
             // Логиним пользователя
-            $this->authSession->login($userInfo['id']);
+            $this->authSession->login($userId);
 
             // Обновляем карзину пользователя
-            $cartSessionId = $this->$cartSession->getId(); 
+            $cartSessionId = $this->cartSession->getId(); 
             $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
             $this->success(200, [
