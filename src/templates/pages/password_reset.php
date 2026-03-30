@@ -28,6 +28,7 @@
             autocomplete="new-password"
             minlength="8"
             maxlength="64"
+            novalidate
         >
     </div>
 
@@ -43,6 +44,7 @@
             autocomplete="new-password"
             minlength="8"
             maxlength="64"
+            novalidate
         >
     </div>
 

@@ -32,6 +32,7 @@
                         name="email"
                         autocomplete="email"
                         maxlength="254"
+                        novalidate
                     >
                 </div>
 
@@ -52,6 +53,7 @@
                         name="password"
                         autocomplete="current-password"
                         maxlength="254"
+                        novalidate
                     >
                 </div>
 
@@ -80,6 +82,7 @@
                         name="name"
                         autocomplete="name"
                         maxlength="100"
+                        novalidate
                     >
                 </div>
 
@@ -100,6 +103,7 @@
                         name="email"
                         autocomplete="email"
                         maxlength="254"
+                        novalidate
                     >
                 </div>
 
@@ -121,6 +125,7 @@
                         autocomplete="new-password"
                         minlength="8"
                         maxlength="64"
+                        novalidate
                     >
                 </div>
 
@@ -141,6 +146,7 @@
                         name="confirm_password"
                         minlength="8"
                         maxlength="64"
+                        novalidate
                     >
                 </div>
 
