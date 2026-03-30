@@ -37,7 +37,6 @@
                     placeholder="Введите адрес доставки"
                     readonly
                     onfocus="this.removeAttribute('readonly')"
-                    novalidate
                 >
 
                 <button type="button" id="address-search-btn" class="map_search_btn">

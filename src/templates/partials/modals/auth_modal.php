@@ -19,7 +19,7 @@
         </div>
 
         <div class="modal-body">
-            <form action="api/auth/login" method="POST" id="login-form">
+            <form action="api/auth/login" method="POST" id="login-form" novalidate>
                 <div class="registration_modal_input_back">
                     <span class="registration_modal_input_text">
                         Ваш email:
@@ -32,7 +32,6 @@
                         name="email"
                         autocomplete="email"
                         maxlength="254"
-                        novalidate
                     >
                 </div>
 
@@ -53,7 +52,6 @@
                         name="password"
                         autocomplete="current-password"
                         maxlength="254"
-                        novalidate
                     >
                 </div>
 
@@ -69,7 +67,7 @@
                 </div>
             </form>
 
-            <form action="api/auth/register" method="POST" id="register-form" class="hidden">
+            <form action="api/auth/register" method="POST" id="register-form" class="hidden" novalidate>
                 <div class="registration_modal_input_back">
                     <span class="registration_modal_input_text">
                         Ваши имя и фамилия:
@@ -82,7 +80,6 @@
                         name="name"
                         autocomplete="name"
                         maxlength="100"
-                        novalidate
                     >
                 </div>
 
@@ -103,7 +100,6 @@
                         name="email"
                         autocomplete="email"
                         maxlength="254"
-                        novalidate
                     >
                 </div>
 
@@ -125,7 +121,6 @@
                         autocomplete="new-password"
                         minlength="8"
                         maxlength="64"
-                        novalidate
                     >
                 </div>
 
@@ -146,7 +141,6 @@
                         name="confirm_password"
                         minlength="8"
                         maxlength="64"
-                        novalidate
                     >
                 </div>
 

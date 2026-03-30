@@ -9,7 +9,7 @@
     </a>
 </div>
 
-<form action="api/auth/password/reset" method="POST" class="password_reset_form" id="reset-pass-form">
+<form action="api/auth/password/reset" method="POST" class="password_reset_form" id="reset-pass-form" novalidate>
     <div class="registration_modal_input_text">
         Сброс пароля
     </div>
@@ -28,7 +28,6 @@
             autocomplete="new-password"
             minlength="8"
             maxlength="64"
-            novalidate
         >
     </div>
 
@@ -44,7 +43,6 @@
             autocomplete="new-password"
             minlength="8"
             maxlength="64"
-            novalidate
         >
     </div>
 
