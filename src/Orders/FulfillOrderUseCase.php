@@ -63,7 +63,6 @@ class FulfillOrderUseCase {
             $orderUrl = $this->baseUrl . '/orders/' . $orderId;
 
             // Отправляем письмо
-            // TODO: сделать метод
             $this->mailService->sendOrderReadyForPickup(
                 $orderData['order'],
                 $orderData['items'],
