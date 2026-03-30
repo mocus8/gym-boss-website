@@ -5,9 +5,7 @@ services:
             - "80:80" # Сайт будет доступен по http://localhost
         volumes:
             - .:/var/www/html # Папка с index.php
-            - php_sessions:/var/lib/php/sessions # Сессии PHP сохраняются
             - ./nginx.conf:/etc/nginx/nginx.conf:ro # Конфиг Nginx
-            - nginx_logs:/var/log/nginx # Логи сохраняются
         depends_on:
             php:
                 condition: service_healthy
@@ -23,6 +21,8 @@ services:
         build: .
         volumes:
             - .:/var/www/html
+            - ./docker/php/conf.d:/usr/local/etc/php/conf.d
+            - php_sessions:/tmp/php-sessions
         environment:
             - ENCRYPTION_KEY=${ENCRYPTION_KEY}
         depends_on:
@@ -72,6 +72,7 @@ volumes:
     mysql_data:
     nginx_logs:
     php_sessions:
+    php_logs:
 
 # Определение сети для взаимодействия 3 контейнеров (nginx, php, mysql)
 networks:

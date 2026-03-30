@@ -1,0 +1,584 @@
+<?php
+// Класс-сервис для взаимодействия с бд, будет использовать в контроллерах и других файлах
+// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo
+// Тут просто выбрасываем исключения, ловим их уже в endpoint-ах и других файлах
+// В этих файлах перед вызовом этих методов нужно валидировать данные
+
+// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
+namespace App\Cart;
+// Используем класс ProductService из пространства имен App\Products
+use App\Products\ProductService;
+
+// Класс для управления корзинами пользователей
+class CartService {
+    // Приватное свойство (переменная класса), привязанная к объекту
+    private \mysqli $db;
+    private ProductService $productService;    // экземпляр сервиса для товаров (dependency injection)
+
+    // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
+    public function __construct(\mysqli $db, ProductService $productService) {
+        $this->db = $db;
+        $this->productService = $productService;
+    }
+
+    // Поиск корзины по cart_session_id или user_id
+    public function getCart(?string $cartSessionId, ?int $userId): ?int {
+        // Выбираем выражение исходя исходя из значения аргументов
+        if ($userId !== null) {
+            $sql = "
+                SELECT id
+                FROM carts
+                WHERE user_id = ? AND is_converted = false
+                LIMIT 1
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $userId);
+
+        } elseif ($cartSessionId !== null && $cartSessionId !== '') {
+            $sql = "
+                SELECT id
+                FROM carts
+                WHERE session_id = ? AND is_converted = false
+                LIMIT 1
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("s", $cartSessionId);
+        } else {
+            return null;
+        }
+
+        // Выполняем
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        $cartId = $row ? (int)$row['id'] : null;
+
+        return $cartId;
+    }
+
+    // Поиск корзины по cart_session_id или user_id, нашли - возвращаем ее $cartId, нет - создаем и возвращаем $cartId новой
+    public function getOrCreateCart(?string $cartSessionId, ?int $userId): int {
+        // Проверяем аргументы 
+        if ($userId === null && ($cartSessionId === null || $cartSessionId === '')) {
+            throw new \InvalidArgumentException('Empty cartSessionId and userId');
+        }
+
+        $cartId = $this->getCart($cartSessionId, $userId);
+
+        if ($cartId !== null) {
+            return $cartId;
+        }
+
+        // Не нашли - заносим в таблицу новую строку
+        if ($userId !== null) {
+            $sql = "
+                INSERT INTO carts (user_id)
+                VALUES (?)
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $userId);
+
+        } elseif ($cartSessionId !== null && $cartSessionId !== '') {
+            $sql = "
+                INSERT INTO carts (session_id)
+                VALUES (?)
+            ";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!$stmt) {
+                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+            }
+
+            $stmt->bind_param("s", $cartSessionId);
+        }
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        // Получаем id как последний вставленный в бд и возвращаем его
+        $cartId = $this->db->insert_id;
+
+        $stmt->close();
+
+        return $cartId;
+    }
+
+    // Метод для привязки гостевой корзины к пользователю (по cart_session_id и user_id)
+    public function attachGuestCartToUser(string $cartSessionId, int $userId): void {
+        // Проверяем аргументы 
+        if ($userId <= 0 || $cartSessionId === '') {
+            throw new \InvalidArgumentException('Invalid userId or empty cartSessionId');
+        }
+
+        // Смотрим, есть ли уже у этого пользователя корзина
+        $sql = "
+            SELECT id
+            FROM carts
+            WHERE user_id = ? AND is_converted = false
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если есть - просто выходим, гостевую корзину не трогаем
+        if ($row) return;
+
+        // Если нет - находим гостевую по session_id
+        $sql = "
+            SELECT id
+            FROM carts
+            WHERE session_id = ? AND user_id IS NULL AND is_converted = false
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $cartSessionId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        // Если строчка не нашлась - выходим
+        if (!$row) return;
+
+        $cartId = (int)$row['id'];
+
+        // У гостевой карзины записываем user id и удаляем session id
+        $sql = "
+            UPDATE carts
+            SET user_id = ?, session_id = NULL
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("ii", $userId, $cartId);
+
+        // Выполняем
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
+    }
+
+    // Метод получения кол-ва всех товаров в корзине
+    public function getItemsCount(int $cartId): int {
+        $sql = "
+            SELECT COALESCE(SUM(quantity), 0) AS count
+            FROM cart_items
+            WHERE cart_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $cartId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+        
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return (int)($row['count'] ?? 0);
+    }
+
+    // Метод для подсчета общей стоимости корзины
+    public function getItemsTotal(int $cartId): float {
+        $sql = "
+            SELECT
+                product_id,
+                quantity
+            FROM cart_items
+            WHERE cart_items.cart_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $cartId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $items = [];
+        $productIds = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $productId = (int)$row['product_id'];
+            $quantity = (int)$row['quantity'];
+
+            $items[$productId] = $quantity;
+            $productIds[] = $productId;
+        }
+        
+        $stmt->close();
+
+        if ($items === []) {
+            return 0;
+        }
+
+        $prices = $this->productService->getPricesByIds($productIds);
+
+        // Объявляем переменную с общей суммой и заполняем
+        $total = 0;
+        foreach ($items as $productId => $quantity) {
+            // Если цены для товара нет то пропускаем итерацию
+            if (!isset($prices[$productId])) {
+                continue;
+            }
+
+            $total += (float)$prices[$productId] * $quantity;
+        }
+
+        return (float)$total;
+    }
+
+    // Метод для получения всех товаров в корзине (с первой фотографией)
+    public function getItems(int $cartId): array {
+        $sql = "
+            SELECT 
+                product_id,
+                quantity
+            FROM cart_items
+            WHERE cart_items.cart_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $cartId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // Объявляем и заполняем массивы id => quantity и id товаров из корзины
+        $quantityByIds = [];
+        $ids = [];
+        while ($row = $result->fetch_assoc()) {
+            $productId = (int)$row['product_id'];
+            $quantity = (int)$row['quantity'];
+
+            $quantityByIds[$productId] = $quantity;
+            $ids[] = $productId;
+        }
+
+        if ($ids === []) {
+            $stmt->close();
+            return [];
+        }
+
+        $stmt->close();
+
+        // Получаем массив товаров через productService
+        $products = $this->productService->getByIds($ids);
+
+        // Собираем итоговый массив позиций корзины: товар + quantity
+        $items = [];
+        foreach ($products as $productId => $product) {
+            // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
+            $items[] = array_merge($product, ['quantity' => $quantityByIds[$productId] ?? 0]);
+        }
+
+        return $items;
+    }
+
+    // Метод для добавления определенного кол-ва (qty) товара в корзину / прибавление кол-ва к сущ-ему товару
+    public function addItem(int $cartId, int $productId, int $qty): void {
+        if ($qty <= 0) {
+            throw new \InvalidArgumentException('Quantity must be positive');
+        }
+    
+        // Запрос вставляет в таблицу строку, либо увел-ает кол-во товара (если уже в корзине)
+        $sql = "
+            INSERT INTO cart_items (cart_id, product_id, quantity)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('iii', $cartId, $productId, $qty);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
+    }
+
+    // Метод для удаления товара из корзины
+    public function removeItem(int $cartId, int $productId): void {
+        $sql = "
+            DELETE FROM cart_items
+            WHERE cart_id = ? AND product_id = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('ii', $cartId, $productId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
+    }
+
+    // Метод для жёсткого установления нового количества товара в корзине
+    public function updateItemQty(int $cartId, int $productId, int $qty): void {
+        if ($qty < 0) {
+            throw new \InvalidArgumentException('Quantity must be >= 0');
+        }
+
+        if ($qty === 0) {
+            $this->removeItem($cartId, $productId);
+            return;
+        }
+
+        $sql = "
+            UPDATE cart_items
+            SET quantity = ?
+            WHERE cart_id = ? AND product_id = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('iii', $qty, $cartId, $productId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
+    }
+
+    // Метод для очистки корзины
+    public function clear(int $cartId): void {
+        $sql = "
+            DELETE FROM cart_items
+            WHERE cart_id = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('i', $cartId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+
+        // После успешного изменения товаров обновляем поле updated_at 
+        $this->touchCart($cartId);
+    }
+
+    // Метод для пометки корзины как конвертированной
+    public function convert(int $cartId): void {
+        $sql = "
+            UPDATE carts
+            SET is_converted = true
+            WHERE id = ?
+        ";
+    
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+    
+        $stmt->bind_param('i', $cartId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+    
+        $stmt->close();
+    }
+
+    // Метод для обновления поля updated_at при действиях с cart_items
+    private function touchCart(int $cartId): void {
+        $sql = "
+            UPDATE carts
+            SET updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $cartId);
+
+        // Выполняем
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $stmt->close();
+    }
+}

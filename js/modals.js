@@ -1,3 +1,8 @@
+/* global grecaptcha */
+/* global Inputmask */
+import { searchProducts } from "./products/products.api.js";
+import { getErrorMessage } from "./utils.js";
+
 // универсальная функция для распознавания ответа
 async function parseResponse(response) {
     const contentType = response.headers.get("content-type");
@@ -10,7 +15,7 @@ async function parseResponse(response) {
         } catch (e) {
             console.error("JSON parse error:", e);
             throw new Error(
-                "Ошибка, некорректный JSON от сервера, попробуйте позже"
+                "Ошибка, некорректный JSON от сервера, попробуйте позже",
             );
         }
     }
@@ -22,7 +27,7 @@ async function parseResponse(response) {
     console.log("Raw response:", text); // Что пришло на самом деле
 
     throw new Error(
-        "Ошибка, сервер вернул некорректный ответ, попробуйте позже"
+        "Ошибка, сервер вернул некорректный ответ, попробуйте позже",
     );
 }
 
@@ -40,7 +45,7 @@ async function fetchWithRetry(url, options, retries = 2) {
         } catch (error) {
             if (attempt === retries) throw error;
             await new Promise((resolve) =>
-                setTimeout(resolve, 1000 * (attempt + 1))
+                setTimeout(resolve, 1000 * (attempt + 1)),
             );
         }
     }
@@ -83,38 +88,50 @@ function setupModal(modalId, openBtnId, closeBtnId) {
 setupModal(
     "authorization-modal",
     "open-authorization-modal",
-    "close-authorization-modal"
+    "close-authorization-modal",
 );
 setupModal(
     "authorization-modal",
     "open-my-orders-for-guest",
-    "close-authorization-modal"
+    "close-authorization-modal",
 );
 setupModal(
     "registration-modal",
     "open-registration-modal",
-    "close-registration-modal"
+    "close-registration-modal",
 );
 setupModal(
     "registration-modal",
     "open-registration-modal-from-cart",
-    "close-registration-modal"
+    "close-registration-modal",
 );
 setupModal(
     "account-edit-modal",
     "open-account-editior-modal",
-    "close-account-edit-modal"
+    "close-account-edit-modal",
 );
 setupModal(
     "account-delete-modal",
     "open-account-edit-modal",
-    "close-account-delete-modal"
+    "close-account-delete-modal",
 );
 setupModal(
     "account-exit-modal",
     "open-account-exit-modal",
-    "close-account-exit-modal"
+    "close-account-exit-modal",
 );
+
+// Отркытие по дата-атрибуту (все кнопки с ним открывают), делигирование событий. Потом переделать все модалки, сделав все не через
+// setup modal, а через такое делегирование и data-атрибуты вместо id. Также все открытие модалок делать через добавление к кнопке
+// дата атрибута
+document.addEventListener("click", (e) => {
+    const trigger = e.target.closest("[data-open-modal]");
+    if (!trigger) return;
+
+    const name = trigger.dataset.openModal;
+    const modal = document.getElementById(`${name}-modal`);
+    if (modal) modal.classList.add("open");
+});
 
 // функция очистки номера телефона
 function validatePhoneNumber(phone) {
@@ -214,65 +231,6 @@ class HeaderModal {
 // создаем объект класса
 const headerModal = new HeaderModal();
 
-// версия универсальной модалки в хедере с текстом в виде объекта через IIFE
-// const HeaderModal = (function() {
-//     let closeTimer = null;
-//     let modal, text, progress, closeBtn;
-
-//     function init() {
-//         modal = document.getElementById('header-modal');
-//         text = document.getElementById('header-modal-text');
-//         progress = document.getElementById('header-modal-progress-fill');
-//         closeBtn = document.getElementById('header-modal-close');
-
-//         if (!modal || !text || !progress || !closeBtn) {
-//             console.error('Modal elements not found');
-//             return;
-//         }
-
-//         closeBtn.addEventListener('click', close);
-//     }
-
-//     function open(innerText) {
-//         if (!modal) return;
-
-//         close();
-
-//         text.textContent = innerText;
-//         modal.classList.remove("hidden");
-
-//         progress.classList.remove("shrinking");
-//         // Принудительный reflow, гарантируем что анимация перезапуститься
-//         void progress.offsetWidth;
-//         progress.classList.add("shrinking");
-
-//        closeTimer = setTimeout(close, 5000);
-//     }
-
-//     function close() {
-//         if (!modal) return;
-
-//         modal.classList.add("hidden");
-//         progress.classList.remove("shrinking");
-
-//         if(text) text.textContent = '';
-
-//         if (closeTimer) clearTimeout(closeTimer);
-
-//         closeTimer = null;
-//     }
-
-//     // Автоинициализация при загрузке
-//     if (document.readyState === 'loading') {
-//         document.addEventListener('DOMContentLoaded', init);
-//     } else {
-//         init();
-//     }
-
-//     // возвращаем функции для открытия и закрытия
-//     return { open, close };
-// })(); // () на конце выполняет сразу (для всех функций), и это исользуется все последующее разы
-
 // крутой класс через ES6 для управления SMS таймерами
 // Singleton паттерн - гарантируем один экземпляр (будет создан всего один объект класса)
 class SmsTimerManager {
@@ -309,7 +267,7 @@ class SmsTimerManager {
         this.#smsFirstCodeButton = document.getElementById("first-sms-code");
         this.#smsRetryCodeButton = document.getElementById("retry-sms-code");
         this.#timerSpans = document.querySelectorAll(
-            `[data-action="retry-sms-code-timer"]`
+            `[data-action="retry-sms-code-timer"]`,
         );
 
         if (
@@ -464,7 +422,7 @@ const smsTimerManager = new SmsTimerManager();
 // проверка на блок по попыткам
 async function isAttemptsBlocked() {
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     try {
@@ -480,7 +438,7 @@ async function isAttemptsBlocked() {
             smsTimerManager.startUnlockTimer(result.blocked_until);
 
             incorrectSmsCodeModal.querySelector(
-                ".error_modal_text"
+                ".error_modal_text",
             ).textContent =
                 `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`;
             incorrectSmsCodeModal.classList.add("open");
@@ -501,10 +459,10 @@ async function isAttemptsBlocked() {
 // проверка наличия пользователя
 async function isUserAlreadyExist() {
     const userAlreadyExistsModal = document.getElementById(
-        "user-already-exists-modal"
+        "user-already-exists-modal",
     );
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     const phoneNumberInput = document
@@ -577,20 +535,20 @@ async function sendSmsCode() {
     const phoneValidation = validatePhoneNumber(phoneNumberInput.value);
 
     const incorrectPhoneModal = document.getElementById(
-        "incorrect-phone-number-modal"
+        "incorrect-phone-number-modal",
     );
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     const smsFirstCodeButton = document.getElementById("first-sms-code");
     const smsRetryCodeButton = document.getElementById("retry-sms-code");
 
     const smsFirstCodeButtonText = smsFirstCodeButton.querySelector(
-        ".first_sms_code_btn_text"
+        ".first_sms_code_btn_text",
     );
     const smsRetryCodeButtonText = smsRetryCodeButton.querySelector(
-        ".retry_sms_code_btn_text"
+        ".retry_sms_code_btn_text",
     );
 
     const smsFirstCodeButtonTextOrgnl = smsFirstCodeButtonText.textContent;
@@ -631,7 +589,7 @@ async function sendSmsCode() {
             throw new Error(
                 result.error ||
                     result.message ||
-                    `Ошибка ${response.status}! Попробуйте еще раз`
+                    `Ошибка ${response.status}! Попробуйте еще раз`,
             );
         }
 
@@ -643,7 +601,7 @@ async function sendSmsCode() {
 
         //это для теста без реальных sms, потом убрать!!!
         alert(
-            `смски дорогие, пока так (но функционал для реальных смс уже есть) Код подтверждения: ${result.debug_code}, был бы отправлен на номер ${result.debug_phone}`
+            `смски дорогие, пока так (но функционал для реальных смс уже есть) Код подтверждения: ${result.debug_code}, был бы отправлен на номер ${result.debug_phone}`,
         );
 
         headerModal.open("SMS-код был отправлен на указанный номер");
@@ -676,14 +634,14 @@ async function confirmSmsCode() {
         .querySelector(".registration_modal_form")
         .querySelector('input[name="sms_code"]');
     const incorrectSmsCodeModal = document.getElementById(
-        "incorrect-sms-code-modal"
+        "incorrect-sms-code-modal",
     );
 
     const smsFirstCodeButton = document.getElementById("first-sms-code");
 
     const smsRetryCodeButton = document.getElementById("retry-sms-code");
     const smsRetryCodeButtonText = smsRetryCodeButton.querySelector(
-        ".retry_sms_code_btn_text"
+        ".retry_sms_code_btn_text",
     );
     const smsRetryCodeButtonTextOrgnl = smsRetryCodeButtonText.textContent;
 
@@ -713,7 +671,7 @@ async function confirmSmsCode() {
             smsFirstCodeButton.disabled = false;
             smsRetryCodeButton.disabled = false;
             throw new Error(
-                `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`
+                `Система заблокирована до ${new Date(result.blocked_until * 1000).toLocaleTimeString()}`,
             );
         }
 
@@ -721,14 +679,14 @@ async function confirmSmsCode() {
             throw new Error(
                 result.error ||
                     result.message ||
-                    `Ошибка ${response.status}! Попробуйте еще раз`
+                    `Ошибка ${response.status}! Попробуйте еще раз`,
             );
         }
 
         smsTimerManager.clearResendTimer();
 
         phoneNumberInput.value = validatePhoneNumber(
-            phoneNumberInput.value
+            phoneNumberInput.value,
         ).formatted;
         phoneNumberInput.readOnly = true;
 
@@ -811,10 +769,10 @@ document.getElementById("header-search-input").addEventListener(
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 const headerSearchCancelButton = document.getElementById(
-                    "header-search-cancel-button"
+                    "header-search-cancel-button",
                 );
                 const queryProductsContainer = document.getElementById(
-                    "query-products-container"
+                    "query-products-container",
                 );
 
                 queryProductsContainer.classList.toggle("hidden", !query);
@@ -827,20 +785,9 @@ document.getElementById("header-search-input").addEventListener(
                 }, 200);
 
                 try {
-                    const response = await fetch(
-                        `/src/search.php?q=${encodeURIComponent(query)}`
-                    );
+                    const queryProducts = await searchProducts(query);
 
                     clearTimeout(loaderTimer);
-
-                    if (!response.ok) {
-                        const errorData = await parseResponse(response);
-                        const error = new Error(errorData.error);
-                        error.status = response.status;
-                        throw error;
-                    }
-
-                    const queryProducts = await parseResponse(response);
 
                     if (queryProducts.length == 0) {
                         queryProductsContainer.innerHTML = `<div class="search_empty">Ничего не найдено</div>`;
@@ -861,37 +808,57 @@ document.getElementById("header-search-input").addEventListener(
                                     </div>
                                 </div>
                             </a>
-                    `
+                    `,
                             )
                             .join("");
                     }
-                } catch (error) {
+                } catch (e) {
                     clearTimeout(loaderTimer);
 
-                    if (error.status === 400) {
-                        queryProductsContainer.innerHTML = `<div class="search_empty">Ошибка, неверный запрос</div>`;
-                    } else if (error.status === 500) {
-                        queryProductsContainer.innerHTML = `<div class="search_empty">Ошибка сервера</div>`;
-                    } else {
-                        queryProductsContainer.innerHTML = `<div class="search_empty">Ошибка поиска</div>`;
-                    }
+                    // Логирование в консоль с полным контекстом
+                    console.error("[product-search] Ошибка при поиске товара", {
+                        message: e.message,
+                        code: e.code,
+                        status: e.status,
+                        payload: e.payload, // тот самый data
+                        query,
+                    });
+
+                    // Отображение ошибки в поле поисковика
+                    const message = getErrorMessage(e.code, e.status);
+                    queryProductsContainer.innerHTML = `<div class="search_empty">${message}</div>`;
                 }
             }, 300);
         };
-    })()
+    })(),
 );
 
-// очистка поля ввода
+// Клик на поле ввода
+document
+    .getElementById("header-search-input")
+    .addEventListener("focus", function () {
+        const queryProductsContainer = document.getElementById(
+            "query-products-container",
+        );
+        if (!queryProductsContainer) return;
+
+        const query = this.value.trim();
+        if (!query) return;
+
+        queryProductsContainer.classList.remove("hidden");
+    });
+
+// Нажатие на крестик (закртие поля воода и очистка инпута)
 document
     .getElementById("header-search-cancel-button")
     .addEventListener("click", function () {
         const queryProductsContainer = document.getElementById(
-            "query-products-container"
+            "query-products-container",
         );
         queryProductsContainer.classList.add("hidden");
 
         const headerSearchInput = document.getElementById(
-            "header-search-input"
+            "header-search-input",
         );
         headerSearchInput.value = "";
 
@@ -899,6 +866,22 @@ document
 
         headerSearchInput.focus();
     });
+
+// Клик не по поисковому блоку закрывает его
+window.addEventListener("click", function (e) {
+    const headerSearchBlock = document.getElementById("header-search");
+    if (!headerSearchBlock) return;
+
+    // Если клик был внутри headerSearchBlock - ничего не делаем
+    if (headerSearchBlock.contains(e.target)) return;
+
+    const queryProductsContainer = document.getElementById(
+        "query-products-container",
+    );
+    if (!queryProductsContainer) return;
+
+    queryProductsContainer.classList.add("hidden");
+});
 
 // потдтверждение формы регистрации
 document
@@ -917,24 +900,24 @@ document
 
         const password = this.querySelector('input[name="password"]').value;
         const confirmPassword = this.querySelector(
-            'input[name="confirm-password"]'
+            'input[name="confirm-password"]',
         ).value;
 
         const submitRegistrtionButton = document.getElementById(
-            "submit-registration"
+            "submit-registration",
         );
 
         const userAlreadyExistsModal = document.getElementById(
-            "user-already-exists-modal"
+            "user-already-exists-modal",
         );
         const mismatchModal = document.getElementById(
-            "password-mismatch-modal"
+            "password-mismatch-modal",
         );
         const incorrectPhoneModal = document.getElementById(
-            "incorrect-phone-number-modal"
+            "incorrect-phone-number-modal",
         );
         const incorrectSmsCodeModal = document.getElementById(
-            "incorrect-sms-code-modal"
+            "incorrect-sms-code-modal",
         );
 
         try {
@@ -981,17 +964,17 @@ document
                 incorrectPhoneModal.classList.add("open");
             } else if (errorMessages[error.message]) {
                 incorrectSmsCodeModal.querySelector(
-                    ".error_modal_text"
+                    ".error_modal_text",
                 ).textContent = errorMessages[error.message];
                 incorrectSmsCodeModal.classList.add("open");
             } else if (error.message) {
                 incorrectSmsCodeModal.querySelector(
-                    ".error_modal_text"
+                    ".error_modal_text",
                 ).textContent = error.message;
                 incorrectSmsCodeModal.classList.add("open");
             } else {
                 incorrectSmsCodeModal.querySelector(
-                    ".error_modal_text"
+                    ".error_modal_text",
                 ).textContent = "Произошла ошибка";
                 incorrectSmsCodeModal.classList.add("open");
             }
@@ -1094,10 +1077,10 @@ document.addEventListener("click", function (e) {
 
 function accountPasswordSwitch(nmbOfInpt) {
     const passwordInput = document.getElementById(
-        "password-input-" + nmbOfInpt
+        "password-input-" + nmbOfInpt,
     );
     const passwordButton = document.getElementById(
-        "account-edit-modal-password-button-" + nmbOfInpt
+        "account-edit-modal-password-button-" + nmbOfInpt,
     );
     if (passwordInput.type === "password") {
         passwordInput.type = "text";
@@ -1124,38 +1107,9 @@ document.addEventListener("click", function (e) {
     // Добавляем проверку на существование parentElement
     if (
         e.target.parentElement?.classList?.contains(
-            "product_minor_images_button"
+            "product_minor_images_button",
         )
     ) {
         document.querySelector(".product_main_img").src = e.target.src;
-    }
-});
-
-//есть ли в корзине + меняем кнопки (при загрузке страницы)
-document.addEventListener("DOMContentLoaded", function () {
-    if (typeof cartAmount !== "undefined") {
-        if (cartAmount != 0) {
-            openModal("product-button-add-in-cart");
-            closeModal("product-button-add-not-in-cart");
-        } else {
-            closeModal("product-button-add-in-cart");
-            openModal("product-button-add-not-in-cart");
-        }
-    }
-});
-
-//есть ли в корзине + меняем кнопки (при клике на кнопки)
-document.addEventListener("click", function (event) {
-    if (event.target.id === "product-button-add-not-in-cart") {
-        openModal("product-button-add-in-cart");
-        closeModal("product-button-add-not-in-cart");
-    } else if (event.target.hasAttribute("data-product-subtract-cart")) {
-        // Проверяем значение в счетчике ПЕРЕД кликом
-        const counter = document.getElementById("product-cart-counter");
-        const currentAmount = counter ? parseInt(counter.textContent) : 0;
-        if (currentAmount === 1) {
-            closeModal("product-button-add-in-cart");
-            openModal("product-button-add-not-in-cart");
-        }
     }
 });

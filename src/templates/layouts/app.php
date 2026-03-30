@@ -11,7 +11,7 @@ $canonical = $canonical ?? $defaultCanonical;
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 	<head>
 		<meta charset="utf-8">
         <meta name="robots" content="<?= htmlspecialchars($robots, ENT_QUOTES, 'UTF-8') ?>">
@@ -23,7 +23,7 @@ $canonical = $canonical ?? $defaultCanonical;
 		<link rel="stylesheet" href="/styles.css">
 	</head>
 
-	<body class="body" data-yandex-maps-key="<?= getenv('YANDEX_MAPS_KEY') ?>">
+	<body class="body" data-yandex-maps-key="<?= $servicesConfig['yandex_maps']['key'] ?? '' ?>">
         <div class="loader-overlay" id="loader">
             <img class="loader" src="/img/loader.png" alt="Загрузка">
         </div>
@@ -36,12 +36,27 @@ $canonical = $canonical ?? $defaultCanonical;
             <?php require_once __DIR__ . '/../partials/footer.php'; ?>
         </div>
 
+        <!-- Tost-уведомление -->
+        <div class="notification hidden" id="notification">
+            <button class="notification_close_btn" id="notification-close-btn">✕</button>
+
+            <div class="notification_top">
+                <img class="notification_icon"src="/img/inf.png">
+                <div class="notification_text" id="notification-text"></div>
+            </div>
+            
+            <div class="notification_progress">
+                <div class="notification_text_progress_fill" id="notification-progress-fill"></div>
+            </div>
+        </div>
+
         <!-- Подключаем разные скрипты -->
 
         <!-- Обязательные для всех страниц -->
         <script defer src="/js/loader.js"></script>
-        <script defer src="/js/modals.js"></script>
-        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= getenv('GOOGLE_RECAPTCHA_SITE_KEY') ?>"></script>
+        <script type="module" src="/js/ui/auth-modal.js"></script>
+        <script type="module" src="/js/header.js"></script>
+        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"></script>
         <script defer src="/js/inputmask.min.js"></script>
 
         <!-- Внешние и обычные из контроллера -->
@@ -57,5 +72,10 @@ $canonical = $canonical ?? $defaultCanonical;
                 <script type="module" src="<?= htmlspecialchars($script, ENT_QUOTES, 'UTF-8') ?>"></script>
             <?php } ?>
         <?php } ?>
+
+        <!-- Универсальная модалка подтверждения -->
+        <?php require __DIR__ . '/../partials/modals/confirmation_modal.php' ?>
+        <!-- Модалка входа/регистрации -->
+        <?php require __DIR__ . '/../partials/modals/auth_modal.php' ?>
 	</body>
 </html>

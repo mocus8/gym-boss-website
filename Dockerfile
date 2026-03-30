@@ -1,12 +1,6 @@
 FROM php:8.2-fpm-alpine3.18
 
 RUN apk update \
-    && apk add --no-cache --virtual .build-deps \
-        build-base \
-        autoconf \
-        gcc \
-        g++ \
-        make \
     && apk add --no-cache \
         libpng-dev \
         libjpeg-turbo-dev \
@@ -23,12 +17,16 @@ RUN apk update \
         gd \
         pcntl \
         opcache \
-    && apk del .build-deps \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+COPY ./docker/php-fpm.d/99-gymboss.conf /usr/local/etc/php-fpm.d/99-gymboss.conf
+
 WORKDIR /var/www/html
-COPY . .
+
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+COPY . .
 
 EXPOSE 9000
 CMD ["php-fpm"]

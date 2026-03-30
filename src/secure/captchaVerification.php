@@ -1,8 +1,10 @@
 <?php
-require_once __DIR__ . '/../envLoader.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 function verifyRecaptcha($token) {
-    $secret = getenv('GOOGLE_RECAPTCHA_SECRET_KEY');
+    $secret = $servicesConfig['recaptcha']['secret_key'] ?? "";
+    if ($secret === "") return;
+
     $url = 'https://www.google.com/recaptcha/api/siteverify';
     
     $data = ['secret' => $secret, 'response' => $token];

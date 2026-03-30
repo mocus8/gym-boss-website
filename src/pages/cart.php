@@ -1,15 +1,12 @@
 <?php
 // Контроллер корзины
 
-// Получаем корзину пользователя
-require_once __DIR__ . '/../getCartInfo.php';
-
-// Получаем id пользователя (если есть, иначе null)
-$userId = isset($_SESSION['user']['id']);
-
 $title  = 'Корзина товаров - Gym Boss';
 $robots = 'noindex,nofollow';
-$pageScripts = ['/js/cart.js'];
+$pageModuleScripts = ['/js/cart/cart.page.js'];
+
+// Смотрим, залогинен ли пользователь 
+$isAuthenticated = $currentUser !== null;
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

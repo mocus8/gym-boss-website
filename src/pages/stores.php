@@ -3,7 +3,10 @@
 
 $title  = 'Магазины Gym Boss';
 $canonical = $baseUrl . '/stores';
-$pageScripts = ['/js/maps.js'];
+$pageModuleScripts = [
+    '/js/stores/stores.page.js',
+    '/js/maps/index.js'
+];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

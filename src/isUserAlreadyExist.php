@@ -1,19 +1,11 @@
 <?php
-session_start();
-
-require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/bootstrap.php';
 
 header('Content-Type: application/json');
 
 try {
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
-
-    $connect = getDB();
-
-    if (!$connect) {
-        throw new Exception('db connection error');
-    }
 
     if (!isset($data["login"]) || empty(trim($data["login"]))) {
         echo json_encode([
@@ -25,7 +17,7 @@ try {
 
     $login = trim($data["login"]);
 
-    $check = $connect->prepare("SELECT id FROM users WHERE login = ?");
+    $check = $db->prepare("SELECT id FROM users WHERE login = ?");
 
     if (!$check) {
         throw new Exception('prepare statement failed');
@@ -53,10 +45,6 @@ try {
 } finally {
     if (isset($check)) {
         $check->close();
-    }
-    
-    if (isset($connect)) {
-        $connect->close();
     }
 }
 ?>

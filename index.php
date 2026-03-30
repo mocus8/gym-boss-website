@@ -1,52 +1,222 @@
 <?php
-// Единая точка входа, проостейший роутер
+// Единая точка входа, роутер и для web и для php запросов
 
-session_start();
+// Подключаем bootstrap (общая инициализация)
+require_once __DIR__ . '/src/bootstrap.php';
 
-// Подключаем необходимые для всего сайта php-файлы 
-require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/src/helpers.php';
-require_once __DIR__ . '/src/envLoader.php';
-
-// Получаем URL сайта из переменных окружения
-$appUrl = getenv('APP_URL');
-if (!$appUrl) {
-    // логируем
-    error_log('APP_URL is not set');
-    // и падаем
-    throw new RuntimeException('APP_URL is not set');
-}
-
-$baseUrl   = rtrim($appUrl, '/');
-
-// Разбор URI
+// Разбор URI (и метода)
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = rtrim($uri, '/');
+$method = $_SERVER['REQUEST_METHOD'];    // GET, POST и т.д.
 
-// Маршруты требуещие авторизации
-$protectedRoutes = [
-    '/my-orders',
-    '/order-making',
-    // сюда же можно добавить ещё маршрутов закрытых для неавторизированных пользователей
-];
-
-// Если маршрут требует авторизации и пользователь не залогинен — на главную
-if (in_array($uri, $protectedRoutes, true) && empty($_SESSION['user']['id'])) {
-    header('Location: /');
+// Маршрут вебхука (получение уведомлений от провайдера оплаты)
+if ($method === 'POST' && $uri === '/webhook/yookassa') {
+    $webhookController->handleNotification();
     exit;
 }
 
-// Определение маршрутов
+// Api-маршруты
+if (strpos($uri, '/api/') === 0) {
+    // убираем префикс /api
+    $apiPath = substr($uri, strlen('/api'));
+
+    // Api маршруты, требуещие авторизации
+    $protectedApiRoutes = [
+        'POST' => [
+            '/auth/email/resend',
+            '/auth/logout',
+            '/account/profile',
+            '/account/password',
+            '/orders/create-from-cart',
+            '/dadata/suggest/address',
+        ],
+        'GET' => [
+            '/auth/me',
+            '/orders',
+        ],
+        'DELETE' => [
+            '/account',
+        ]
+        // Сюда же можно добавить ещё закрытых маршрутов для неавторизированных пользователей
+    ];
+
+    // Если маршрут требует авторизации - проверяем авторизацию
+    if (isset($protectedApiRoutes[$method]) && in_array($apiPath, $protectedApiRoutes[$method], true)) {
+        requireApiAuth($authSession);
+    }
+
+    // Api маршруты, требующие подтвержденного email
+    $verifiedEmailApiRoutes = [
+        'POST' => [
+            '/orders/create-from-cart',
+            '/dadata/suggest/address',
+        ],
+        'GET' => [
+            '/orders',
+        ]
+        // Сюда же можно добавить ещё закрытых маршрутов
+    ];
+
+    // Если маршрут требует подтвержденной почты - проверяем верификацию
+    if (isset($verifiedEmailApiRoutes[$method]) && in_array($apiPath, $verifiedEmailApiRoutes[$method], true)) {
+        requireVerifiedEmail($authSession, $authService);
+    }
+
+    // Определение api маршрутов
+    $apiRoutes = [
+        'POST' => [
+            '/auth/register' => [$authController, 'register'],
+            '/auth/email/resend' => [$authController, 'resendVerification'],
+            '/auth/login' => [$authController, 'login'],
+            '/auth/logout' => [$authController, 'logout'],
+            '/auth/password/forgot' => [$authController, 'forgotPassword'],
+            '/auth/password/reset' => [$authController, 'resetPassword'],
+            '/account/profile' => [$accountController, 'updateProfile'],
+            '/account/password' => [$accountController, 'updatePassword'],
+            '/cart/add-item' => [$cartController, 'addItem'],
+            '/cart/update-item-qty' => [$cartController, 'updateItemQty'],
+            '/cart/remove-item' => [$cartController, 'removeItem'],
+            '/cart/clear' => [$cartController, 'clear'],
+            '/orders/create-from-cart' => [$orderController, 'createFromCart'],
+            '/dadata/suggest/address' => [$dadataController, 'suggestAddress'],
+        ],
+        'GET' => [
+            '/auth/me' => [$authController, 'me'],
+            '/cart' => [$cartController, 'getCart'],
+            '/products' => [$productController, 'getCatalog'],
+            '/orders' => [$orderController, 'getUserOrders'],
+            '/stores' => [$storeController, 'getAll'],
+        ],
+         'DELETE' => [
+             '/account' => [$accountController, 'delete'],
+         ]
+    ];
+
+    // Если маршрут есть в списке, подключаем соответствующий метод
+    if (isset($apiRoutes[$method][$apiPath])) {
+        $handler = $apiRoutes[$method][$apiPath];    // handler - массив [объект контроллера][строка с именем метода]
+        call_user_func($handler);    // вызываем метод
+        exit;
+    }
+    // Поиск товара: GET /api/products/search?q=...
+    elseif ($method === 'GET' && $apiPath === '/products/search') {
+        $q = $_GET['q'] ?? '';
+        $productController->search($q);
+        exit;
+    }
+    // Товар по slug: GET /api/products/{slug}
+    elseif ($method === 'GET' && preg_match('#^/products/([a-zA-Z0-9-]+)$#', $apiPath, $matches)) {
+        $slug = $matches[1];
+        $productController->getBySlug($slug);
+        exit;
+    }
+    // Заказ по id: GET /api/orders/{id}
+    elseif ($method === 'GET' && preg_match('#^/orders/([0-9]+)$#', $apiPath, $matches)) {
+        requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
+
+        $orderId  = (int)$matches[1];
+        $orderController->getById($orderId );
+        exit;
+    }
+    // Отмена заказа по id: POST /api/orders/{id}/cancel
+    elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/cancel$#', $apiPath, $matches)) {
+        requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
+
+        $orderId  = (int)$matches[1];
+        $orderController->markCancel($orderId);
+        exit;
+    }
+    // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/orders/{id}/start-payment
+    elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/start-payment$#', $apiPath, $matches)) {
+        requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
+
+        $orderId  = (int)$matches[1];
+        $orderController->startPayment($orderId);
+        exit;
+    }
+    // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/orders/{id}/sync-payment
+    elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
+        requireApiAuth($authSession);
+        requireVerifiedEmail($authSession, $authService);
+
+        $orderId  = (int)$matches[1];
+        $orderController->syncPayment($orderId);
+        exit;
+    }
+    // Получение магазина по id: GET /api/stores/{id}
+    elseif ($method === 'GET' && preg_match('#^/stores/([0-9]+)$#', $apiPath, $matches)) {
+        $storeId  = (int)$matches[1];
+        $storeController->getById($storeId);
+        exit;
+    }
+    // Любой другой путь - 404-й статус и json ответ с указанием
+    else {
+        http_response_code(404);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => 'API endpoint not found',
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Web-маршруты
+// Именно для web части получаем контекст запроса для отображения на странице (пользователя и его корзину)
+
+// Получаем текущего пользователя
+$currentUser = null;
+$userId = $authSession->getUserId();
+if ($userId !== null) {
+    try {
+        $currentUser = $authService->getUserInfo($userId);
+    } catch (\Throwable $e) {
+        // TODO: потом сделать правильно через логер (с контекстом)
+        error_log('Failed to get current user: ' . $e->getMessage());
+
+        $currentUser = null;
+    }
+}
+
+// Получаем инфу о корзине пользователя для счетчиков в хедере
+$cartCount = 0;
+$cartSessionId = $cartSession->getId();    // получаем id сеанса корзины
+$cartId = $cartService->getCart($cartSessionId, $userId);    // получаем id корзины из бд
+
+// Если нашелся $cartId - то получаем кол-во товаров в корзине (для отображения в хедере)
+if ($cartId !== null) {
+    $cartCount = $cartService->getItemsCount($cartId);  
+}
+
+// Web маршруты, требуещие авторизации
+$protectedWebRoutes = [
+    '/account/orders',
+    '/checkout',
+    // сюда можно добавить ещё закрытых маршрутов для неавторизированных пользователей
+];
+
+// Если маршрут требует авторизации - проверяем авторизацию
+if (in_array($uri, $protectedWebRoutes, true)) {
+    requireWebAuth($authSession);
+}
+
+// Определение web маршрутов
 $routes = [
-    ''              => 'home.php',
-    '/'             => 'home.php',
-    '/cart'       => 'cart.php',
-    '/contacts'   => 'contacts.php',
-    '/kwork-customers' => 'kwork_customers.php',
-    '/my-orders'  => 'my_orders.php',
-    '/order-making' => 'order_making.php',
-    '/privacy'    => 'privacy.php',
-    '/stores'     => 'stores.php',
+    '' => 'home.php',
+    '/' => 'home.php',
+    '/auth/email/verify' => 'email_verify.php',
+    '/auth/password/reset' =>'password_reset.php',
+    '/cart' => 'cart.php',
+    '/contacts' => 'contacts.php',
+    '/about' => 'about.php',
+    '/account' => 'account.php',
+    '/account/orders' => 'orders.php',
+    '/checkout' => 'checkout.php',
+    '/privacy' => 'privacy.php',
+    '/stores' => 'stores.php',
 ];
 
 // Если маршрут есть в списке, подключаем соответствующий файл
@@ -54,14 +224,16 @@ if (isset($routes[$uri])) {
     require __DIR__ . '/src/pages/' . $routes[$uri];
     exit;
 }
-// Страница товара: /product/slug
-elseif (preg_match('#^/product/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
+// Страница товара: /products/slug
+elseif (preg_match('#^/products/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
     $_GET['url'] = $matches[1];
     require __DIR__ . '/src/pages/product.php';
     exit;
 }
-// Страница заказа: /order/123, также записываем в GET id
-elseif (preg_match('#^/order/([0-9]+)$#', $uri, $matches)) {
+// Страница заказа: /orders/123, также записываем в GET id
+elseif (preg_match('#^/orders/([0-9]+)$#', $uri, $matches)) {
+    requireWebAuth($authSession);
+
     $_GET['orderId'] = $matches[1];
     require __DIR__ . '/src/pages/order.php';
     exit;
@@ -72,4 +244,3 @@ else {
     require __DIR__ . '/src/pages/404.php';
     exit;
 }
-?>

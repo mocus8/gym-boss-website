@@ -1,8 +1,5 @@
 <?php
-session_start();
-
-require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/envLoader.php';
+require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/secure/captchaVerification.php';
 
 // тут нужна еще проверка CSRF токенов и ограничение частоты запросов. это все через laravel можно сделать
@@ -13,17 +10,13 @@ $password = $_POST["password"];
 $name = $_POST["name"];
 
 // Если локальный режим окружения то не проверяем капчу
-$isLocal = getenv('APP_ENV') === 'local';
+$isLocal = $appConfig['env'] === 'local';
 if (!$isLocal){
     requireCaptcha();
 }
 
-$cartSessionId = getCartSessionId();
-
-$connect = getDB();
-
 // 1. Проверяем нет ли такого пользователя
-$check = $connect->prepare("SELECT id FROM users WHERE login = ?");
+$check = $db->prepare("SELECT id FROM users WHERE login = ?");
 $check->bind_param("s", $login);
 $check->execute();
 $result = $check->get_result();
@@ -72,7 +65,7 @@ if ((time() - $_SESSION['phone_verified_at']) > 1800) {
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
 // 3. Безопасное добавление в БД
-$stmt = $connect->prepare("
+$stmt = $db->prepare("
     INSERT INTO users (login, password, name) VALUES (?, ?, ?)
 ");
 $stmt->bind_param("sss", $login, $hashedPassword, $name);
@@ -81,18 +74,11 @@ if ($stmt->execute()) {
     // меняем id сессии для безопасности
     session_regenerate_id(true);
 
-    $new_user_id = $stmt->insert_id; // Сохраняем ID нового пользователя
+    $userId = $stmt->insert_id; // Сохраняем ID нового пользователя
     
-    $_SESSION['user'] = ['id' => $new_user_id];
+    $_SESSION['user'] = ['id' => $userId];
     
-    // 4. Обновляем существующие заказы с session_id на user_id
-    $update_stmt = $connect->prepare("
-        UPDATE orders 
-        SET user_id = ?, session_id = NULL 
-        WHERE session_id = ?
-    ");
-    $update_stmt->bind_param("is", $new_user_id, $cartSessionId);
-    $update_stmt->execute();
+    $cartService->attachGuestCartToUser($cartSessionId, $userId);
     
     header('Content-Type: application/json');
     echo json_encode([
