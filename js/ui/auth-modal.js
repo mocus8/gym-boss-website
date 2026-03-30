@@ -400,6 +400,13 @@ class AuthModal {
                 );
             }
 
+            if (!confirmPassInput.checkValidity()) {
+                this.#showInputError(
+                    confirmPassInput,
+                    "Пароль должен быть от 8 до 64 символов",
+                );
+            }
+
             return;
         }
 

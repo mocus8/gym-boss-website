@@ -174,8 +174,8 @@ class AccountController extends BaseController {
         $passwordConfirmation = isset($data['new_password_confirmation']) ? (string)$data['new_password_confirmation'] : null;
 
         // Проверяем что пароли совпадают
-        if ($newPassword !== $passwordConfirmation) {
-            $this->error(422, 'PASSWORD_MISMATCH', 'Passwords do not match');
+        if ($newPassword === $passwordConfirmation) {
+            $this->error(422, 'SAME_PASSWORD', 'Passwords are the same');
             return null;
         }
 
