@@ -2931,7 +2931,7 @@ button {
 
 .modal-warning {
     margin: 0;
-    color: #b42318; /* условно “красный” */
+    color: #000000;
     font-size: 14px;
 }
 

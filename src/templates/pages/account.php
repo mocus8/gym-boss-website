@@ -14,7 +14,7 @@
 </div>
 
 <div class="account_wrapper">
-    <form action="api/account/profile" method="POST" class="account_form" id="change-name-form">
+    <form action="api/account/profile" method="POST" class="account_form" id="change-name-form" novalidate>
         <div class="registration_modal_input_text">
             Ваше имя
         </div>
@@ -56,7 +56,7 @@
         <?php } ?>
     </div>
 
-    <form action="api/account/password" method="POST" class="account_form" id="change-pass-form">
+    <form action="api/account/password" method="POST" class="account_form" id="change-pass-form" novalidate>
         <div class="registration_modal_input_text">
             Смена пароля
         </div>
@@ -69,7 +69,7 @@
                 required
                 class="registration_modal_input"
                 type="password"
-                name="current-password"
+                name="current_password"
                 autocomplete="current-password"
                 minlength="8"
                 maxlength="64"
@@ -89,7 +89,7 @@
                 required
                 class="registration_modal_input"
                 type="password"
-                name="new-password"
+                name="new_password"
                 autocomplete="new-password"
                 minlength="8"
                 maxlength="64"
@@ -109,7 +109,7 @@
                 required
                 class="registration_modal_input"
                 type="password"
-                name="confirm-password"
+                name="confirm_password"
                 autocomplete="new-password"
                 minlength="8"
                 maxlength="64"

@@ -43,6 +43,14 @@ export function register(email, password, name) {
     });
 }
 
+// Функция для повторной отправки email-а для подтверждения аккаунта
+// Отправляет запрос POST /api/auth/email/resend
+export function resendVerificationEmail() {
+    return requestAuth("/email/resend", {
+        method: "POST",
+    });
+}
+
 // Функция для старта сброса пароля
 // Отправляет запрос POST /api/auth/password/forgot
 export function forgotPassword(email) {
