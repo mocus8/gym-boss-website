@@ -40,21 +40,21 @@ class ProductService {
 
         $sql = "
             SELECT 
-                ctg.category_id as ctg_id,
+                ctg.id as ctg_id,
                 ctg.name as ctg_name,
-                prdct.product_id as prdct_id,
+                prdct.id as prdct_id,
                 prdct.slug as prdct_slug,
                 prdct.name as prdct_name,
                 prdct.price as prdct_price,
-                img.image_id as img_id,
+                img.id as img_id,
                 img.image_path as image_path
             FROM categories ctg
-            INNER JOIN products prdct ON ctg.category_id = prdct.category_id
-            LEFT JOIN product_images img ON prdct.product_id = img.product_id
-                AND img.image_id = (
-                    SELECT MIN(img2.image_id) 
+            INNER JOIN products prdct ON ctg.id = prdct.category_id
+            LEFT JOIN product_images img ON prdct.id = img.product_id
+                AND img.id = (
+                    SELECT MIN(img2.id) 
                     FROM product_images img2 
-                    WHERE img2.product_id = prdct.product_id
+                    WHERE img2.product_id = prdct.id
                 )
             ORDER BY ctg.name, prdct.name
         ";
@@ -121,7 +121,7 @@ class ProductService {
     public function getBySlug(string $slug): ?array {
         $sql = "
             SELECT
-                product_id,
+                id,
                 category_id,
                 slug,
                 name,
@@ -168,7 +168,7 @@ class ProductService {
     public function getById(int $id): ?array {
         $sql = "
             SELECT
-                product_id,
+                id,
                 category_id,
                 slug,
                 name,
@@ -176,7 +176,7 @@ class ProductService {
                 vat_code,
                 description
             FROM products
-            WHERE product_id = ?
+            WHERE id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -228,7 +228,7 @@ class ProductService {
 
         $sql = "
             SELECT 
-                p.product_id,
+                p.id,
                 p.category_id,
                 p.slug,
                 p.name,
@@ -238,13 +238,13 @@ class ProductService {
                 img.image_path
             FROM products p
             LEFT JOIN product_images img 
-                ON p.product_id = img.product_id
-                AND img.image_id = (
-                    SELECT MIN(img2.image_id)
+                ON p.id = img.product_id
+                AND img.id = (
+                    SELECT MIN(img2.id)
                     FROM product_images img2
-                    WHERE img2.product_id = p.product_id
+                    WHERE img2.product_id = p.id
                 )
-            WHERE p.product_id IN ($placeholders)
+            WHERE p.id IN ($placeholders)
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -273,11 +273,11 @@ class ProductService {
         }
 
         // Объявляем и заполняем массив с найденными товарами
-        // Сразу получается ассоциативный массив, где ключи - это product_id
+        // Сразу получается ассоциативный массив, где ключи - это id продукта
         $products = [];
         while ($row = $result->fetch_assoc()) {
             $row['image_path'] = $row['image_path'] ?: '/img/default.png';    // если нет картинки - дефолтную
-            $products[(int)$row['product_id']] = $row;
+            $products[(int)$row['id']] = $row;
         }
     
         $stmt->close();
@@ -302,10 +302,10 @@ class ProductService {
 
         $sql = "
             SELECT 
-                product_id,
+                id,
                 price
             FROM products
-            WHERE products.product_id IN ($placeholders)
+            WHERE products.id IN ($placeholders)
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -334,10 +334,10 @@ class ProductService {
         }
 
         // Объявляем и заполняем массив с найденными ценами
-        // Сразу получается ассоциативный массив, где ключи - это product_id
+        // Сразу получается ассоциативный массив, где ключи - это id продуктов
         $prices = [];
         while ($row = $result->fetch_assoc()) {
-            $prices[(int)$row['product_id']] = $row['price'];
+            $prices[(int)$row['id']] = $row['price'];
         }
     
         $stmt->close();
@@ -351,7 +351,7 @@ class ProductService {
             SELECT image_path 
             FROM product_images 
             WHERE product_id = ? 
-            ORDER BY image_id ASC
+            ORDER BY id ASC
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -432,12 +432,12 @@ class ProductService {
         // Ищем в бд схожие названия
         $sql = "
             SELECT 
-                prdct.product_id as prdct_id,
+                prdct.id as prdct_id,
                 prdct.slug as prdct_slug,
                 prdct.name as prdct_name,
                 prdct.price as prdct_price,
                 prdct.description as prdct_description,
-                img.image_id as img_id,
+                img.id as img_id,
                 img.image_path as img_path,
                 (CASE
                     WHEN prdct.name LIKE ? THEN 40
@@ -447,11 +447,11 @@ class ProductService {
                     ELSE 0
                 END) as relevance
             FROM products prdct
-            LEFT JOIN product_images img ON prdct.product_id = img.product_id
-                AND img.image_id = (
-                    SELECT MIN(img2.image_id) 
+            LEFT JOIN product_images img ON prdct.id = img.product_id
+                AND img.id = (
+                    SELECT MIN(img2.id) 
                     FROM product_images img2 
-                    WHERE img2.product_id = prdct.product_id
+                    WHERE img2.product_id = prdct.id
                 )
             WHERE " . implode(' OR ', $conditions) . "
             HAVING relevance > 0
@@ -492,10 +492,10 @@ class ProductService {
         // формируем массив полученных товаров
         while ($row = $result->fetch_assoc()) {
             $queryProducts[] = [
-                'id'         => (int)$row['prdct_id'],
-                'slug'       => $row['prdct_slug'],
-                'name'       => $row['prdct_name'],
-                'price'      => $row['prdct_price'],
+                'id' => (int)$row['prdct_id'],
+                'slug' => $row['prdct_slug'],
+                'name' => $row['prdct_name'],
+                'price' => $row['prdct_price'],
                 'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/img/default.png',
             ];
         }

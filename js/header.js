@@ -131,7 +131,7 @@ function initHeaderSearch() {
     function createProductCard(product) {
         // Создаем ссылку-обертку вокруг карточки
         const linkWrapper = document.createElement("a");
-        linkWrapper.href = `/product/${product.slug}`;
+        linkWrapper.href = `/products/${product.slug}`;
 
         const productWrapper = document.createElement("div");
         productWrapper.classList.add("product");

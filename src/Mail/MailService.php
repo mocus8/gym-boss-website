@@ -93,12 +93,12 @@ class MailService {
         }
 
         // Задаем тему письма
-        $subject = "Ваш заказ №{$orderInfo['order_id']} оплачен";
+        $subject = "Ваш заказ №{$orderInfo['id']} оплачен";
 
         // Собираем массив инфы для рендера шаблона письма
         $templateData = [
             'userName' => $orderInfo['user_name'],
-            'orderId' => $orderInfo['order_id'],
+            'orderId' => $orderInfo['id'],
             'items' => $orderItems,
             'itemsPrice' => $orderInfo['total_price'],
             'deliveryTypeCode' => $orderInfo['delivery_type_code'],
@@ -147,12 +147,12 @@ class MailService {
         }
 
         // Задаем тему письма
-        $subject = "Ваш заказ №{$orderInfo['order_id']} отменен";
+        $subject = "Ваш заказ №{$orderInfo['id']} отменен";
 
         // Собираем массив инфы для рендера шаблона письма
         $templateData = [
             'userName' => $orderInfo['user_name'],
-            'orderId' => $orderInfo['order_id'],
+            'orderId' => $orderInfo['id'],
             'items' => $orderItems,
             'itemsPrice' => $orderInfo['total_price'],
             'canceledBy' => $canceledBy,
@@ -189,12 +189,12 @@ class MailService {
         }
 
         // Задаем тему письма
-        $subject = "Заказ №{$orderInfo['order_id']} передан в доставку";
+        $subject = "Заказ №{$orderInfo['id']} передан в доставку";
 
         // Собираем массив инфы для рендера шаблона письма
         $templateData = [
             'userName' => $orderInfo['user_name'],
-            'orderId' => $orderInfo['order_id'],
+            'orderId' => $orderInfo['id'],
             'items' => $orderItems,
             'deliveryAddressText'  => $orderInfo['delivery_address_text'],
             'courierDeliveryFrom'  => formatDateForEmail($orderInfo['courier_delivery_from']),
@@ -233,12 +233,12 @@ class MailService {
         }
 
         // Задаем тему письма
-        $subject = "Заказ №{$orderInfo['order_id']} готов к получению";
+        $subject = "Заказ №{$orderInfo['id']} готов к получению";
 
         // Собираем массив инфы для рендера шаблона письма
         $templateData = [
             'userName' => $orderInfo['user_name'],
-            'orderId' => $orderInfo['order_id'],
+            'orderId' => $orderInfo['id'],
             'items' => $orderItems,
             'storeAddress'  => $orderInfo['store_address'],
             'storeWorkHours' => $orderInfo['store_work_hours'],

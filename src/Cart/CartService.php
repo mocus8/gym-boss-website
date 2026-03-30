@@ -28,7 +28,7 @@ class CartService {
             $sql = "
                 SELECT id
                 FROM carts
-                WHERE user_id = ? AND is_converted = 0
+                WHERE user_id = ? AND is_converted = false
                 LIMIT 1
             ";
 
@@ -44,7 +44,7 @@ class CartService {
             $sql = "
                 SELECT id
                 FROM carts
-                WHERE session_id = ? AND is_converted = 0
+                WHERE session_id = ? AND is_converted = false
                 LIMIT 1
             ";
 
@@ -150,7 +150,7 @@ class CartService {
         $sql = "
             SELECT id
             FROM carts
-            WHERE user_id = ? AND is_converted = 0
+            WHERE user_id = ? AND is_converted = false
             LIMIT 1
         ";
 
@@ -186,7 +186,7 @@ class CartService {
         $sql = "
             SELECT id
             FROM carts
-            WHERE session_id = ? AND user_id IS NULL AND is_converted = 0
+            WHERE session_id = ? AND user_id IS NULL AND is_converted = false
             LIMIT 1
         ";
 
@@ -248,7 +248,7 @@ class CartService {
     // Метод получения кол-ва всех товаров в корзине
     public function getItemsCount(int $cartId): int {
         $sql = "
-            SELECT COALESCE(SUM(amount), 0) AS count
+            SELECT COALESCE(SUM(quantity), 0) AS count
             FROM cart_items
             WHERE cart_id = ?
         ";
@@ -286,7 +286,7 @@ class CartService {
         $sql = "
             SELECT
                 product_id,
-                amount
+                quantity
             FROM cart_items
             WHERE cart_items.cart_id = ?
         ";
@@ -317,9 +317,9 @@ class CartService {
 
         while ($row = $result->fetch_assoc()) {
             $productId = (int)$row['product_id'];
-            $amount    = (int)$row['amount'];
+            $quantity = (int)$row['quantity'];
 
-            $items[$productId] = $amount;
+            $items[$productId] = $quantity;
             $productIds[] = $productId;
         }
         
@@ -333,13 +333,13 @@ class CartService {
 
         // Объявляем переменную с общей суммой и заполняем
         $total = 0;
-        foreach ($items as $productId => $amount) {
+        foreach ($items as $productId => $quantity) {
             // Если цены для товара нет то пропускаем итерацию
             if (!isset($prices[$productId])) {
                 continue;
             }
 
-            $total += (float)$prices[$productId] * $amount;
+            $total += (float)$prices[$productId] * $quantity;
         }
 
         return (float)$total;
@@ -350,7 +350,7 @@ class CartService {
         $sql = "
             SELECT 
                 product_id,
-                amount
+                quantity
             FROM cart_items
             WHERE cart_items.cart_id = ?
         ";
@@ -376,14 +376,14 @@ class CartService {
             throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
         }
 
-        // Объявляем и заполняем массивы id => amount и id товаров из корзины
-        $amountByIds = [];
+        // Объявляем и заполняем массивы id => quantity и id товаров из корзины
+        $quantityByIds = [];
         $ids = [];
         while ($row = $result->fetch_assoc()) {
             $productId = (int)$row['product_id'];
-            $amount = (int)$row['amount'];
+            $quantity = (int)$row['quantity'];
 
-            $amountByIds[$productId] = $amount;
+            $quantityByIds[$productId] = $quantity;
             $ids[] = $productId;
         }
 
@@ -397,11 +397,11 @@ class CartService {
         // Получаем массив товаров через productService
         $products = $this->productService->getByIds($ids);
 
-        // Собираем итоговый массив позиций корзины: товар + amount
+        // Собираем итоговый массив позиций корзины: товар + quantity
         $items = [];
         foreach ($products as $productId => $product) {
             // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
-            $items[] = array_merge($product, ['amount' => $amountByIds[$productId] ?? 0]);
+            $items[] = array_merge($product, ['quantity' => $quantityByIds[$productId] ?? 0]);
         }
 
         return $items;
@@ -415,9 +415,9 @@ class CartService {
     
         // Запрос вставляет в таблицу строку, либо увел-ает кол-во товара (если уже в корзине)
         $sql = "
-            INSERT INTO cart_items (cart_id, product_id, amount)
+            INSERT INTO cart_items (cart_id, product_id, quantity)
             VALUES (?, ?, ?)
-            ON DUPLICATE KEY UPDATE amount = amount + VALUES(amount)
+            ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
         ";
     
         $stmt = $this->db->prepare($sql);
@@ -480,7 +480,7 @@ class CartService {
 
         $sql = "
             UPDATE cart_items
-            SET amount = ?
+            SET quantity = ?
             WHERE cart_id = ? AND product_id = ?
         ";
     
@@ -535,7 +535,7 @@ class CartService {
     public function convert(int $cartId): void {
         $sql = "
             UPDATE carts
-            SET is_converted = 1
+            SET is_converted = true
             WHERE id = ?
         ";
     

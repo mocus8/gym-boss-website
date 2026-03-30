@@ -64,11 +64,9 @@ window.addEventListener("DOMContentLoaded", async function () {
         const cartItems = cart.items ?? [];
 
         // Узнаем, есть ли товар в корзине, и сколько его там
-        const itemInCart = cartItems.find(
-            (el) => Number(el.product_id) === productId,
-        );
+        const itemInCart = cartItems.find((el) => Number(el.id) === productId);
 
-        const cartCount = itemInCart ? Number(itemInCart.amount) : 0;
+        const cartCount = itemInCart ? Number(itemInCart.quantity) : 0;
 
         updateProductCounter(cartCount);
 
@@ -113,12 +111,10 @@ document.addEventListener("click", async function (e) {
             // const count = response.count;
 
             // Узнаем, сколько там этого товара
-            const itemInCart = items.find(
-                (el) => Number(el.product_id) === productId,
-            );
+            const itemInCart = items.find((el) => Number(el.id) === productId);
 
             // Тернарный оператор, если item не null то левую часть, иначе правую
-            const qty = itemInCart ? Number(itemInCart.amount) : 0;
+            const qty = itemInCart ? Number(itemInCart.quantity) : 0;
 
             updateHeaderCounter(count);
             updateProductCounter(qty);
@@ -164,11 +160,9 @@ document.addEventListener("click", async function (e) {
 
             const { items, count } = response;
 
-            const itemInCart = items.find(
-                (el) => Number(el.product_id) === productId,
-            );
+            const itemInCart = items.find((el) => Number(el.id) === productId);
 
-            const qty = itemInCart ? Number(itemInCart.amount) : 0;
+            const qty = itemInCart ? Number(itemInCart.quantity) : 0;
 
             updateHeaderCounter(count);
             updateProductCounter(qty);

@@ -40,10 +40,7 @@ function validateOrderData(data) {
     if (!order || typeof order !== "object") return false;
     if (!Array.isArray(items) || items.length === 0) return false;
 
-    if (
-        !Number.isInteger(Number(order.order_id)) ||
-        Number(order.order_id) <= 0
-    ) {
+    if (!Number.isInteger(Number(order.id)) || Number(order.id) <= 0) {
         return false;
     }
     if (typeof order.status_code !== "string" || !order.status_code) {
@@ -116,13 +113,13 @@ function createOrderItemEl(item) {
     itemDiv.classList.add("item_row");
 
     const name = String(item.name);
-    const amount = String(item.amount);
+    const quantity = String(item.quantity);
     const totalPrice = String(
-        formatPrice(Number(item.amount) * Number(item.price)),
+        formatPrice(Number(item.quantity) * Number(item.price)),
     );
 
     // Заполняем блок товара
-    itemDiv.textContent = `${name} (${amount} шт.) - ${totalPrice} ₽`;
+    itemDiv.textContent = `${name} (${quantity} шт.) - ${totalPrice} ₽`;
 
     return itemDiv;
 }

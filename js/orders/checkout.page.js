@@ -274,13 +274,13 @@ function createCheckoutItemEl(item) {
     itemDiv.classList.add("item_row");
 
     const name = String(item.name);
-    const amount = String(item.amount);
+    const quantity = String(item.quantity);
     const totalPrice = String(
-        formatPrice(Number(item.amount) * Number(item.price)),
+        formatPrice(Number(item.quantity) * Number(item.price)),
     );
 
     // Заполняем блок товара
-    itemDiv.textContent = `${name} (${amount} шт.) - ${totalPrice} ₽`;
+    itemDiv.textContent = `${name} (${quantity} шт.) - ${totalPrice} ₽`;
 
     return itemDiv;
 }
@@ -393,13 +393,18 @@ function getDeliveryDateText(deliveryType) {
 
 // Функция для обновления общей инфы из корзины
 function updateCheckoutInfo(cart) {
-    const itemsAmountEl = document.getElementById("checkout-items-count");
+    const itemsQuantityEl = document.getElementById("checkout-items-count");
     const itemsPriceEl = document.getElementById("checkout-items-price");
     const deliveryPriceEl = document.getElementById("checkout-delivery-price");
     const totalPriceEl = document.getElementById("checkout-total-price");
     const courierDateEl = document.getElementById("courier-date-text");
     const pickupDateEl = document.getElementById("pickup-date-text");
-    if (!itemsAmountEl || !itemsPriceEl || !deliveryPriceEl || !totalPriceEl) {
+    if (
+        !itemsQuantityEl ||
+        !itemsPriceEl ||
+        !deliveryPriceEl ||
+        !totalPriceEl
+    ) {
         return;
     }
 
@@ -413,7 +418,7 @@ function updateCheckoutInfo(cart) {
 
     const totalPrice = cartItemsTotal + deliveryPrice;
 
-    itemsAmountEl.textContent = String(cart.count);
+    itemsQuantityEl.textContent = String(cart.count);
     itemsPriceEl.textContent = String(formatPrice(cartItemsTotal));
     deliveryPriceEl.textContent = String(formatPrice(deliveryPrice));
     totalPriceEl.textContent = String(formatPrice(totalPrice));

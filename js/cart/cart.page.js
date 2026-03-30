@@ -13,7 +13,7 @@ function createCartProductElement(item) {
     // Корневой блок
     const itemDiv = document.createElement("div");
     itemDiv.classList.add("cart_product");
-    itemDiv.dataset.productId = String(item.product_id);
+    itemDiv.dataset.productId = String(item.id);
     itemDiv.dataset.price = String(item.price);
 
     const productClick = document.createElement("div");
@@ -39,8 +39,8 @@ function createCartProductElement(item) {
     // Цена за позицию
     const price = document.createElement("div");
     price.classList.add("cart_product_price");
-    price.id = `cart-item-total-${item.product_id}`;
-    price.textContent = `${formatPrice(item.price * item.amount)} ₽`;
+    price.id = `cart-item-total-${item.id}`;
+    price.textContent = `${formatPrice(item.price * item.quantity)} ₽`;
     productClick.appendChild(price);
 
     // Блок взаимодействия
@@ -60,16 +60,16 @@ function createCartProductElement(item) {
     minusImg.classList.add("product_interaction_sign");
     minusImg.src = "/img/minus.png";
     minusImg.setAttribute("data-subtract-cart", "");
-    minusImg.dataset.productId = String(item.product_id);
+    minusImg.dataset.productId = String(item.id);
     minusBtn.appendChild(minusImg);
     countWrap.appendChild(minusBtn);
 
     // Количество
-    const amount = document.createElement("div");
-    amount.classList.add("product_interaction_amount");
-    amount.id = `cart-item-counter-${item.product_id}`;
-    amount.textContent = String(item.amount);
-    countWrap.appendChild(amount);
+    const quantity = document.createElement("div");
+    quantity.classList.add("product_interaction_amount");
+    quantity.id = `cart-item-counter-${item.id}`;
+    quantity.textContent = String(item.quantity);
+    countWrap.appendChild(quantity);
 
     // Кнопка плюс
     const plusBtn = document.createElement("button");
@@ -79,7 +79,7 @@ function createCartProductElement(item) {
     plusImg.classList.add("product_interaction_sign");
     plusImg.src = "/img/plus.png";
     plusImg.setAttribute("data-add-cart", "");
-    plusImg.dataset.productId = String(item.product_id);
+    plusImg.dataset.productId = String(item.id);
     plusBtn.appendChild(plusImg);
     countWrap.appendChild(plusBtn);
 
@@ -91,7 +91,7 @@ function createCartProductElement(item) {
     removeImg.classList.add("product_interaction_delete");
     removeImg.src = "/img/trash.png";
     removeImg.setAttribute("data-remove-cart", "");
-    removeImg.dataset.productId = String(item.product_id);
+    removeImg.dataset.productId = String(item.id);
     removeBtn.appendChild(removeImg);
     interaction.appendChild(removeBtn);
 
@@ -222,10 +222,10 @@ async function initCartPage(productContainer, startOrderBtn) {
                 const { items, count } = response;
 
                 const itemInCart = items.find(
-                    (el) => Number(el.product_id) === productId,
+                    (el) => Number(el.id) === productId,
                 );
 
-                const qty = itemInCart ? Number(itemInCart.amount) : 0;
+                const qty = itemInCart ? Number(itemInCart.quantity) : 0;
 
                 // Обновляем UI
                 updateHeaderCounter(count);
@@ -265,10 +265,10 @@ async function initCartPage(productContainer, startOrderBtn) {
                 const { items, count } = response;
 
                 const itemInCart = items.find(
-                    (el) => Number(el.product_id) === productId,
+                    (el) => Number(el.id) === productId,
                 );
 
-                const qty = itemInCart ? Number(itemInCart.amount) : 0;
+                const qty = itemInCart ? Number(itemInCart.quantity) : 0;
 
                 // Обновляем UI
                 updateHeaderCounter(count);

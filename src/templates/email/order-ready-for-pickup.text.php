@@ -4,7 +4,7 @@
 
 Состав заказа:
 <?php foreach ($orderItems as $item) { ?>
-    <?= htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['amount'] ?> шт.)
+    <?= htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.)
 <?php } ?>
 
 Вы можете получить заказ в выбранном вами магазине: <?= htmlspecialchars($storeAddress, ENT_QUOTES, 'UTF-8') ?>.

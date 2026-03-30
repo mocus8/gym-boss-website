@@ -11,7 +11,7 @@ function createOrderElement(order) {
     // Номер заказа и дата оформления
     const numberDate = document.createElement("div");
     numberDate.classList.add("order_number");
-    const numberDateText = `Заказ №${order.order_id} (оформлен ${formatDate(order.created_at)})`;
+    const numberDateText = `Заказ №${order.id} (оформлен ${formatDate(order.created_at)})`;
     numberDate.textContent = numberDateText;
     orderDiv.appendChild(numberDate);
 
@@ -49,7 +49,7 @@ function createOrderElement(order) {
 
     // Кнопка-ссылка для перехода к заказу
     const link = document.createElement("a");
-    link.href = `/orders/${Number(order.order_id)}`;
+    link.href = `/orders/${Number(order.id)}`;
     link.classList.add("order_action_button");
     link.textContent = "Перейти к заказу";
     orderDiv.appendChild(link);

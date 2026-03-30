@@ -164,7 +164,7 @@ class OrderService {
             $sql = "
                 INSERT INTO orders (
                     user_id,
-                    total_qty,
+                    total_quantity,
                     total_price,
                     delivery_type_id,
                     delivery_cost,
@@ -216,7 +216,7 @@ class OrderService {
                 $params[] = $orderId;
                 $params[] = $item["product_id"];
                 $params[] = $item["name"];
-                $params[] = $item["amount"];
+                $params[] = $item["quantity"];
                 $params[] = $item["price"];
                 $params[] = $item["vat_code"];
             }
@@ -236,7 +236,7 @@ class OrderService {
                     order_id,
                     product_id,
                     product_name,
-                    amount,
+                    quantity,
                     price,
                     vat_code
                 )
@@ -289,11 +289,11 @@ class OrderService {
         // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
         $sql = "
             SELECT
-                o.order_id,
+                o.id AS order_id,
                 o.user_id,
                 u.name AS user_name,
                 u.email AS user_email,
-                o.total_qty,
+                o.total_quantity,
                 o.total_price,
                 o.delivery_type_id,
                 dt.code AS delivery_type_code,
@@ -320,7 +320,7 @@ class OrderService {
             LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
             LEFT JOIN stores AS s ON o.store_id = s.id
             LEFT JOIN order_statuses AS os ON o.status_id = os.id
-            WHERE o.order_id = ? AND o.user_id = ?
+            WHERE o.id = ? AND o.user_id = ?
             LIMIT 1
         ";
 
@@ -400,7 +400,7 @@ class OrderService {
         $sql = "
             SELECT 
                 product_id,
-                amount,
+                quantity,
                 price
             FROM order_items
             WHERE order_items.order_id = ?
@@ -427,16 +427,16 @@ class OrderService {
             throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
         }
 
-        // Объявляем и заполняем массивы id => amount, id => price и id товаров из заказа
-        $amountByIds = [];
+        // Объявляем и заполняем массивы id => quantity, id => price и id товаров из заказа
+        $quantityByIds = [];
         $priceByIds = [];
         $ids = [];
         while ($row = $result->fetch_assoc()) {
             $productId = (int)$row['product_id'];
-            $amount = (int)$row['amount'];
+            $quantity = (int)$row['quantity'];
             $price = (float)$row['price'];
 
-            $amountByIds[$productId] = $amount;
+            $quantityByIds[$productId] = $quantity;
             $priceByIds[$productId] = $price;
             $ids[] = $productId;
         }
@@ -454,12 +454,12 @@ class OrderService {
         // Получаем массив товаров через productService
         $products = $this->productService->getByIds($ids);
 
-        // Собираем итоговый массив позиций корзины: товар + amount
+        // Собираем итоговый массив позиций корзины: товар + quantity
         $items = [];
         foreach ($products as $productId => $product) {
             // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
             $items[] = array_merge($product, [
-                'amount' => $amountByIds[$productId] ?? 0,
+                'quantity' => $quantityByIds[$productId] ?? 0,
                 'price' => $priceByIds[$productId] ?? $product['price']
             ]);
         }
@@ -480,9 +480,9 @@ class OrderService {
         // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
         $sql = "
             SELECT
-                o.order_id,
+                o.id AS order_id,
                 o.user_id,
-                o.total_qty,
+                o.total_quantity,
                 o.total_price,
                 o.delivery_type_id,
                 dt.code AS delivery_type_code,
@@ -557,7 +557,7 @@ class OrderService {
         $sql = "
             SELECT status_id
             FROM orders
-            WHERE order_id = ? AND user_id = ?
+            WHERE id = ? AND user_id = ?
             FOR UPDATE
         ";
 
@@ -611,7 +611,7 @@ class OrderService {
             SET 
                 status_id = ?,
                 canceled_at = NOW()
-            WHERE order_id = ? AND user_id = ?
+            WHERE id = ? AND user_id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -645,7 +645,7 @@ class OrderService {
         $sql = "
             SELECT status_id
             FROM orders
-            WHERE order_id = ?
+            WHERE id = ?
             FOR UPDATE
         ";
 
@@ -699,7 +699,7 @@ class OrderService {
             SET 
                 status_id = ?,
                 canceled_at = NOW()
-            WHERE order_id = ?
+            WHERE id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -730,7 +730,7 @@ class OrderService {
                 delivery_type_id,
                 paid_at
             FROM orders
-            WHERE order_id = ?
+            WHERE id = ?
             FOR UPDATE
         ";
 
@@ -814,7 +814,7 @@ class OrderService {
                 ready_for_pickup_from = ?,
                 ready_for_pickup_to = ?,
                 paid_at = ?
-            WHERE order_id = ?
+            WHERE id = ?
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -885,7 +885,7 @@ class OrderService {
                 SELECT 
                     status_id
                 FROM orders
-                WHERE order_id = ?
+                WHERE id = ?
                 FOR UPDATE
             ";
 
@@ -938,7 +938,7 @@ class OrderService {
             $sql = "
                 UPDATE orders
                 SET status_id = ?
-                WHERE order_id = ?
+                WHERE id = ?
             ";
 
             $stmt = $this->db->prepare($sql);
@@ -984,7 +984,7 @@ class OrderService {
                 SELECT 
                     status_id
                 FROM orders
-                WHERE order_id = ?
+                WHERE id = ?
                 FOR UPDATE
             ";
 
@@ -1037,7 +1037,7 @@ class OrderService {
             $sql = "
                 UPDATE orders
                 SET status_id = ?
-                WHERE order_id = ?
+                WHERE id = ?
             ";
 
             $stmt = $this->db->prepare($sql);
@@ -1080,14 +1080,14 @@ class OrderService {
         // Получаем базовую инфу о заказе с блокировкой строки (FOR UPDATE)
         $sql = "
             SELECT
-                order_id,
+                id,
                 user_id,
                 total_price,
                 delivery_type_id,
                 delivery_cost,
                 status_id
             FROM orders
-            WHERE order_id = ? AND user_id = ?
+            WHERE id = ? AND user_id = ?
             FOR UPDATE
         ";
 
@@ -1135,7 +1135,7 @@ class OrderService {
                 order_id,
                 product_id,
                 product_name,
-                amount,
+                quantity,
                 price,
                 vat_code
             FROM order_items

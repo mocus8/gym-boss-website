@@ -50,7 +50,7 @@
 
                                 <?php foreach ($orderItems as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['amount'] ?> шт.) - <?= $item['price'] ?>
+                                        <?= htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?>
                                     </p>
                                 <?php } ?>
 

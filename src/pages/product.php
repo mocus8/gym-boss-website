@@ -44,7 +44,7 @@ try {
     }
 
     // Картинки
-    $images = $productService->getImagesById((int)$product['product_id']);
+    $images = $productService->getImagesById((int)$product['id']);
     
 } catch (\Throwable $e) {
     // Тут потом нормально логировать
