@@ -113,7 +113,7 @@ class AuthModal {
         this.#registerEmailInput = this.#registerForm.elements["email"];
         this.#registerPassInput = this.#registerForm.elements["password"];
         this.#registerConfirmPassInput =
-            this.#registerForm.elements["confirm-password"];
+            this.#registerForm.elements["confirm_password"];
         this.#registerSubmitBtn = this.#registerForm.querySelector(
             'button[type="submit"]',
         );
@@ -378,7 +378,7 @@ class AuthModal {
         const nameInput = form.elements["name"];
         const emailInput = form.elements["email"];
         const passInput = form.elements["password"];
-        const confirmPassInput = form.elements["confirm-password"];
+        const confirmPassInput = form.elements["confirm_password"];
 
         // Проверяем валидность формы и ее инпутов
         if (!form.checkValidity()) {

@@ -10,7 +10,7 @@ import { notification } from "../../ui/notification.js";
 // Функция инициализации страницы, навешивает обработчики
 function initPasswordResetPage(resetPassForm, resetSuccessEl) {
     const passInput = resetPassForm.elements["password"];
-    const confirmPassInput = resetPassForm.elements["confirm-password"];
+    const confirmPassInput = resetPassForm.elements["confirm_password"];
     const passErrorEl = resetPassForm.querySelector(".form_error");
     const passErrorText = passErrorEl.querySelector(".error_modal_text");
     const submitButton = resetPassForm.querySelector('button[type="submit"]');
@@ -51,7 +51,7 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
         // Получаем пароли из полей формы
         const password = resetPassForm.elements["password"].value;
         const confirmPassword =
-            resetPassForm.elements["confirm-password"].value;
+            resetPassForm.elements["confirm_password"].value;
 
         // Проверяем пароли
         if (!password || !confirmPassword) {

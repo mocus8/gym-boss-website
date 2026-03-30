@@ -138,7 +138,7 @@
                         required
                         class="registration_modal_input"
                         type="password"
-                        name="confirm-password"
+                        name="confirm_password"
                         minlength="8"
                         maxlength="64"
                     >
