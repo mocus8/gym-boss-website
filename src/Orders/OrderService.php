@@ -214,7 +214,7 @@ class OrderService {
                 $placeholders[] = '(?, ?, ?, ?, ?, ?)';
 
                 $params[] = $orderId;
-                $params[] = $item["product_id"];
+                $params[] = $item["id"];
                 $params[] = $item["name"];
                 $params[] = $item["quantity"];
                 $params[] = $item["price"];
