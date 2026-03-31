@@ -58,7 +58,7 @@ class Logger {
             date('Y-m-d H:i:s'),
             strtoupper($level),    // Верхний регистр
             $message,
-            $context ? ' ' . json_encode($context, JSON_UNESCAPED_UNICODE) : ''
+            $context ? ' ' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : ''
         );
 
         // Записывает в файл
