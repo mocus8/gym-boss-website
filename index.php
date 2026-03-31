@@ -59,7 +59,7 @@ if (strpos($uri, '/api/') === 0) {
 
     // Если маршрут требует подтвержденной почты - проверяем верификацию
     if (isset($verifiedEmailApiRoutes[$method]) && in_array($apiPath, $verifiedEmailApiRoutes[$method], true)) {
-        requireVerifiedEmail($authSession, $authService);
+        requireApiVerifiedEmail($authSession, $authService);
     }
 
     // Определение api маршрутов
@@ -113,7 +113,7 @@ if (strpos($uri, '/api/') === 0) {
     // Заказ по id: GET /api/orders/{id}
     elseif ($method === 'GET' && preg_match('#^/orders/([0-9]+)$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
-        requireVerifiedEmail($authSession, $authService);
+        requireApiVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->getById($orderId );
@@ -122,7 +122,7 @@ if (strpos($uri, '/api/') === 0) {
     // Отмена заказа по id: POST /api/orders/{id}/cancel
     elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/cancel$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
-        requireVerifiedEmail($authSession, $authService);
+        requireApiVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->markCancel($orderId);
@@ -131,7 +131,7 @@ if (strpos($uri, '/api/') === 0) {
     // Попытка оплаты заказа (получение ссылки для оплаты) по id: POST /api/orders/{id}/start-payment
     elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/start-payment$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
-        requireVerifiedEmail($authSession, $authService);
+        requireApiVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->startPayment($orderId);
@@ -140,7 +140,7 @@ if (strpos($uri, '/api/') === 0) {
     // Синхронизация статуса платежа и заказа между бд и юкассой по id: POST /api/orders/{id}/sync-payment
     elseif ($method === 'POST' && preg_match('#^/orders/([0-9]+)/sync-payment$#', $apiPath, $matches)) {
         requireApiAuth($authSession);
-        requireVerifiedEmail($authSession, $authService);
+        requireApiVerifiedEmail($authSession, $authService);
 
         $orderId  = (int)$matches[1];
         $orderController->syncPayment($orderId);
@@ -193,6 +193,7 @@ if ($cartId !== null) {
 
 // Web маршруты, требуещие авторизации
 $protectedWebRoutes = [
+    '/account',
     '/account/orders',
     '/checkout',
     // сюда можно добавить ещё закрытых маршрутов для неавторизированных пользователей
@@ -201,6 +202,15 @@ $protectedWebRoutes = [
 // Если маршрут требует авторизации - проверяем авторизацию
 if (in_array($uri, $protectedWebRoutes, true)) {
     requireWebAuth($authSession);
+}
+
+// Web маршруты, требуещие подтвержденного email
+$verifiedEmailWebRoutes = [
+    '/checkout',
+];
+
+if (in_array($uri, $verifiedEmailWebRoutes, true)) {
+    requireWebVerifiedEmail($authSession, $authService);
 }
 
 // Определение web маршрутов

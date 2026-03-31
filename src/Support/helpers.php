@@ -19,16 +19,8 @@ function requireApiAuth(\App\Auth\AuthSession $authSession): void {
     }
 }
 
-// Проверка авторизации для web маршрутов (с редиректом)
-function requireWebAuth(\App\Auth\AuthSession $authSession): void {
-    if (!$authSession->isAuthenticated()) {
-        header('Location: /');
-        exit;
-    }
-}
-
-// Проверка подтвержденной почты
-function requireVerifiedEmail(\App\Auth\AuthSession $authSession, \App\Auth\AuthService $authService): void {
+// Проверка подтвержденной почты для api запросов (со статусом и json в ответе)
+function requireApiVerifiedEmail(\App\Auth\AuthSession $authSession, \App\Auth\AuthService $authService): void {
     // Получаем userId из сессии через метод
     $userId = $authSession->getUserId();
 
@@ -57,6 +49,32 @@ function requireVerifiedEmail(\App\Auth\AuthSession $authSession, \App\Auth\Auth
                 'message' => 'User email is not verified',
             ],
         ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Проверка авторизации для web маршрутов (с редиректом)
+function requireWebAuth(\App\Auth\AuthSession $authSession): void {
+    if (!$authSession->isAuthenticated()) {
+        header('Location: /');
+        exit;
+    }
+}
+
+// Проверка подтвержденной почты для api запросов (со статусом и json в ответе)
+function requireWebVerifiedEmail(\App\Auth\AuthSession $authSession, \App\Auth\AuthService $authService): void {
+    // Получаем userId из сессии через метод
+    $userId = $authSession->getUserId();
+
+    // Если пользователь не залогинен - редиректим на главную
+    if ($userId === null) {
+        header('Location: /');
+        exit;
+    }
+
+    // Если почта не подтверждена - редиректим на страницу аккаунта
+    if (!$authService->isEmailVerified($userId)) {
+        header('Location: /account');
         exit;
     }
 }

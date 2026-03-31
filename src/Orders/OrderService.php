@@ -214,7 +214,7 @@ class OrderService {
                 $placeholders[] = '(?, ?, ?, ?, ?, ?)';
 
                 $params[] = $orderId;
-                $params[] = $item["product_id"];
+                $params[] = $item["id"];
                 $params[] = $item["name"];
                 $params[] = $item["quantity"];
                 $params[] = $item["price"];
@@ -289,7 +289,7 @@ class OrderService {
         // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
         $sql = "
             SELECT
-                o.id AS order_id,
+                o.id,
                 o.user_id,
                 u.name AS user_name,
                 u.email AS user_email,
@@ -480,7 +480,7 @@ class OrderService {
         // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
         $sql = "
             SELECT
-                o.id AS order_id,
+                o.id,
                 o.user_id,
                 o.total_quantity,
                 o.total_price,
