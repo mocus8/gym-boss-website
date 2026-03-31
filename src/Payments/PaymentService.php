@@ -109,7 +109,7 @@ class PaymentService {
                 INSERT INTO payments (
                     order_id,
                     status,
-                    quantity,
+                    amount,
                     idempotency_key
                 )
                 VALUES (?, ?, ?, ?)
@@ -158,7 +158,7 @@ class PaymentService {
 
         // Формируем payload (тело) для создания платежа
         $payload = [
-            'quantity' => [
+            'amount' => [
                 'value' => number_format($draftPaymentInfo['orderTotal'], 2, '.', ''),
                 'currency' => 'RUB'
             ],
@@ -482,7 +482,7 @@ class PaymentService {
             $itemsForReceipt[] = [
                 'description' => $item['product_name'],
                 'quantity' => $item['quantity'],
-                'quantity' => [
+                'amount' => [
                     'value' => $price,
                     'currency' => 'RUB'
                 ],
@@ -499,7 +499,7 @@ class PaymentService {
             $itemsForReceipt[] = [
                 'description' => 'Доставка',
                 'quantity' => 1,
-                'quantity' => [
+                'amount' => [
                     'value' => $deliveryCost,
                     'currency' => 'RUB'
                 ],
@@ -517,7 +517,7 @@ class PaymentService {
         // Проверяем итоговую стоимость (должна сходиться с чеком)
         $receiptTotal = 0;
         foreach ($itemsForReceipt as $item) {
-            $receiptTotal += (float)$item['quantity']['value'] * $item['quantity'];
+            $receiptTotal += (float)$item['amount']['value'] * $item['quantity'];
         }
     
         if (abs($receiptTotal - $orderTotal) > 0.01) {
