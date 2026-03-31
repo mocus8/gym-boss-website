@@ -43,6 +43,12 @@
     </form>
 
     <div class="account_form">
+        <?php if (!$currentUser['is_verified']) { ?>
+            <div class="registration_modal_input_text">
+                Для оформления заказов подтвердите ваш email
+            </div>
+        <?php } ?>
+
         <div class="registration_modal_input_text">
             Ваш email: <?= htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') ?>
         </div>
