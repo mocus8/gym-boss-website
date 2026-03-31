@@ -275,14 +275,10 @@ class OrderService {
     }
 
     // Метод для получения инфы о заказе и всех товаров в нем (с первой фотографией) по его id
-    public function getById(int $orderId, int $userId): array {
+    public function getById(int $orderId): array {
         // Базовые проверки id
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
-        }
-
-        if ($userId <= 0) {
-            throw new \InvalidArgumentException('Invalid userId');
         }
 
         // Получаем всю инфу о заказе (таблицы order, delivery_types, order_statuses)
