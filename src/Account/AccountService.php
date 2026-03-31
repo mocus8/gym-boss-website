@@ -230,5 +230,7 @@ class AccountService {
         }
 
         $stmt->close();
+
+        return $email;
     }
 }
