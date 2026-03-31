@@ -40,13 +40,16 @@ class Logger {
         $this->log('error', $message, $context);
     }
 
-    // Приватный метод для записи лога
-    private function log(string $level, string $message, array $context): void {
+    // Метод для записи лога
+    public function log(string $level, string $message, array $context): void {
         // Если уровень ниже минимально установленного - не логируем
         if (self::LEVELS[$level] <  $this->minLevel) return;
 
         // Подставляем контекст в сообщение
-        $message = $this->interpolate($message, $context);
+        $message = $this->interpolateMessage($message, $context);
+
+        // Нормализуем контекст
+        $context = $this->normalizeContext($context);
 
         // Собираем строку лога
         // sprintf собирает строку по шаблону из первого параметра
@@ -62,8 +65,8 @@ class Logger {
         error_log($line, 3, $this->logFile);
     }
 
-    // Функция для подстановки контекста в сообщение
-    private function interpolate(string $message, array $context): string {
+    // Метод для подстановки контекста в сообщение
+    private function interpolateMessage(string $message, array $context): string {
         $replace = [];
 
         foreach ($context as $key => $value) {
@@ -74,5 +77,22 @@ class Logger {
 
         // strtr заменяет подстроки replace в строке message
         return strtr($message, $replace);
+    }
+
+    // Метод для нормализации контекста, если там \Throwable то он раскладывается
+    private function normalizeContext(array $context): array {
+        foreach ($context as $key => $value) {
+            if ($value instanceof \Throwable) {
+                $context[$key] = [
+                    'class'   => get_class($value),
+                    'message' => $value->getMessage(),
+                    'file'    => $value->getFile(),
+                    'line'    => $value->getLine(),
+                    'trace'   => $value->getTraceAsString(),
+                ];
+            }
+        }
+    
+        return $context;
     }
 }

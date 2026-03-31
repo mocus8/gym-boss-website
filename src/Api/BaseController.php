@@ -45,8 +45,22 @@ abstract class BaseController {
     protected function error(
         int $status = 500,
         string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
+        string $message = 'Internal server error',
+        array $context = []
     ): void {
+        // Определяем уровень по статусу
+        $level = $status >= 500 ? 'error' : 'warning';
+
+        // Логируем
+        // {$level} - variable function - динамический вызов метода (подставляется переменная)
+        $this->logger->{$level}($message, array_merge([
+            'status' => $status,
+            'code'   => $code,
+            'path'   => $_SERVER['REQUEST_URI'] ?? null,
+            'method' => $_SERVER['REQUEST_METHOD'] ?? null,
+        ], $context));
+
+        // Даем ответ
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
     
