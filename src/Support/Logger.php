@@ -12,6 +12,12 @@ class Logger {
     public function __construct(string $logFile, string $minLevel = 'debug') {
         $this->logFile = $logFile;
         $this->minLevel = self::LEVELS[$minLevel] ?? 0;
+
+        // Создаем директорию для файла логов если ее еще нет
+        $dir = dirname($this->logFile);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
     }
 
     // Обертка на log, задает уровень "debug"
@@ -35,7 +41,7 @@ class Logger {
     }
 
     // Приватный метод для записи лога
-    private function log(string $level, string $message, array $context) {
+    private function log(string $level, string $message, array $context): void {
         // Если уровень ниже минимально установленного - не логируем
         if (self::LEVELS[$level] <  $this->minLevel) return;
 

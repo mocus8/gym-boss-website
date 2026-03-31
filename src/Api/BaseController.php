@@ -1,21 +1,19 @@
 <?php
 // Базовый класс для всех контроллеров, включает в себя нужные для дочерних классов методы
 
-// Тут добавить логирование и документацию для этого api
-
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-// use App\Support\Logger;
+use App\Support\Logger;
 
 // Базовый класс для контроллеров, abstract - нельзя создать экземпляр напрямую, только через наследников
 abstract class BaseController {
-    // protected Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
+    protected Logger $logger;    // Логгер для передачи в зависимость в конструкторе
 
     // Будующий конструктор (с логером)
-    // public function __construct(Logger $logger) {
-    //     $this->logger = $logger;
-    // }
+    public function __construct(Logger $logger) {
+        $this->logger = $logger;
+    }
 
     // Защищенный метод для получения, декодирования и проверки json входных данных
     // Protected не позволяет пользоваться методом из вне, но позволет использовать его наследникам

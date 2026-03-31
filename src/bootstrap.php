@@ -35,7 +35,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Dotenv\Dotenv;    // библиотека для прочтения .env файла
 use App\Support\Logger;
 use App\Db\Db;    // используем класс Db из пространства имен App\Db
-// use App\Support\Logger;
 use App\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
 use App\Integrations\Resend\ResendGateway;
 use App\Mail\MailService;
