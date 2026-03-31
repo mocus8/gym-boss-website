@@ -57,7 +57,7 @@ class PaymentStatusSyncService {
             // Если статус реально поменялся - отправляем письмо 
             if ($justMarked) {
                 // Получаем данные о заказе
-                $orderData = $this->orderService->getById($orderId, $userId);
+                $orderData = $this->orderService->getById($orderId);
 
                 // Собираем ссылку на страницу заказа
                 $orderUrl = $this->baseUrl . '/orders/' . $orderId;

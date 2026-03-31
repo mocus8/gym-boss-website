@@ -275,7 +275,57 @@ class OrderService {
     }
 
     // Метод для получения инфы о заказе и всех товаров в нем (с первой фотографией) по его id
-    public function getById(int $orderId, int $userId): array {
+    public function getById(int $orderId): array {
+        // Базовые проверки id
+        if ($orderId <= 0) {
+            throw new \InvalidArgumentException('Invalid orderId');
+        }
+
+        // Получаем всю инфу о заказе (таблицы order, delivery_types, order_statuses)
+        // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
+        $sql = "
+            SELECT
+                o.id,
+                o.user_id,
+                u.name AS user_name,
+                u.email AS user_email,
+                o.total_quantity,
+                o.total_price,
+                o.delivery_type_id,
+                dt.code AS delivery_type_code,
+                dt.name AS delivery_type_name,
+                o.delivery_cost,
+                o.delivery_address_text,
+                o.delivery_postal_code,
+                o.store_id,
+                s.address AS store_address,
+                s.work_hours AS store_work_hours,
+                o.courier_delivery_from,
+                o.courier_delivery_to,
+                o.ready_for_pickup_from,
+                o.ready_for_pickup_to,
+                o.status_id,
+                os.code AS status_code,
+                os.name AS status_name,
+                o.created_at,
+                o.updated_at,
+                o.paid_at,
+                o.canceled_at
+            FROM orders AS o
+            LEFT JOIN users AS u ON o.user_id = u.id
+            LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
+            LEFT JOIN stores AS s ON o.store_id = s.id
+            LEFT JOIN order_statuses AS os ON o.status_id = os.id
+            WHERE o.id = ?
+            LIMIT 1
+        ";
+
+        return $this->fetchOrderWithItemsBySql($sql, "i", $orderId);
+    }
+
+    // Метод для получения инфы о заказе и всех товаров в нем (с первой фотографией) по его id и по user id
+    // Для запросов со стороны пользователей, дополнительно проверяется принадлежность по user id
+    public function getByIdForUser(int $orderId, int $userId): array {
         // Базовые проверки id
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
@@ -324,150 +374,7 @@ class OrderService {
             LIMIT 1
         ";
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ii", $orderId, $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // order - ассоциативный массив с инфой о заказе (строка orders)
-        $order = $result->fetch_assoc();
-
-        if (!$order) {
-            $stmt->close();
-            throw new \InvalidArgumentException('Order not found');
-        }
-
-        $stmt->close();
-
-        // Объявляем примерные/фактические сроки доставки/самовывоза
-        $deliveryFrom = null;
-        $deliveryTo = null;
-
-        $statusCode = $order["status_code"];
-        $deliveryTypeId = (int)$order["delivery_type_id"];
-
-        if ($statusCode === 'pending_payment') {
-            // Заказ не оплачен, считаем от now
-            $now = new \DateTimeImmutable('now');
-
-            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
-                $deliveryFrom = $now->modify('+' . $this->courierDeliveryFromHours . ' hours')->format('Y-m-d H:i:s');
-                $deliveryTo = $now->modify('+' . $this->courierDeliveryToHours . ' hours')->format('Y-m-d H:i:s');
-            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
-                $deliveryFrom = $now->modify('+' . $this->pickupReadyFromHours . ' hours')->format('Y-m-d H:i:s');
-                $deliveryTo = $now->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
-            }
-
-        } elseif ($statusCode === 'paid' || $statusCode === 'shipped' || $statusCode === 'ready_for_pickup') {
-            // Заказ оплачен, используем значения из бд
-            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
-                $deliveryFrom = $order["courier_delivery_from"];
-                $deliveryTo = $order["courier_delivery_to"];
-            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
-                $deliveryFrom = $order["ready_for_pickup_from"];
-                $deliveryTo = $order["ready_for_pickup_to"];
-            }
-        }
-
-        // Удаляем сырые значения из бд из массива order
-        unset(
-            $order['courier_delivery_from'],
-            $order['courier_delivery_to'],
-            $order['ready_for_pickup_from'],
-            $order['ready_for_pickup_to']
-        );
-
-        // Добавляем новые поля в массив order
-        $order['delivery_from'] = $deliveryFrom;
-        $order['delivery_to'] = $deliveryTo;
-
-        $sql = "
-            SELECT 
-                product_id,
-                quantity,
-                price
-            FROM order_items
-            WHERE order_items.order_id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // Объявляем и заполняем массивы id => quantity, id => price и id товаров из заказа
-        $quantityByIds = [];
-        $priceByIds = [];
-        $ids = [];
-        while ($row = $result->fetch_assoc()) {
-            $productId = (int)$row['product_id'];
-            $quantity = (int)$row['quantity'];
-            $price = (float)$row['price'];
-
-            $quantityByIds[$productId] = $quantity;
-            $priceByIds[$productId] = $price;
-            $ids[] = $productId;
-        }
-
-        if ($ids === []) {
-            $stmt->close();
-            return [
-                'order' => $order,
-                'items' => []
-            ];
-        }
-
-        $stmt->close();
-
-        // Получаем массив товаров через productService
-        $products = $this->productService->getByIds($ids);
-
-        // Собираем итоговый массив позиций корзины: товар + quantity
-        $items = [];
-        foreach ($products as $productId => $product) {
-            // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
-            $items[] = array_merge($product, [
-                'quantity' => $quantityByIds[$productId] ?? 0,
-                'price' => $priceByIds[$productId] ?? $product['price']
-            ]);
-        }
-
-        return [
-            'order' => $order,
-            'items' => $items
-        ];
+        return $this->fetchOrderWithItemsBySql($sql, "ii", $orderId, $userId);
     }
 
     // Метод для получения инфы о всех заказах пользователя по userId
@@ -1175,6 +1082,158 @@ class OrderService {
         }
 
         return $items;
+    }
+
+    // Приватный вспомагательный метод для нахождения заказа
+    // В зависимости от параметров ищет заказ либо просто по id либо с привязкой к user id
+    // ...$params - это набор аргументов переменной длинны
+    private function fetchOrderWithItemsBySql(string $sql, string $types, ...$params): array {
+        // Подготавливаем выражение из параметров метода
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param($types, ...$params);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // order - ассоциативный массив с инфой о заказе (строка orders)
+        $order = $result->fetch_assoc();
+
+        if (!$order) {
+            $stmt->close();
+            throw new \InvalidArgumentException('Order not found');
+        }
+
+        $stmt->close();
+
+        // Объявляем примерные/фактические сроки доставки/самовывоза
+        $deliveryFrom = null;
+        $deliveryTo = null;
+
+        $statusCode = $order["status_code"];
+        $deliveryTypeId = (int)$order["delivery_type_id"];
+
+        if ($statusCode === 'pending_payment') {
+            // Заказ не оплачен, считаем от now
+            $now = new \DateTimeImmutable('now');
+
+            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+                $deliveryFrom = $now->modify('+' . $this->courierDeliveryFromHours . ' hours')->format('Y-m-d H:i:s');
+                $deliveryTo = $now->modify('+' . $this->courierDeliveryToHours . ' hours')->format('Y-m-d H:i:s');
+            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
+                $deliveryFrom = $now->modify('+' . $this->pickupReadyFromHours . ' hours')->format('Y-m-d H:i:s');
+                $deliveryTo = $now->modify('+' . $this->pickupReadyToHours . ' hours')->format('Y-m-d H:i:s');
+            }
+
+        } elseif ($statusCode === 'paid' || $statusCode === 'shipped' || $statusCode === 'ready_for_pickup') {
+            // Заказ оплачен, используем значения из бд
+            if ($deliveryTypeId === self::DELIVERY_TYPE_COURIER) {
+                $deliveryFrom = $order["courier_delivery_from"];
+                $deliveryTo = $order["courier_delivery_to"];
+            } elseif ($deliveryTypeId === self::DELIVERY_TYPE_PICKUP) {
+                $deliveryFrom = $order["ready_for_pickup_from"];
+                $deliveryTo = $order["ready_for_pickup_to"];
+            }
+        }
+
+        // Удаляем сырые значения из бд из массива order
+        unset(
+            $order['courier_delivery_from'],
+            $order['courier_delivery_to'],
+            $order['ready_for_pickup_from'],
+            $order['ready_for_pickup_to']
+        );
+
+        // Добавляем новые поля в массив order
+        $order['delivery_from'] = $deliveryFrom;
+        $order['delivery_to'] = $deliveryTo;
+
+        $sql = "
+            SELECT 
+                product_id,
+                quantity,
+                price
+            FROM order_items
+            WHERE order_items.order_id = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $order['id']);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        // Объявляем и заполняем массивы id => quantity, id => price и id товаров из заказа
+        $quantityByIds = [];
+        $priceByIds = [];
+        $ids = [];
+        while ($row = $result->fetch_assoc()) {
+            $productId = (int)$row['product_id'];
+            $quantity = (int)$row['quantity'];
+            $price = (float)$row['price'];
+
+            $quantityByIds[$productId] = $quantity;
+            $priceByIds[$productId] = $price;
+            $ids[] = $productId;
+        }
+
+        if ($ids === []) {
+            $stmt->close();
+
+            return [
+                'order' => $order,
+                'items' => []
+            ];
+        }
+
+        $stmt->close();
+
+        // Получаем массив товаров через productService
+        $products = $this->productService->getByIds($ids);
+
+        // Собираем итоговый массив позиций корзины: товар + quantity
+        $items = [];
+        foreach ($products as $productId => $product) {
+            // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
+            $items[] = array_merge($product, [
+                'quantity' => $quantityByIds[$productId] ?? 0,
+                'price' => $priceByIds[$productId] ?? $product['price']
+            ]);
+        }
+
+        return [
+            'order' => $order,
+            'items' => $items
+        ];
     }
 
     // Вспомогательный приватный метод для получения цены доставки

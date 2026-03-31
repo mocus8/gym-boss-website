@@ -107,12 +107,10 @@ class MailService {
             'deliveryTypeName'  => $orderInfo['delivery_type_name'],
 
             'deliveryAddressText'  => $orderInfo['delivery_address_text'],
-            'courierDeliveryFrom'  => formatDateForEmail($orderInfo['courier_delivery_from']),
-            'courierDeliveryTo'  => formatDateForEmail($orderInfo['courier_delivery_to']),
-
             'storeAddress'  => $orderInfo['store_address'],
-            'readyForPickupFrom'  => formatDateForEmail($orderInfo['ready_for_pickup_from']),
-            'readyForPickupTo'  => formatDateForEmail($orderInfo['ready_for_pickup_to']),
+
+            'deliveryFrom'  => formatDateForEmail($orderInfo['delivery_from']),
+            'deliveryTo'  => formatDateForEmail($orderInfo['delivery_to']),
 
             'orderUrl' => $orderUrl
         ];
@@ -197,8 +195,8 @@ class MailService {
             'orderId' => $orderInfo['id'],
             'items' => $orderItems,
             'deliveryAddressText'  => $orderInfo['delivery_address_text'],
-            'courierDeliveryFrom'  => formatDateForEmail($orderInfo['courier_delivery_from']),
-            'courierDeliveryTo'  => formatDateForEmail($orderInfo['courier_delivery_to']),
+            'deliveryFrom'  => formatDateForEmail($orderInfo['delivery_from']),
+            'deliveryTo'  => formatDateForEmail($orderInfo['delivery_to']),
             'orderUrl' => $orderUrl,
             'supportEmail' => self::SUPPORT_EMAIL
         ];

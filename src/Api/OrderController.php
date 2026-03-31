@@ -134,7 +134,7 @@ class OrderController extends BaseController {
         try {
             $userId = $this->authSession->getUserId();
 
-            $data = $this->orderService->getById($orderId, $userId);
+            $data = $this->orderService->getByIdForUser($orderId, $userId);
 
             // Форматируем временные поля из SQL формата в ISO формат
             $data['order'] = mapIsoFields($data['order'], [
