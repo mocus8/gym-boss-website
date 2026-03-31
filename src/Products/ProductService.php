@@ -11,7 +11,7 @@ namespace App\Products;
 class ProductService {
     private \mysqli $db;    // приватное свойство (переменная класса), привязанная к объекту
     // Константы класса (не свойства, вызываются через self::)
-    private const CATALOG_CACHE_FILE = __DIR__ . '/../../var/cache/catalog.cache';    // путь к файлу с кэшем каталога
+    private const CATALOG_CACHE_FILE = __DIR__ . '/../../storage/cache/catalog.cache';    // путь к файлу с кэшем каталога
     private const CATALOG_CACHE_TTL  = 300;    // время кэширования (ttl - time to live)
 
     // Конструктор (магический метод), просто присваиваем внешюю $db в переменную создоваемого объекта

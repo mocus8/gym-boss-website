@@ -33,6 +33,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // Подключаем пространства имен
 use Dotenv\Dotenv;    // библиотека для прочтения .env файла
+use App\Support\Logger;
 use App\Db\Db;    // используем класс Db из пространства имен App\Db
 // use App\Support\Logger;
 use App\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
@@ -67,8 +68,8 @@ $dotenv->safeLoad();
 
 // Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
+require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
-// require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Support/AppException.php';
 require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
@@ -110,6 +111,9 @@ if (!$appUrl) {
     throw new RuntimeException('APP_URL is not set');   // и падаем
 }
 $baseUrl = rtrim($appUrl, '/');
+
+// Создаем логгер
+$logger = new Logger($appConfig['log_file'], $appConfig['log_level']);
 
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connect($servicesConfig['database']);

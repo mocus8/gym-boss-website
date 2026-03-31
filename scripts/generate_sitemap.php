@@ -1,6 +1,5 @@
 <?php
-// Генератор sitemap.xml для учебного проекта
-// Запуск: docker-compose exec php php /var/www/html/scripts/generate_sitemap.php
+// Генератор sitemap.xml
 
 require_once __DIR__ . '/../src/bootstrap.php';
 
