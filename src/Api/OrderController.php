@@ -88,10 +88,10 @@ class OrderController extends BaseController {
             }
 
             // Разбираем поля из массива полученных данных data
-            $deliveryTypeId = isset($data['deliveryTypeId']) ? (int) $data['deliveryTypeId'] : 0;
-            $deliveryAddressText = isset($data['deliveryAddressText']) ? (string) $data['deliveryAddressText'] : null;
-            $deliveryPostalCode = isset($data['deliveryPostalCode']) ? (string) $data['deliveryPostalCode'] : null;
-            $storeId = isset($data['storeId']) ? (int) $data['storeId'] : null;
+            $deliveryTypeId = isset($data['delivery_type_id']) ? (int) $data['delivery_type_id'] : 0;
+            $deliveryAddressText = isset($data['delivery_address_text']) ? (string) $data['delivery_address_text'] : null;
+            $deliveryPostalCode = isset($data['delivery_postal_code']) ? (string) $data['delivery_postal_code'] : null;
+            $storeId = isset($data['store_id']) ? (int) $data['store_id'] : null;
 
             if ($deliveryTypeId <= 0) {
                 $this->error(422, 'VALIDATION_ERROR', 'Invalid deliveryTypeId');
