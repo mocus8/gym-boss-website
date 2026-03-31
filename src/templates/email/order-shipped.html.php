@@ -48,9 +48,9 @@
                                     Состав заказа:
                                 </p>
 
-                                <?php foreach ($orderItems as $item) { ?>
+                                <?php foreach ($items as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.)
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.)
                                     </p>
                                 <?php } ?>
 
@@ -59,7 +59,7 @@
                                 </p>
 
                                 <p style="margin:0 0 16px;">
-                                    Примерный срок доставки: с <?= $courierDeliveryFrom ?> до <?= $courierDeliveryTo ?>
+                                    Примерный срок доставки: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
                                 </p>
 
                                 <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">

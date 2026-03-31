@@ -48,9 +48,9 @@
                                     Состав заказа:
                                 </p>
 
-                                <?php foreach ($orderItems as $item) { ?>
+                                <?php foreach ($items as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?>
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?>
                                     </p>
                                 <?php } ?>
 
@@ -76,7 +76,7 @@
                                     </p>
 
                                     <p style="margin:0 0 16px;">
-                                        Примерный срок доставки: с <?= $courierDeliveryFrom ?> до <?= $courierDeliveryTo ?>
+                                        Примерный срок доставки: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
                                     </p>
                                 <?php } elseif ($deliveryTypeCode === 'pickup') { ?>
                                     <p style="margin:0 0 16px;">
@@ -92,7 +92,7 @@
                                     </p>
 
                                     <p style="margin:0 0 16px;">
-                                        Примерный срок готовности заказа: с <?= $readyForPickupFrom ?> до <?= $readyForPickupTo ?>
+                                        Примерный срок готовности заказа: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
                                     </p>
                                 <?php } ?>
 
