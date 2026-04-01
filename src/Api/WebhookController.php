@@ -23,6 +23,12 @@ class WebhookController extends BaseController{
         '2a02:5180::/32',
     ];
 
+    // Константа с разрешенными ip для проверки прокси
+    private const TRUSTED_PROXIES = [
+        '127.0.0.1',
+        '::1',
+    ];
+
     // Конструктор (магический метод), присваиваем внеший экземпляр StoreService в переменные создоваемого объекта
     public function __construct(WebhookService $webhookService, Logger $logger) {
         $this->webhookService = $webhookService;
@@ -32,7 +38,7 @@ class WebhookController extends BaseController{
     // Метод для обработки уведомления от юкассы 
     // Обработчик запроса POST /webhook/yookassa от юкассы
     public function handleNotification(): void {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        $ip = $this->getClientIp();
         if (!$this->isIpAllowed($ip)) {
             $this->logger->warning('Webhook notification from unknown ip {ip}', [
                 'ip' => $ip,
@@ -54,6 +60,7 @@ class WebhookController extends BaseController{
         try {
             // Синхронизируем статус заказа через метод контроллера
             $this->webhookService->handleNotification($payload);
+
         } catch (\Throwable $e) {
             $this->logger->warning('Failed to handle webhook notification', [
                 'exception' => $e,
@@ -68,32 +75,61 @@ class WebhookController extends BaseController{
 
     // Приватный метод для проверки принадлежности ip к CIDR-диапозону
     private function ipInCidr(string $ip, string $cidr): bool {
-        // Если это IPv6 (есть двоеточие) - пропускаем
-        if (str_contains($cidr, ':') || str_contains($ip, ':')) {
-            return false;
-        }
-
-        // Одиночный IP без "/"
         if (!str_contains($cidr, '/')) {
             return $ip === $cidr;
         }
 
         [$subnet, $maskBits] = explode('/', $cidr, 2);
 
-        $ipLong     = ip2long($ip);
-        $subnetLong = ip2long($subnet);
+        $ipBin = inet_pton($ip);
+        $subnetBin = inet_pton($subnet);
 
-        if ($ipLong === false || $subnetLong === false) {
+        if ($ipBin === false || $subnetBin === false) {
+            return false;
+        }
+
+        if (strlen($ipBin) !== strlen($subnetBin)) {
             return false;
         }
 
         $maskBits = (int) $maskBits;
-        $mask     = -1 << (32 - $maskBits); // битовая маска для IPv4
+        $bytes = strlen($ipBin);
+        $fullBytes = intdiv($maskBits, 8);
+        $remainingBits = $maskBits % 8;
 
-        $ipNet     = $ipLong & $mask;
-        $subnetNet = $subnetLong & $mask;
+        for ($i = 0; $i < $fullBytes; $i++) {
+            if ($ipBin[$i] !== $subnetBin[$i]) {
+                return false;
+            }
+        }
 
-        return $ipNet === $subnetNet;
+        if ($remainingBits === 0) {
+            return true;
+        }
+
+        $mask = (0xFF << (8 - $remainingBits)) & 0xFF;
+
+        return (ord($ipBin[$fullBytes]) & $mask) === (ord($subnetBin[$fullBytes]) & $mask);
+    }
+
+    // Метод для получения реального ip клиента, приходящего к прокси nginx
+    private function getClientIp(): string {
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        if (in_array($remoteAddr, self::TRUSTED_PROXIES, true)) {
+            $forwardedFor = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+            if ($forwardedFor !== '') {
+                $parts = explode(',', $forwardedFor);
+                return trim($parts[0]);
+            }
+
+            $realIp = $_SERVER['HTTP_X_REAL_IP'] ?? '';
+            if ($realIp !== '') {
+                return trim($realIp);
+            }
+        }
+
+        return $remoteAddr;
     }
 
     // Приватный метод для проверки адреса поступающего уведомления
