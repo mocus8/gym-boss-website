@@ -9,6 +9,7 @@ namespace App\Auth;
 
 use App\Support\AppException;
 use App\Mail\MailService;
+use App\Support\Logger;
 
 // Класс для управления авторизацией пользователей
 class AuthService {
@@ -16,6 +17,7 @@ class AuthService {
     private \mysqli $db;
     private MailService $mailService;
     private string $baseUrl;
+    private Logger $logger;
 
     private array $verifiedEmailsCache = [];    // кэш с верификацией пользователей: userId -> bool
     private const SEND_EMAIL_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
@@ -26,15 +28,18 @@ class AuthService {
     private const RESET_PASSWORD_TOKEN_TTL_SECONDS = 3600;    // константа с временем жизни токена подверждения (60 минут)
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
-    public function __construct(\mysqli $db, MailService $mailService, string $baseUrl) {
+    public function __construct(\mysqli $db, MailService $mailService, string $baseUrl, Logger $logger) {
         $this->db = $db;
         $this->mailService = $mailService;
         $this->baseUrl = $baseUrl;
+        $this->logger = $logger;
     }
 
     // Метод для регистрации
     // Регистрирует пользователя и инициализирует verify-процесс
     public function register(string $email, string $password, string $name): int {
+        $this->logger->info('User registration started');
+        
         // Ищем этот email в бд
         $sql = "
             SELECT id
@@ -133,6 +138,10 @@ class AuthService {
 
         // Собираем и отправляем ссылку для подтверждения почты через приватный метод
         $this->createAndSendEmailVerificationLink($rawToken, $email, $name);
+
+        $this->logger->info('User {user_id} created', [
+            'user_id' => $userId,
+        ]);
 
         // Возвращаем userId
         return $userId;

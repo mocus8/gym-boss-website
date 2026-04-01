@@ -133,7 +133,7 @@ $productController = new ProductController($productService, $logger);    // со
 
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
-$authService = new AuthService($db, $mailService, $baseUrl);
+$authService = new AuthService($db, $mailService, $baseUrl, $logger);
 $accountService = new AccountService($db);
 $accountController = new AccountController($authSession, $accountService, $logger);
 $cartSession = new CartSession();
@@ -156,7 +156,15 @@ $orderService = new OrderService(
 );
 // Работаем с платежами
 $yookassaGateway = new YookassaGateway($servicesConfig['yookassa']['shop_id'], $servicesConfig['yookassa']['api_key']);
-$paymentService = new PaymentService($db, $baseUrl, $orderService, $accountService, $yookassaGateway, $deliveryConfig['vat_code']);
+$paymentService = new PaymentService(
+    $db, 
+    $baseUrl, 
+    $orderService, 
+    $accountService, 
+    $yookassaGateway, 
+    $deliveryConfig['vat_code'],
+    $logger
+);
 $paymentStatusSyncService = new PaymentStatusSyncService(
     $db,
     $baseUrl,
@@ -167,7 +175,7 @@ $paymentStatusSyncService = new PaymentStatusSyncService(
     $logger
 );
 // Создаем use-case/координационный класс для отмены заказов и отмены его платежей
-$cancelOrderUseCase = new CancelOrderUseCase($db, $baseUrl, $orderService, $paymentService, $mailService);
+$cancelOrderUseCase = new CancelOrderUseCase($db, $baseUrl, $orderService, $paymentService, $mailService, $logger);
 // Создаем контроллер заказов
 $orderController = new OrderController(
     $authSession,

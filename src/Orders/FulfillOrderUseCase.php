@@ -5,6 +5,7 @@
 namespace App\Orders;
 use App\Orders\OrderService;
 use App\Mail\MailService;
+use App\Support\Logger;
 
 // Класс для пометки заказов как готовых к самовывозу или отправленых
 class FulfillOrderUseCase {
@@ -12,12 +13,14 @@ class FulfillOrderUseCase {
     private string $baseUrl;
     private OrderService $orderService;
     private MailService $mailService;
+    private Logger $logger;
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
-    public function __construct(string $baseUrl, OrderService $orderService, MailService $mailService) {
+    public function __construct(string $baseUrl, OrderService $orderService, MailService $mailService, Logger $logger) {
         $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
         $this->mailService = $mailService;
+        $this->logger = $logger;
     }
 
     // Метод для пометки заказа как отправленого курьером, объеденяет (координирует) методы двух других сервисов
@@ -25,6 +28,10 @@ class FulfillOrderUseCase {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
+
+        $this->logger->info('Order {order_id} shipped initiated', [
+            'order_id' => $orderId,
+        ]);
 
         // Помечаем сам заказ как отправленый
         $justMarked = $this->orderService->markShipped($orderId);
@@ -50,6 +57,10 @@ class FulfillOrderUseCase {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
+
+        $this->logger->info('Order {order_id} ready for pickup initiated', [
+            'order_id' => $orderId,
+        ]);
 
         // Помечаем сам заказ как готовый к получению
         $justMarked = $this->orderService->markReadyForPickup($orderId);
