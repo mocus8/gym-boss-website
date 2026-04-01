@@ -23,12 +23,17 @@ export function updateProfile(newName) {
 
 // Функция для смены пароля на основании текущего
 // Отправляет запрос POST /api/account/password
-export function updatePassword(currentPassword, newPassword) {
+export function updatePassword(
+    currentPassword,
+    newPassword,
+    newPasswordConfirmation,
+) {
     return requestAccount("/password", {
         method: "POST",
         body: JSON.stringify({
             current_password: currentPassword,
             new_password: newPassword,
+            new_password_confirmation: newPasswordConfirmation,
         }),
     });
 }
