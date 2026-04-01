@@ -199,3 +199,39 @@ $dadataController = new DadataController($dadataClient, $logger);
 // Работаем с сервисом и контроллером магазинов
 $storeService = new StoreService($db);
 $storeController = new StoreController($storeService, $logger);
+
+// Устанавливаем на все приложение хендлер
+// Если где то будет непойманая ошибка - вызывается этот обработчик
+// set_exception_handler - регистрация глобального обработчика
+// function (\Throwable $e) - анонимная функция, без имени
+// use ($logger) - замыкание переменной внутрь функции
+set_exception_handler(function (\Throwable $e) use ($logger) {
+    // Получаем путь запроса и метод
+    $uri = $_SERVER['REQUEST_URI'] ?? null;
+    $method = $_SERVER['REQUEST_METHOD'] ?? null;
+
+    $logger->error('Unhandled exception', [
+        'uri'       => $uri,
+        'method'    => $method,
+        'exception' => $e,
+    ]);
+
+    $path = $uri ? parse_url($uri, PHP_URL_PATH) : '';
+    $isApi = is_string($path) && str_starts_with($path, '/api/');
+
+    http_response_code(500);
+
+    if ($isApi) {
+        // Если api запрос - отвечаем ошибкой
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error'   => 'Internal server error',
+        ], JSON_UNESCAPED_UNICODE);
+    } else {
+        // Если web запрос - рендерим 500 страницу
+        require __DIR__ . '/pages/500.php';
+    }
+
+    exit;
+});
