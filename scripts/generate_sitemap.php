@@ -3,12 +3,10 @@
 
 require_once __DIR__ . '/../src/bootstrap.php';
 
-// Если из bootatrap не пришла appUrl или baseUrl
-if (!$appUrl || !$baseUrl) {
-    // логируем
-    error_log('[generate_sitemap.php] AppUrl or baseUrl is not set');
-    // и падаем
-    exit(1);
+// Если из bootatrap не пришел baseUrl
+if (!$baseUrl) {
+    $logger->error('BaseUrl is not set');    // логируем
+    exit(1);    // и падаем
 }
 
 // lastmod для статичных страниц не делаю
@@ -31,21 +29,26 @@ try {
     ");
 
     if (!$stmt) {
-        throw new Exception('query failed');
+        throw new \RuntimeException('Sitemap query prepare failed: ' . $db->error);
     }
 
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new \RuntimeException('Sitemap query execute failed: ' . $stmt->error);
+    }
+
     $result = $stmt->get_result();
+
+    if (!$result) {
+        throw new \RuntimeException('Sitemap get_result failed: ' . $stmt->error);
+    }
 
     while ($row = $result->fetch_assoc()) {
         $slug = $row['slug'];
         $lastmod = null;
 
         if (!empty($row['changed'])) {
-            $dt = new DateTimeImmutable($row['changed'], new DateTimeZone('UTC'));
-            if ($dt !== false) {
-                $lastmod = $dt->format('Y-m-d');
-            }
+            $dt = new \DateTimeImmutable($row['changed'], new \DateTimeZone('UTC'));
+            $lastmod = $dt->format('Y-m-d');
         }
 
         // Создание базовой записи для URL
@@ -61,9 +64,11 @@ try {
         $urls[] = $entry;
     }
 
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     // Не критично для генерации sitemap — просто логируем
-    error_log('Sitemap generator DB error: ' . $e->getMessage());
+    $logger->error('Sitemap generator DB error', [
+        'db_error'   => $e->getMessage()
+    ]);
 
 } finally {
     if (isset($stmt) && $stmt instanceof mysqli_stmt) {
@@ -76,7 +81,7 @@ $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
 foreach ($urls as $u) {
     $xml .= "    <url>\n";
-    $xml .= '        <loc>' . htmlspecialchars($u['loc'], ENT_QUOTES) . "</loc>\n";
+    $xml .= '        <loc>' . htmlspecialchars($u['loc'], ENT_QUOTES | ENT_XML1, 'UTF-8') . "</loc>\n";
     if (!empty($u['lastmod'])) {
         $xml .= '        <lastmod>' . $u['lastmod'] . "</lastmod>\n";
     }
@@ -84,9 +89,12 @@ foreach ($urls as $u) {
 }
 
 $xml .= '</urlset>' . "\n";
-
 $outPath = __DIR__ . '/../sitemap.xml';
+
 if (file_put_contents($outPath, $xml) === false) {
+    $logger->error('Failed to write sitemap file', [
+        'path' => $outPath,
+    ]);
     fwrite(STDERR, "Failed to write sitemap to {$outPath}\n");
     exit(1);
 }
