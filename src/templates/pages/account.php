@@ -45,7 +45,7 @@
     <div class="account_form">
         <?php if (!$currentUser['is_verified']) { ?>
             <div class="registration_modal_input_text">
-                Для оформления заказов подтвердите ваш email
+                Чтобы завершить регистрацию и получить возможность оформлять заказы подтвердите ваш email
             </div>
         <?php } ?>
 

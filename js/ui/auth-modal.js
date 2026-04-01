@@ -432,9 +432,7 @@ class AuthModal {
 
             await register(email, password, name);
 
-            notification.open(
-                "Вам на почту отправлено письмо для подтверждения вашего email, перейдите по ссылке в письме, чтобы завершить регистрацию",
-            );
+            window.location.href = "/account";
 
             this.close();
         } catch (e) {
