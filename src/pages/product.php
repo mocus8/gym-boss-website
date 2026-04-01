@@ -47,13 +47,9 @@ try {
     $images = $productService->getImagesById((int)$product['id']);
     
 } catch (\Throwable $e) {
-    // Тут потом нормально логировать
-    error_log(sprintf(
-        '[product] getBySlug/getImagesById failed: %s in %s:%d',
-        $e->getMessage(),
-        $e->getFile(),
-        $e->getLine()
-    ));
+    $logger->error('Failed to get product info', [
+        'exception' => $e
+    ]);
     
     http_response_code(500);
     require __DIR__ . '/500.php';
