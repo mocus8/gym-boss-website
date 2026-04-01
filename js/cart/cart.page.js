@@ -123,7 +123,7 @@ function updateCartItemCounter(productId, qty) {
         productElement.remove();
     } else {
         productCounter.textContent = String(qtyNumber);
-        productTotal.textContent = `${qtyNumber * itemPrice} ₽`;
+        productTotal.textContent = `${formatPrice(qtyNumber * itemPrice)} ₽`;
     }
 }
 
