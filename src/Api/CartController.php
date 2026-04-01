@@ -3,35 +3,27 @@
 // Принимает запросы, взаимодействует с бд через методы сервиса и отвечает
 // Его методы - отдельные API‑эндпоинты (POST /api/cart/add-item и т.д.).
 
-// Тут добавить логирование и документацию для этого api
-
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Cart\CartSession;    // используем класс CartSession из пространства имен App\Cart
-use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
-use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
+use App\Cart\CartSession;
+use App\Auth\AuthSession;
+use App\Cart\CartService;
+use App\Support\Logger;
 
 // Класс для управления корзинами пользователей (через методы сервиса)
 class CartController extends BaseController {
-    private CartSession $cartSession;    // приватное свойство (переменная класса), привязанная к объекту
-    private AuthSession $authSession;    // приватное свойство (переменная класса), привязанная к объекту
-    private CartService $cartService;    // приватное свойство (переменная класса), привязанная к объекту
+    private CartSession $cartSession;
+    private AuthSession $authSession;
+    private CartService $cartService;
 
     // Конструктор (магический метод), присваиваем внеший экземпляр CartService и CartSession в переменные создоваемого объекта
-    public function __construct(CartSession $cartSession, AuthSession $authSession, CartService $cartService) {
+    public function __construct(CartSession $cartSession, AuthSession $authSession, CartService $cartService, Logger $logger) {
         $this->cartSession = $cartSession;
         $this->authSession = $authSession;
         $this->cartService = $cartService;
+        parent::__construct($logger);
     }
-
-    // Будующий конструктор (с логером)
-    // public function __construct(CartSession $cartSession, AuthSession $authSession, CartService $cartService, Logger $logger) {
-    //     $this->cartSession = $cartSession;
-    //     $this->authSession = $authSession;
-    //     $this->cartService = $cartService;
-    //     parent::__construct($logger);
-    // }
 
     // Метод для получения данных о корзине, возвращает массив - список товаров, общее кол-во, стоимость
     // Использует сразу три метода CartService
@@ -62,19 +54,21 @@ class CartController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get cart',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
     // Метод для добавления товара в корзину, обработчик запроса POST /api/cart/add-item 
     public function addItem(): void {
         try {
+            $cartId = null;
+
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
@@ -90,7 +84,12 @@ class CartController extends BaseController {
             $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
 
             if ($productId <= 0 || $qty <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
+                $this->error(
+                    422, 
+                    'VALIDATION_ERROR', 
+                    'Invalid product_id or qty'
+                );
+
                 return;
             }
 
@@ -103,30 +102,46 @@ class CartController extends BaseController {
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart addItem failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to add item to {cart_id}',
+                context: [
+                    'cart_id' => $cartId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
     // Метод для удаления товара из корзины, обработчик запроса POST /api/cart/remove-item 
     public function removeItem(): void {
         try {
+            $cartId = null;
+
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getCart($cartSessionId, $userId);
             if ($cartId === null) {
-                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                $this->error(
+                    404, 
+                    'CART_NOT_FOUND', 
+                    'Cart not found'
+                );
+
                 return;
             }
 
@@ -138,7 +153,12 @@ class CartController extends BaseController {
             $productId = isset($data['product_id']) ? (int) $data['product_id'] : 0;
 
             if ($productId <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id');
+                $this->error(
+                    422, 
+                    'VALIDATION_ERROR', 
+                    'Invalid product_id'
+                );
+
                 return;
             }
 
@@ -150,27 +170,43 @@ class CartController extends BaseController {
             $this->success(200, $data);
 
         } catch (\InvalidArgumentException $e) {
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart removeItem failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to remove item from {cart_id}',
+                context: [
+                    'cart_id' => $cartId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
     // Метод для обновления в бд опр-ого кол-ва товара в корзине, обработчик запроса POST /api/cart/update-item-qty
     public function updateItemQty(): void {
         try {
+            $cartId = null;
+
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getCart($cartSessionId, $userId);
             if ($cartId === null) {
-                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                $this->error(
+                    404, 
+                    'CART_NOT_FOUND', 
+                    'Cart not found'
+                );
+
                 return;
             }
 
@@ -183,7 +219,12 @@ class CartController extends BaseController {
             $qty = isset($data['qty']) ? (int) $data['qty'] : 0;
 
             if ($productId <= 0 || $qty < 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid product_id or qty');
+                $this->error(
+                    422, 
+                    'VALIDATION_ERROR', 
+                    'Invalid product_id or qty'
+                );
+
                 return;
             }
 
@@ -195,27 +236,43 @@ class CartController extends BaseController {
             $this->success(200, $data);
 
         } catch (\InvalidArgumentException $e) {
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart updateItemQty failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to update item quantity in {cart_id}',
+                context: [
+                    'cart_id' => $cartId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
     // Метод для очистки корзины, обработчик запроса POST /api/cart/clear
     public function clear(): void {
         try {
+            $cartId = null;
+
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getCart($cartSessionId, $userId);
             if ($cartId === null) {
-                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                $this->error(
+                    404, 
+                    'CART_NOT_FOUND', 
+                    'Cart not found'
+                );
+                
                 return;
             }
 
@@ -227,12 +284,14 @@ class CartController extends BaseController {
             $this->success(200, $data);
 
         } catch (\Throwable $e) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart clear failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to clear {cart_id}',
+                context: [
+                    'cart_id' => $cartId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 

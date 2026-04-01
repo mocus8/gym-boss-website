@@ -128,17 +128,17 @@ $mailService = new MailService($resendGateway);
 
 // Работаем с сервисом и контроллером товара
 $productService = new ProductService($db);    // создаем экземпляр класса
-$productController = new ProductController($productService);    // создаем экземпляр класса
+$productController = new ProductController($productService, $logger);    // создаем экземпляр класса
 
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
 $authService = new AuthService($db, $mailService, $baseUrl);
 $accountService = new AccountService($db);
-$accountController = new AccountController($authSession, $accountService);
+$accountController = new AccountController($authSession, $accountService, $logger);
 $cartSession = new CartSession();
 $cartService = new CartService($db, $productService);
-$authController = new AuthController($authSession, $authService, $cartSession, $cartService);
-$cartController = new CartController($cartSession, $authSession, $cartService);
+$authController = new AuthController($authSession, $authService, $cartSession, $cartService, $logger);
+$cartController = new CartController($cartSession, $authSession, $cartService, $logger);
 
 // Создаем сервис заказов
 // В параметры передаем бд, другие сервисы для взаимодействия и переменные доставки из конфига
@@ -167,17 +167,18 @@ $orderController = new OrderController(
     $cartSession,
     $cartService,
     $paymentService,
-    $paymentStatusSyncService
+    $paymentStatusSyncService,
+    $logger
 );
 
 // Создаем вебхук для обработки уведомлений от юкассы
 $webhookService = new WebhookService($paymentStatusSyncService, $yookassaGateway);
-$webhookController = new WebhookController($webhookService);
+$webhookController = new WebhookController($webhookService, $logger);
 
 // Работаем с внешним сервисом DaData
 $dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // создаем клиент для взаимодействия с сервисом DaData
-$dadataController = new DadataController($dadataClient);
+$dadataController = new DadataController($dadataClient, $logger);
 
 // Работаем с сервисом и контроллером магазинов
 $storeService = new StoreService($db);
-$storeController = new StoreController($storeService);
+$storeController = new StoreController($storeService, $logger);

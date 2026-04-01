@@ -15,6 +15,7 @@ use App\Cart\CartSession;    // используем класс CartSession из
 use App\Cart\CartService;    // используем класс CartService из пространства имен App\Cart
 use App\Payments\PaymentService;
 use App\Payments\PaymentStatusSyncService;
+use App\Support\Logger;
 
 // Класс для управления заказами пользователей (через методы сервиса)
 class OrderController extends BaseController {
@@ -35,7 +36,8 @@ class OrderController extends BaseController {
         CartSession $cartSession,
         CartService $cartService,
         PaymentService $paymentService,
-        PaymentStatusSyncService $paymentStatusSyncService
+        PaymentStatusSyncService $paymentStatusSyncService,
+        Logger $logger
     ) {
         $this->authSession = $authSession;
         $this->orderService = $orderService;
@@ -44,40 +46,27 @@ class OrderController extends BaseController {
         $this->cartService = $cartService;
         $this->paymentService = $paymentService;
         $this->paymentStatusSyncService = $paymentStatusSyncService;
+        parent::__construct($logger);
     }
-
-    // Будующий конструктор (с логером)
-    // public function __construct(
-    //     AuthSession $authSession,
-    //     OrderService $orderService,
-    //     CancelOrderUseCase $CancelOrderUseCase,
-    //     CartSession $cartSession,
-    //     CartService $cartService,
-    //     PaymentService $paymentService,
-    //     PaymentStatusSyncService $paymentStatusSyncService
-    //     Logger $logger
-    // ) {
-    //     $this->authSession = $authSession;
-    //     $this->orderService = $orderService;
-    //     $this->CancelOrderUseCase = $CancelOrderUseCase;
-    //     $this->cartSession = $cartSession;
-    //     $this->cartService = $cartService;
-    //     $this->paymentService = $paymentService;
-    //     $this->paymentStatusSyncService = $paymentStatusSyncService;
-    //     parent::__controller($logger);
-    // }
 
     // Метод для создания заказа на основе корзины, корзину помечает как конвертированную, возвращает id заказа
     // Обработчик запроса POST /api/orders/create-from-cart
     public function createFromCart(): void {
         try {
+            $cartId = null;
+
             // Подготавливаем переменные для использования в методе createFromCart
             $cartSessionId = $this->cartSession->getId();
             $userId = $this->authSession->getUserId();
 
             $cartId = $this->cartService->getCart($cartSessionId, $userId);
             if ($cartId === null) {
-                $this->error(404, 'CART_NOT_FOUND', 'Cart not found');
+                $this->error(
+                    404, 
+                    'CART_NOT_FOUND', 
+                    'Cart not found'
+                );
+
                 return;
             }
 
@@ -94,7 +83,15 @@ class OrderController extends BaseController {
             $storeId = isset($data['store_id']) ? (int) $data['store_id'] : null;
 
             if ($deliveryTypeId <= 0) {
-                $this->error(422, 'VALIDATION_ERROR', 'Invalid deliveryTypeId');
+                $this->error(
+                    422, 
+                    'VALIDATION_ERROR', 
+                    'Invalid deliveryTypeId while checkout for {cart_id}',
+                    context: [
+                        'cart_id' => $cartId,
+                    ]
+                );
+
                 return;
             }
 
@@ -107,24 +104,37 @@ class OrderController extends BaseController {
                 $storeId
             );
 
+            $this->logger->info('Order {order_id} created from cart {cart_id}', [
+                'order_id' => $orderId,
+                'cart_id'  => $cartId,
+            ]);
+
             // Возвращаем успех через приватную функцию
             $this->success(201, ['order_id' => $orderId,]);
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to create order from cart {cart_id}',
+                context: [
+                    'cart_id' => $cartId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -151,23 +161,38 @@ class OrderController extends BaseController {
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\RuntimeException $e) {
             // Заказ не найден
-            $this->error(404, 'ORDER_NOT_FOUND', $e->getMessage());
+            $this->error(
+                404,
+                'ORDER_NOT_FOUND',
+                $e->getMessage(),
+                context: [
+                    'order_id' => $orderId,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get order by id {order_id}',
+                context: [
+                    'order_id' => $orderId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -175,7 +200,20 @@ class OrderController extends BaseController {
     // Обработчик запроса GET /api/orders
     public function getUserOrders(): void {
         try {
+            $userId = null;
+
             $userId = $this->authSession->getUserId();
+
+            // Если пользователь не залогинен
+            if ($userId === null) {
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required'
+                );
+
+                return;
+            }
 
             $data = $this->orderService->getUserOrders($userId);
 
@@ -201,13 +239,14 @@ class OrderController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get orders by user id {user_id}',
+                context: [
+                    'user_id' => $userId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -219,27 +258,46 @@ class OrderController extends BaseController {
 
             $this->CancelOrderUseCase->markCancelByUser($orderId, $userId);
 
+            $this->logger->info('Order {order_id} marked as canceled', [
+                'order_id' => $orderId,
+            ]);
+
             // Возвращаем успех через приватную функцию
             $this->success();
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\RuntimeException $e) {
-            $this->error(400, 'ORDER_CANCEL_ERROR', $e->getMessage());
+            $this->error(
+                400,
+                'ORDER_CANCEL_ERROR',
+                $e->getMessage(),
+                context: [
+                    'order_id' => $orderId,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Cart getCart failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to mark order {order_id} as canceled',
+                context: [
+                    'order_id' => $orderId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -251,27 +309,46 @@ class OrderController extends BaseController {
 
             $confirmationUrl = $this->paymentService->getOrCreatePayment($orderId, $userId);
 
+            $this->logger->info('Payment started for order {order_id}', [
+                'order_id' => $orderId,
+            ]);
+
             // Возвращаем успех через приватную функцию
             $this->success(200, ['confirmation_url' => $confirmationUrl]);
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\RuntimeException $e) {
-            $this->error(400, 'PAYMENT_CREATION_ERROR', $e->getMessage());
+            $this->error(
+                400,
+                'PAYMENT_CREATION_ERROR',
+                $e->getMessage(),
+                context: [
+                    'order_id' => $orderId,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Order startPayment failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to start payment for order {order_id}',
+                context: [
+                    'order_id' => $orderId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -281,27 +358,46 @@ class OrderController extends BaseController {
         try {
             $this->paymentStatusSyncService->syncByOrderId($orderId);
 
+            $this->logger->info('Payment status was synced for order {order_id}', [
+                'order_id' => $orderId,
+            ]);
+
             // Возвращаем успех через приватную функцию
             $this->success();
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\RuntimeException $e) {
-            $this->error(400, 'PAYMENT_STATUS_SYNC_ERROR', $e->getMessage());
+            $this->error(
+                400,
+                'PAYMENT_STATUS_SYNC_ERROR',
+                $e->getMessage(),
+                context: [
+                    'order_id' => $orderId,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Order syncPayment failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to sync payment for order {order_id}',
+                context: [
+                    'order_id' => $orderId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 }

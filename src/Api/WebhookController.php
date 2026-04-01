@@ -3,15 +3,14 @@
 // Принимает запросы, взаимодействует с бд через методы сервиса и отвечает
 // Его методы - отдельные API‑эндпоинты
 
-// Тут добавить логирование и документацию для этого api
-
 // Настраиваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Payments\WebhookService;    // используем класс StoreService из пространства имен App\Payments
+use App\Payments\WebhookService;
+use App\Support\Logger;
 
 class WebhookController extends BaseController{
-    private WebhookService $webhookService;    // приватное свойство (переменная класса), привязанная к объекту
+    private WebhookService $webhookService;
 
     // Константа с разрешенными CIDR-диапазонами для приема уведомлений
     private const ALLOWED_CIDRS = [
@@ -25,25 +24,19 @@ class WebhookController extends BaseController{
     ];
 
     // Конструктор (магический метод), присваиваем внеший экземпляр StoreService в переменные создоваемого объекта
-    public function __construct(WebhookService $webhookService) {
+    public function __construct(WebhookService $webhookService, Logger $logger) {
         $this->webhookService = $webhookService;
+        parent::__construct($logger);
     }
-
-    // Будущий конструктор (с логером)
-    // public function __construct(WebhookService $webhookService, Logger $logger) {
-    //     $this->webhookService = $webhookService;
-    //     parent::__controller($logger);
-    // }
 
     // Метод для обработки уведомления от юкассы 
     // Обработчик запроса POST /webhook/yookassa от юкассы
     public function handleNotification(): void {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         if (!$this->isIpAllowed($ip)) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Notification from uknown ip', [
-            //     'ip' => $ip,
-            // ]);
+            $this->logger->warning('Webhook notification from unknown ip {ip}', [
+                'ip' => $ip,
+            ]);
 
             http_response_code(403);
             return;
@@ -52,10 +45,7 @@ class WebhookController extends BaseController{
         // Получаем json тело запроса и декодируем его через приватный метод
         $payload = $this->getJsonBody();
         if ($payload === null) {
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Store getAll  failed', [
-            //     'exception' => $e,
-            // ]);
+            $this->logger->error('Webhook notification with empty payload');
 
             http_response_code(200);
             return;
@@ -65,13 +55,11 @@ class WebhookController extends BaseController{
             // Синхронизируем статус заказа через метод контроллера
             $this->webhookService->handleNotification($payload);
         } catch (\Throwable $e) {
-            // Вместо Exception, Throwable - более обширное, все поймает
-            // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
+            $this->logger->warning('Failed to handle webhook notification', [
+                'exception' => $e,
+                'ip' => $ip,
+            ]);
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Store getAll  failed', [
-            //     'exception' => $e,
-            // ]);
         } finally {
             // В любом случае возвращаем успех (статус 200)
             http_response_code(200);

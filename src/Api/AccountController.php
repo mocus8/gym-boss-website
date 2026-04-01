@@ -3,30 +3,23 @@
 // Принимает запросы, взаимодействует с бд через методы сервиса и отвечает
 // Его методы - отдельные API‑эндпоинты (POST /api/cart/add-item и т.д.).
 
-// Тут добавить логирование и документацию для этого api
-
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
 use App\Auth\AuthSession;
 use App\Account\AccountService;
+use App\Support\Logger;
 
 // Класс для управления классами пользователей (через методы сервиса)
 class AccountController extends BaseController {
     private AuthSession $authSession;
     private AccountService $accountService;
 
-    public function __construct(AuthSession $authSession, AccountService $accountService) {
+    public function __construct(AuthSession $authSession, AccountService $accountService, Logger $logger) {
         $this->authSession = $authSession;
         $this->accountService = $accountService;
+        parent::__construct($logger);
     }
-
-    // Будующий конструктор (с логером)
-    // public function __construct(AuthSession $authSession, AccountService $accountService, Logger $logger) {
-    //     $this->authSession = $authSession;
-    //     $this->accountService = $accountService;
-    //     parent::__construct($logger);    // передаем логгер в родительский класс
-    // }
 
     // Метод для изменения данных аккаунта (имени)
     public function updateProfile(): void {
@@ -36,7 +29,12 @@ class AccountController extends BaseController {
 
             // Если null - ошибку
             if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required',
+                );
+
                 return;
             }
 
@@ -52,18 +50,24 @@ class AccountController extends BaseController {
             // Меняем имя через метод сервиса
             $this->accountService->updateProfile($userId, $name);
 
+            $this->logger->info('Name updated for {user_id}', [
+                'user_id' => $userId,
+            ]);
+
             $this->success(200, ['name' => $name]);
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to update profile for {user_id}',
+                context: [
+                    'user_id' => $userId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -75,7 +79,12 @@ class AccountController extends BaseController {
 
             // Если null - ошибку
             if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required',
+                );
+
                 return;
             }
 
@@ -96,22 +105,38 @@ class AccountController extends BaseController {
             // Защищаем от фиксаций на сессии по регенерации id
             $this->authSession->regenerateId();
 
+            $this->logger->info('Password updated for {user_id}', [
+                'user_id' => $userId,
+            ]);
+
             $this->success();
 
         } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
-            $this->error(422, $e->getErrorCode(), $e->getMessage());
+
+            $this->error(
+                422,
+                $e->getErrorCode(),
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
+
+            return;
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to update password for {user_id}',
+                context: [
+                    'user_id' => $userId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -123,7 +148,12 @@ class AccountController extends BaseController {
 
             // Если null - ошибку
             if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required',
+                );
+
                 return;
             }
 
@@ -133,18 +163,24 @@ class AccountController extends BaseController {
             // Очищаем сессию
             $this->authSession->logout();
 
+            $this->logger->info('Account deleted for user {user_id}', [
+                'user_id' => $userId,
+            ]);
+
             $this->success(204);
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to delete {user_id}',
+                context: [
+                    'user_id' => $userId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -167,15 +203,25 @@ class AccountController extends BaseController {
 
         // Проверяем что новый и старый пароли разные
         if ($currentPassword === $newPassword) {
-            $this->error(422, 'SAME_PASSWORD', 'New and current passwords are the same');
+            $this->error(
+                422,
+                'SAME_PASSWORD',
+                'New and current passwords are the same',
+            );
+
             return null;
         }
 
         $passwordConfirmation = isset($data['new_password_confirmation']) ? (string)$data['new_password_confirmation'] : null;
 
         // Проверяем что пароли совпадают
-        if ($newPassword === $passwordConfirmation) {
-            $this->error(422, 'SAME_PASSWORD', 'Passwords are the same');
+        if ($newPassword !== $passwordConfirmation) {
+            $this->error(
+                422,
+                'PASSWORD_MISMATCH',
+                'Passwords do not match',
+            );
+
             return null;
         }
 

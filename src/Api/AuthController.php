@@ -3,8 +3,6 @@
 // Принимает запросы, взаимодействует с бд через методы сервиса и отвечает
 // Его методы - отдельные API‑эндпоинты (POST /api/cart/add-item и т.д.).
 
-// Тут добавить логирование и документацию для этого api
-
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
@@ -13,10 +11,11 @@ use App\Auth\AuthSession;
 use App\Auth\AuthService;
 use App\Cart\CartSession;
 use App\Cart\CartService;
+use App\Support\Logger;
 
 // Класс для управления аутентификацией пользователей (через методы сервиса)
 class AuthController extends BaseController {
-    private AuthSession $authSession;    // приватное свойство (переменная класса), привязанная к объекту
+    private AuthSession $authSession;
     private AuthService $authService;
     private CartSession $cartSession;
     private CartService $cartService;
@@ -25,28 +24,15 @@ class AuthController extends BaseController {
         AuthSession $authSession,
         AuthService $authService,
         CartSession $cartSession,
-        CartService $cartService
+        CartService $cartService,
+        Logger $logger
     ) {
         $this->authSession = $authSession;
         $this->authService = $authService;
         $this->cartSession = $cartSession;
         $this->cartService = $cartService;
+        parent::__construct($logger);
     }
-
-    // Будующий конструктор (с логером)
-    // public function __construct(
-    //     AuthSession $authSession,
-    //     AuthService $authService,
-    //     CartSession $cartSession,
-    //     CartService $cartService,
-    //     Logger $logger
-    // ) {
-    //     $this->authSession = $authSession;
-    //     $this->authService = $authService;
-    //     $this->cartSession = $cartSession;
-    //     $this->cartService = $cartService;
-    //     parent::__construct($logger);    // передаем логгер в родительский класс
-    // }
 
     // Метод для старта регистрации
     // Обработчик запроса POST /api/auth/register
@@ -54,7 +40,12 @@ class AuthController extends BaseController {
         try {
             if ($this->authSession->getUserId() !== null) {
                 // Пользователь уже залогинен
-                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
+                $this->error(
+                    409,
+                    'ALREADY_AUTHENTICATED',
+                    'User already authenticated'
+                );
+
                 return;
             }
 
@@ -80,6 +71,10 @@ class AuthController extends BaseController {
             $cartSessionId = $this->cartSession->getId(); 
             $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
+            $this->logger->info('User {user_id} created', [
+                'user_id' => $userId,
+            ]);
+
             $this->success(201, [
                 'user_id' => $userId,
                 'email' => $email,
@@ -89,22 +84,38 @@ class AuthController extends BaseController {
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422,
+                'VALIDATION_ERROR',
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
         
         } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
-            $this->error(422, $e->getErrorCode(), $e->getMessage());
+            
+            $this->error(
+                422,
+                $e->getErrorCode(),
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to register user',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -117,12 +128,21 @@ class AuthController extends BaseController {
 
             // Если null - ошибку
             if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required'
+                );
+
                 return;
             }
 
             // Вызываем метод повторной отправки письма для подтерждения
             $this->authService->resendVerification($userId);
+
+            $this->logger->info('New verification email sent to {user_id}', [
+                'user_id' => $userId,
+            ]);
 
             // Возвращаем успех через приватную функцию
             $this->success();
@@ -135,18 +155,27 @@ class AuthController extends BaseController {
                 header('Retry-After: ' . $e->getRetryAfter());
             }
 
-            $this->error(422, $e->getErrorCode(), $e->getMessage());
+            $this->error(
+                422,
+                $e->getErrorCode(),
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to resend verification email for {user_id}',
+                context: [
+                    'user_id' => $userId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -156,7 +185,12 @@ class AuthController extends BaseController {
         try {
             if ($this->authSession->getUserId() !== null) {
                 // Пользователь уже залогинен
-                $this->error(409, 'ALREADY_AUTHENTICATED', 'User already authenticated');
+                $this->error(
+                    409,
+                    'ALREADY_AUTHENTICATED',
+                    'User already authenticated'
+                );
+
                 return;
             }
 
@@ -182,6 +216,10 @@ class AuthController extends BaseController {
             $cartSessionId = $this->cartSession->getId(); 
             $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
+            $this->logger->info('User {user_id} logged in', [
+                'user_id' => $userId,
+            ]);
+
             $this->success(200, [
                 'user_id' => $userInfo['id'],
                 'email' => $email,
@@ -197,18 +235,26 @@ class AuthController extends BaseController {
                 header('Retry-After: ' . $e->getRetryAfter());
             }
 
-            $this->error(401, $e->getErrorCode(), $e->getMessage());
+            $this->error(
+                401,
+                $e->getErrorCode(),
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Login failed',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -218,7 +264,12 @@ class AuthController extends BaseController {
         try {
             // Если пользователь не залогинен
             if ($this->authSession->getUserId() === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required'
+                );
+
                 return;
             }
 
@@ -232,12 +283,13 @@ class AuthController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Faild to logout',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -249,7 +301,12 @@ class AuthController extends BaseController {
 
             // Если пользователь не залогинен
             if ($userId === null) {
-                $this->error(401, 'UNAUTHENTICATED', 'Authentication required');
+                $this->error(
+                    401,
+                    'UNAUTHENTICATED',
+                    'Authentication required'
+                );
+
                 return;
             }
 
@@ -268,12 +325,14 @@ class AuthController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed get profile info for {user_id}',
+                context: [
+                    'user_id' => $userId,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -293,29 +352,46 @@ class AuthController extends BaseController {
             // Начинаем процесс сброса пароля через метод сервиса
             $this->authService->sendPasswordResetLink($email);
 
+            $this->logger->info('Email for password reset was sended');            
+
             // Возвращаем успех через приватную функцию
             $this->success();
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
             // Для защиты от user-enumeration тут показываем только ошибку по лимиту отправки писем
 
-            $this->error(429, 'EMAIL_RATE_LIMIT', $e->getMessage());
+            $this->error(
+                429,
+                'EMAIL_RATE_LIMIT',
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to start password reset',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -340,28 +416,45 @@ class AuthController extends BaseController {
             // Защищаем от фиксаций на сессии по регенерации id
             $this->authSession->regenerateId();
 
+            $this->logger->info('Password was reseted');     
+
             // Возвращаем успех через приватную функцию
             $this->success();
 
         } catch (\InvalidArgumentException $e) {
             // Ошибка пользователя/некорректные данные - 422 + честное описание
-            $this->error(422, 'VALIDATION_ERROR', $e->getMessage());
+            $this->error(
+                422, 
+                'VALIDATION_ERROR', 
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (AppException $e) {
             // Кастомный класс для ошибки в бизнес логике
 
-            $this->error(422, $e->getErrorCode(), $e->getMessage());
+            $this->error(
+                422,
+                $e->getErrorCode(),
+                $e->getMessage(),
+                context: [
+                    'exception' => $e,
+                ]
+            );
 
         } catch (\Throwable $e) {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Auth register failed', [
-            //     'exception' => $e,
-            // ]);
-
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to reset password',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -427,7 +520,12 @@ class AuthController extends BaseController {
         // Проверяем что токен не пустой
         $token = isset($data['token']) ? (string)$data['token'] : null;
         if ($token === null || $token === '') {
-            $this->error(422, 'TOKEN_INVALID', 'Token is required');
+            $this->error(
+                422, 
+                'TOKEN_INVALID', 
+                'Token is required'
+            );
+
             return null;
         }
 
@@ -442,7 +540,12 @@ class AuthController extends BaseController {
 
         // Проверяем что пароли совпадают
         if ($password !== $passwordConfirmation) {
-            $this->error(422, 'PASSWORD_MISMATCH', 'Passwords do not match');
+            $this->error(
+                422, 
+                'PASSWORD_MISMATCH', 
+                'Passwords do not match'
+            );
+
             return null;
         }
 

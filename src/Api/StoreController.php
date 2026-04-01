@@ -3,27 +3,20 @@
 // Принимает запросы, взаимодействует с бд через методы сервиса и отвечает
 // Его методы - отдельные API‑эндпоинты
 
-// Тут добавить логирование и документацию для этого api
-
-// Настраиваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Stores\StoreService;    // используем класс StoreService из пространства имен App\Stores
+use App\Stores\StoreService;
+use App\Support\Logger;
 
 // Класс для подгрузки инфы о магазинах (через методы сервиса)
 class StoreController extends BaseController {
-    private StoreService $storeService;    // приватное свойство (переменная класса), привязанная к объекту
+    private StoreService $storeService;
 
     // Конструктор (магический метод), присваиваем внеший экземпляр StoreService в переменные создоваемого объекта
-    public function __construct(StoreService $storeService) {
+    public function __construct(StoreService $storeService, Logger $logger) {
         $this->storeService = $storeService;
+        parent::__construct($logger);
     }
-
-    // Будущий конструктор (с логером)
-    // public function __construct(StoreService $storeService, Logger $logger) {
-    //     $this->storeService = $storeService;
-    //     parent::__controller($logger);
-    // }
 
     // Метод для получения всех магазинов
     // Обработчик запроса GET /api/stores
@@ -38,13 +31,13 @@ class StoreController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Store getAll  failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get all stores',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -56,7 +49,15 @@ class StoreController extends BaseController {
             $data = $this->storeService->getById($id);
 
             if ($data === null) {
-                $this->error(404, 'STORE_NOT_FOUND', 'Store not found');
+                $this->error(
+                    404,
+                    'STORE_NOT_FOUND',
+                    'Store not found for store id {store_id}',
+                    context: [
+                        'store_id' => $id
+                    ]
+                );
+
                 return;
             }
 
@@ -67,13 +68,14 @@ class StoreController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Store getById failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get store by id {store_id}',
+                context: [
+                    'store_id' => $id,
+                    'exception' => $e,
+                ]
+            );
         }
     }
 }
