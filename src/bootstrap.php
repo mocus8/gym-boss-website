@@ -106,16 +106,17 @@ $servicesConfig = require __DIR__ . '/config/services.php';
 // Получаем URL сайта из переменных окружения
 $appUrl = $appConfig['url'] ?? null;
 if (!$appUrl) {
-    error_log('APP_URL is not set');    // логируем
+    $logger->error('APP_URL is not set in appConfig');    // логируем
     throw new RuntimeException('APP_URL is not set');   // и падаем
 }
+
 $baseUrl = rtrim($appUrl, '/');
 
 // Создаем логгер
 $logger = new Logger($appConfig['log_file'], $appConfig['log_level']);
 
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
-$db = Db::connect($servicesConfig['database']);
+$db = Db::connect($servicesConfig['database'], $logger);
 
 // Работаем с электронными письмами
 $resendGateway = new ResendGateway(
