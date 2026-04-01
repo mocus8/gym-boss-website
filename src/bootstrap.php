@@ -157,7 +157,15 @@ $orderService = new OrderService(
 // Работаем с платежами
 $yookassaGateway = new YookassaGateway($servicesConfig['yookassa']['shop_id'], $servicesConfig['yookassa']['api_key']);
 $paymentService = new PaymentService($db, $baseUrl, $orderService, $accountService, $yookassaGateway, $deliveryConfig['vat_code']);
-$paymentStatusSyncService = new PaymentStatusSyncService($db, $baseUrl, $orderService, $paymentService, $mailService, $yookassaGateway);
+$paymentStatusSyncService = new PaymentStatusSyncService(
+    $db,
+    $baseUrl,
+    $orderService,
+    $paymentService,
+    $mailService,
+    $yookassaGateway,
+    $logger
+);
 // Создаем use-case/координационный класс для отмены заказов и отмены его платежей
 $cancelOrderUseCase = new CancelOrderUseCase($db, $baseUrl, $orderService, $paymentService, $mailService);
 // Создаем контроллер заказов

@@ -7,6 +7,7 @@ use App\Orders\OrderService;
 use App\Payments\PaymentService;
 use App\Mail\MailService;
 use App\Integrations\Yookassa\YookassaGateway;
+use App\Support\Logger;
 
 class PaymentStatusSyncService {
     // Приватное свойство (переменная класса), привязанная к объекту
@@ -16,6 +17,7 @@ class PaymentStatusSyncService {
     private PaymentService $paymentService;
     private MailService $mailService;
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
+    private Logger $logger;
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(
@@ -24,7 +26,8 @@ class PaymentStatusSyncService {
         OrderService $orderService,
         PaymentService $paymentService,
         MailService $mailService,
-        YookassaGateway $yookassaGateway
+        YookassaGateway $yookassaGateway,
+        Logger $logger
     ) {
         $this->db = $db;
         $this->baseUrl = $baseUrl;
@@ -32,6 +35,7 @@ class PaymentStatusSyncService {
         $this->paymentService = $paymentService;
         $this->mailService = $mailService;
         $this->yookassaGateway = $yookassaGateway;
+        $this->logger = $logger;
     }
 
     // Метод для синхронизации статуса заказа в бд со статусом платежа оператора (юкассы) по id платежа из юкассы
@@ -85,8 +89,12 @@ class PaymentStatusSyncService {
 
         // Для любого другого статуса (неизвестный/битый/новый) помечаем платеж как unknown и логируем
         $this->paymentService->updateStatusByExternalId($externalPaymentId, 'unknown', $providerStatus);
-        // TODO: потом сделать правильно через логер (с контекстом)
-        error_log("Unknown payment status from provider: $providerStatus for payment: $externalPaymentId");
+
+        $this->logger->error('Unknown payment status {provider_status} from provider for payment {external_payment_id}', [
+            'provider_status' => $providerStatus,
+            'external_payment_id' => $externalPaymentId
+        ]);
+
         return;
     }
 
