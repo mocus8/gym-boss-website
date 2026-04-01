@@ -9,6 +9,7 @@ namespace App\Payments;
 use App\Orders\OrderService;
 use App\Account\AccountService;
 use App\Integrations\Yookassa\YookassaGateway;
+use App\Support\Logger;
 
 // Класс для управления платежами
 class PaymentService {
@@ -19,6 +20,7 @@ class PaymentService {
     private AccountService $accountService;
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
     private int $deliveryVatCode;    // код НДС для доставки
+    private Logger $logger;
 
     // Константы для типов доставки
     private const DELIVERY_TYPE_COURIER = 1;
@@ -31,7 +33,8 @@ class PaymentService {
         OrderService $orderService,
         AccountService $accountService,
         YookassaGateway $yookassaGateway,
-        int $deliveryVatCode
+        int $deliveryVatCode,
+        Logger $logger
     ) {
         $this->db = $db;
         $this->baseUrl = $baseUrl;
@@ -39,6 +42,7 @@ class PaymentService {
         $this->accountService = $accountService;
         $this->yookassaGateway = $yookassaGateway;
         $this->deliveryVatCode = $deliveryVatCode;
+        $this->logger = $logger;
     }
 
     // Метод для получения или создания платежа, возвращает существующею/новую ссылку на платеж
@@ -50,6 +54,11 @@ class PaymentService {
         if ($userId <= 0) {
             throw new \InvalidArgumentException('Invalid userId');
         }
+
+        $this->logger->info('Payment creation started for order {order_id} by user {user_id}', [
+            'order_id' => $orderId,
+            'user_id' => $userId,
+        ]);
 
         // Cтавим ожидание блокировок как 5 секунд, потом ошибка от sql
         $this->db->query("SET SESSION innodb_lock_wait_timeout = 5");
@@ -83,6 +92,12 @@ class PaymentService {
             // Если ссылка есть то просто возвращаем ее
             if ($paymentConfirmationUrl !== null) {
                 $this->db->commit();
+                
+                $this->logger->info('Payment {payment_url} for order {order_id} already exists', [
+                    'payment_url' => $paymentConfirmationUrl,
+                    'order_id' => $orderId,
+                ]);
+                
                 return $paymentConfirmationUrl;
             }
 
@@ -226,6 +241,11 @@ class PaymentService {
         }
 
         $stmt->close();
+
+        $this->logger->info('Payment {external_payment_id} for order {order_id} created in Yookassa', [
+            'order_id' => $orderId,
+            'external_payment_id' => $externalPaymentId,
+        ]);
 
         return $confirmationUrl;
     }

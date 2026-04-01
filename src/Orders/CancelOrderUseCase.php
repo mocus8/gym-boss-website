@@ -6,6 +6,7 @@ namespace App\Orders;
 use App\Orders\OrderService;
 use App\Payments\PaymentService;
 use App\Mail\MailService;
+use App\Support\Logger;
 
 // Класс для управления отменами заказов
 class CancelOrderUseCase {
@@ -15,6 +16,7 @@ class CancelOrderUseCase {
     private OrderService $orderService;
     private PaymentService $paymentService;
     private MailService $mailService;
+    private Logger $logger;
 
     // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(
@@ -22,13 +24,15 @@ class CancelOrderUseCase {
         string $baseUrl,
         OrderService $orderService,
         PaymentService $paymentService,
-        MailService $mailService
+        MailService $mailService,
+        Logger $logger
     ) {
         $this->db = $db;
         $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
         $this->paymentService = $paymentService;
         $this->mailService = $mailService;
+        $this->logger = $logger;
     }
 
     // Метод для отмены заказа пользователем, объеденяет (координирует) методы двух других сервисов внутри транзакции
@@ -39,6 +43,11 @@ class CancelOrderUseCase {
         if ($userId <= 0) {
             throw new \InvalidArgumentException('Invalid userId');
         }
+
+        $this->logger->info('Order {order_id} cancel initiated by user {user_id}', [
+            'order_id' => $orderId,
+            'user_id' => $userId,
+        ]);
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
         $this->db->begin_transaction();
@@ -68,6 +77,10 @@ class CancelOrderUseCase {
             // Помечаем того, кто отменил
             $canceledBy = 'user';
 
+            $this->logger->info('Order {order_id} cancelled by user', [
+                'order_id' => $orderId,
+            ]);
+
             // Отправляем письмо
             $this->mailService->sendOrderCanceled(
                 $orderData['order'],
@@ -85,6 +98,10 @@ class CancelOrderUseCase {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
+
+        $this->logger->info('Order {order_id} cancel initiated by payment provider', [
+            'order_id' => $orderId,
+        ]);
 
         // Начинаем транзакцию (либо выполняются все sql запросы либо ни одного)
         $this->db->begin_transaction();

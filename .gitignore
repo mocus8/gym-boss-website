@@ -58,12 +58,11 @@ yarn-error.log*
 # =================================
 # Кеш + логи + временные файлы (GymBoss + Laravel)
 # =================================
-var/
-var/cache/
+storage/
+storage/cache/
 public/sess*/
 public/tmp/
 tmp/
-storage/
 cache/
 logs/
 *.log

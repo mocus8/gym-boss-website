@@ -3,27 +3,21 @@
 // Принимает запросы, взаимодействует с бд через методы сервиса и отвечает
 // Его методы - отдельные API‑эндпоинты
 
-// Тут добавить логирование и документацию для этого api
-
 // Настраиваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-use App\Products\ProductService;    // используем класс ProductService из пространства имен App\Products
+use App\Products\ProductService;
+use App\Support\Logger;
 
 // Класс для подгрузки инфы о товарах (через методы сервиса)
 class ProductController extends BaseController {
     private ProductService $productService;    // приватное свойство (переменная класса), привязанная к объекту
 
     // Конструктор (магический метод), присваиваем внеший экземпляр ProductService в переменные создоваемого объекта
-    public function __construct(ProductService $productService) {
+    public function __construct(ProductService $productService, Logger $logger) {
         $this->productService = $productService;
+        parent::__construct($logger);
     }
-
-    // Будущий конструктор (с логером)
-    // public function __construct(ProductService $productService, Logger $logger) {
-    //     $this->productService = $productService;
-    //     parent::__construct($logger);
-    // }
 
     // Метод для получения каталога, возвращает массив - категории, товары в них, инфа о товарах
     // Обработчик запроса GET /api/products
@@ -39,13 +33,13 @@ class ProductController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Product getCatalog  failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get catalog',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -74,13 +68,13 @@ class ProductController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Product getBySlug failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to get product by slug',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 
@@ -98,13 +92,13 @@ class ProductController extends BaseController {
             // Вместо Exception, Throwable - более обширное, все поймает
             // Ошибка сервера/баг/БД упала - 500 + запись в лог, а пользователю только общий текст.
 
-            // Релизовать во время добавления логирования, также добавить контекст
-            // $this->logger->error('Product search failed', [
-            //     'exception' => $e,
-            // ]);
-
-            // Возвращаем ошибку через приватную функцию (параметры по умолчанию)
-            $this->error();
+            // Возвращаем ошибку и логируем через приватную функцию (параметры по умолчанию)
+            $this->error(
+                message: 'Failed to search product',
+                context: [
+                    'exception' => $e,
+                ]
+            );
         }
     }
 }

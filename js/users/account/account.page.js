@@ -186,7 +186,7 @@ function initAccountPage() {
             // Добавляем залипание на кнопку
             setButtonLoading(changePassFormSubmitBtn, true);
 
-            await updatePassword(currentPass, newPassword);
+            await updatePassword(currentPass, newPassword, confirmPassword);
 
             changePassForm.reset();
 

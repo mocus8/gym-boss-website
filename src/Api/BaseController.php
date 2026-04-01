@@ -1,21 +1,19 @@
 <?php
 // Базовый класс для всех контроллеров, включает в себя нужные для дочерних классов методы
 
-// Тут добавить логирование и документацию для этого api
-
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
-// use App\Support\Logger;
+use App\Support\Logger;
 
 // Базовый класс для контроллеров, abstract - нельзя создать экземпляр напрямую, только через наследников
 abstract class BaseController {
-    // protected Logger $logger;    // Логгер для передачи в зависимость в конструкторе, потом подключить
+    protected Logger $logger;    // Логгер для передачи в зависимость в конструкторе
 
     // Будующий конструктор (с логером)
-    // public function __construct(Logger $logger) {
-    //     $this->logger = $logger;
-    // }
+    public function __construct(Logger $logger) {
+        $this->logger = $logger;
+    }
 
     // Защищенный метод для получения, декодирования и проверки json входных данных
     // Protected не позволяет пользоваться методом из вне, но позволет использовать его наследникам
@@ -47,8 +45,22 @@ abstract class BaseController {
     protected function error(
         int $status = 500,
         string $code = 'INTERNAL_SERVER_ERROR',
-        string $message = 'Internal server error'
+        string $message = 'Internal server error',
+        array $context = []
     ): void {
+        // Определяем уровень по статусу
+        $level = $status >= 500 ? 'error' : 'warning';
+
+        // Логируем
+        // {$level} - variable function - динамический вызов метода (подставляется переменная)
+        $this->logger->{$level}($message, array_merge([
+            'status' => $status,
+            'code'   => $code,
+            'path'   => $_SERVER['REQUEST_URI'] ?? null,
+            'method' => $_SERVER['REQUEST_METHOD'] ?? null,
+        ], $context));
+
+        // Даем ответ
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
     
