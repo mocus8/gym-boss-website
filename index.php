@@ -174,9 +174,10 @@ if ($userId !== null) {
     try {
         $currentUser = $authService->getUserInfo($userId);
     } catch (\Throwable $e) {
-        // TODO: потом сделать правильно через логер (с контекстом)
-        error_log('Failed to get current user: ' . $e->getMessage());
-
+        $logger->error('Failed to get user info', [
+            'user_id'   => $userId,
+            'exception' => $e,
+        ]);
         $currentUser = null;
     }
 }
