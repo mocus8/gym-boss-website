@@ -439,7 +439,10 @@ class AuthModal {
             // Добавляем залипание на кнопку
             setButtonLoading(this.#registerSubmitBtn, true);
 
-            await register(email, password, name);
+            // Получаем токен от капчи для этого действия
+            const recaptchaToken = await getRecaptchaToken("register");
+
+            await register(email, password, name, recaptchaToken);
 
             this.close();
             window.location.reload();
@@ -516,7 +519,12 @@ class AuthModal {
             // Добавляем залипание на кнопку
             setButtonLoading(this.#forgotPassBtn, true);
 
-            await forgotPassword(email);
+            // Получаем токен от капчи для этого действия
+            const recaptchaToken = await getRecaptchaToken(
+                "password_reset_request",
+            );
+
+            await forgotPassword(email, recaptchaToken);
 
             notification.open(
                 "Вам на почту отправлено письмо для сброса пароля, перейдите по ссылке в письме, чтобы создать новый пароль",

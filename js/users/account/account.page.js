@@ -1,4 +1,8 @@
-import { getErrorMessage, setButtonLoading } from "../../utils.js";
+import {
+    getRecaptchaToken,
+    getErrorMessage,
+    setButtonLoading,
+} from "../../utils.js";
 import { updateProfile, updatePassword, deleteAccount } from "./account.api.js";
 import { resendVerificationEmail } from "../auth/auth.api.js";
 import { ConfirmationModal } from "../../ui/confirmation-modal.js";
@@ -90,7 +94,12 @@ function initAccountPage() {
                 // Добавляем залипание на кнопку
                 setButtonLoading(resendVerificationEmailBtn, true);
 
-                await resendVerificationEmail();
+                // Получаем токен от капчи для этого действия
+                const recaptchaToken = await getRecaptchaToken(
+                    "resend_verification_email",
+                );
+
+                await resendVerificationEmail(recaptchaToken);
 
                 notification.open(
                     "Вам на электронную почту будет отправлен email для подтверждения",
