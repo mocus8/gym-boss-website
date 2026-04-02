@@ -35,6 +35,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Dotenv\Dotenv;    // библиотека для прочтения .env файла
 use App\Support\Logger;
 use App\Db\Db;    // используем класс Db из пространства имен App\Db
+use App\Support\Flash;
 use App\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
 use App\Integrations\Resend\ResendGateway;
 use App\Mail\MailService;
@@ -66,7 +67,8 @@ $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
 // Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
-require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
+require_once __DIR__ . '/Support/Logger.php';
+require_once __DIR__ . '/Support/Flash.php';
 require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
@@ -117,6 +119,9 @@ $logger = new Logger($appConfig['log_file'], $appConfig['log_level']);
 
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connect($servicesConfig['database'], $logger);
+
+// Работаем с серверными флеш-уведомлениями
+$flash = new Flash();
 
 // Работаем с электронными письмами
 $resendGateway = new ResendGateway(
