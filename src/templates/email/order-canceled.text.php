@@ -4,10 +4,10 @@
 
 Состав заказа:
 <?php foreach ($items as $item) { ?>
-    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?>
+    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
 <?php } ?>
 
-Сумма заказа: <?= $itemsPrice ?>
+Сумма заказа: <?= $itemsPrice ?> ₽
 
 <?php if ($canceledBy === 'user') { ?>
     Заказ был отменён по вашему запросу

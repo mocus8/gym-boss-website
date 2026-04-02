@@ -50,12 +50,12 @@
 
                                 <?php foreach ($items as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?>
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
                                     </p>
                                 <?php } ?>
 
                                 <p style="margin:8px 0 16px 0;">
-                                    Сумма заказа: <?= $itemsPrice ?>
+                                    Сумма заказа: <?= $itemsPrice ?> ₽
                                 </p>
 
                                 <p style="margin:0 0 16px;">
