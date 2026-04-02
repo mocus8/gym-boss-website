@@ -8,6 +8,9 @@ $robots = $robots ?? 'index,follow';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $defaultCanonical = $baseUrl . $path;
 $canonical = $canonical ?? $defaultCanonical;
+
+// Получаем flash сообщение из сессии если оно там есть
+$flashMessage = $flash->get();
 ?>
 
 <!DOCTYPE html>
@@ -54,10 +57,25 @@ $canonical = $canonical ?? $defaultCanonical;
         <!-- Подключаем разные скрипты -->
 
         <!-- Обязательные для всех страниц -->
+        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"></script>
         <script defer src="/js/loader.js"></script>
+        <script type="module" src="/js/ui/flash-notifications.js"></script>
         <script type="module" src="/js/ui/auth-modal.js"></script>
         <script type="module" src="/js/header.js"></script>
-        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"></script>
+        
+        <!-- Данные для флеш-уведомления, если оно есть -->
+        <?php if ($flashMessage !== null) { ?>
+            <script id="server-flash" type="application/json">
+                <?= json_encode(
+                    ['message' => $flashMessage],
+                    JSON_UNESCAPED_UNICODE
+                    | JSON_HEX_TAG
+                    | JSON_HEX_AMP
+                    | JSON_HEX_APOS
+                    | JSON_HEX_QUOT
+                ) ?>
+            </script>
+        <?php } ?>
 
         <!-- Внешние и обычные из контроллера -->
         <?php if (!empty($pageScripts) && is_array($pageScripts)) { ?>
