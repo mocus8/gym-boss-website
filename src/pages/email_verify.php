@@ -17,6 +17,13 @@ try {
     $status = 'success';
 
 } catch (\App\Support\AppException $e) {
+    $this->error(
+        message: 'Failed to verify email',
+        context: [
+            'exception' => $e,
+        ]
+    );
+
     // Переводим ошибку сервиса в статус
     $status = match ($e->getErrorCode()) {
         'TOKEN_INVALID' => 'token_invalid',
