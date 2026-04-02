@@ -432,9 +432,8 @@ class AuthModal {
 
             await register(email, password, name);
 
-            window.location.href = "/account";
-
             this.close();
+            window.location.reload();
         } catch (e) {
             console.error("[auth-modal] Не удалось выполнить регистрацию", {
                 message: e.message,

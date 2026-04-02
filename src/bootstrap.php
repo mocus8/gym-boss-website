@@ -68,8 +68,8 @@ $dotenv->safeLoad();
 
 // Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
 require_once __DIR__ . '/Support/Logger.php';
+require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
 require_once __DIR__ . '/Support/Flash.php';
-require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Support/AppException.php';
@@ -143,7 +143,7 @@ $accountService = new AccountService($db);
 $accountController = new AccountController($authSession, $accountService, $logger);
 $cartSession = new CartSession();
 $cartService = new CartService($db, $productService);
-$authController = new AuthController($authSession, $authService, $cartSession, $cartService, $logger);
+$authController = new AuthController($authSession, $authService, $cartSession, $cartService, $flash, $logger);
 $cartController = new CartController($cartSession, $authSession, $cartService, $logger);
 
 // Создаем сервис заказов
