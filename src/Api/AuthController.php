@@ -11,6 +11,7 @@ use App\Auth\AuthSession;
 use App\Auth\AuthService;
 use App\Cart\CartSession;
 use App\Cart\CartService;
+use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Support\Flash;
 use App\Support\Logger;
 
@@ -20,6 +21,7 @@ class AuthController extends BaseController {
     private AuthService $authService;
     private CartSession $cartSession;
     private CartService $cartService;
+    private GoogleRecaptchaClient $googleRecaptchaClient;
     private Flash $flash;
 
     public function __construct(
@@ -27,6 +29,7 @@ class AuthController extends BaseController {
         AuthService $authService,
         CartSession $cartSession,
         CartService $cartService,
+        GoogleRecaptchaClient $googleRecaptchaClient,
         Flash $flash,
         Logger $logger
     ) {
@@ -34,6 +37,7 @@ class AuthController extends BaseController {
         $this->authService = $authService;
         $this->cartSession = $cartSession;
         $this->cartService = $cartService;
+        $this->googleRecaptchaClient = $googleRecaptchaClient;
         $this->flash = $flash;
         parent::__construct($logger);
     }
@@ -502,6 +506,18 @@ class AuthController extends BaseController {
     // Метод для валидации входных полей при входе в аккаунт
     // Возвращает проверенный массив либо null
     private function validateLoginInput(array $data): ?array {
+        // Проверяем токен от капчи
+        $recaptchaToken = isset($data['recaptcha_token']) ? (string)$data['recaptcha_token'] : null;
+        if (!$this->googleRecaptchaClient->validate($recaptchaToken, 'login')) {
+            $this->error(
+                429,
+                'RECAPTCHA_FAILED',
+                'reCAPTCHA validation failed for login'
+            );
+
+            return null;
+        }
+
         // Проверяем email через метод
         $email = isset($data['email']) ? (string)$data['email'] : null;
         $email = $this->validateEmail($email);

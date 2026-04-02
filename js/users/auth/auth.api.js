@@ -12,12 +12,13 @@ async function requestAuth(path, options = {}) {
 
 // Функция для входа в аккаунт
 // Отправляет запрос POST /api/auth/login
-export function login(email, password) {
+export function login(email, password, recaptchaToken) {
     return requestAuth("/login", {
         method: "POST",
         body: JSON.stringify({
             email: email,
             password: password,
+            recaptcha_token: recaptchaToken,
         }),
     });
 }

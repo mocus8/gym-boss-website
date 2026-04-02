@@ -1,6 +1,10 @@
 // Импортируем js (подключение этих js в других файлах не требуется)
 import { login, register, forgotPassword } from "../users/auth/auth.api.js";
-import { getErrorMessage, setButtonLoading } from "../utils.js";
+import {
+    getRecaptchaToken,
+    getErrorMessage,
+    setButtonLoading,
+} from "../utils.js";
 import { notification } from "./notification.js";
 
 // Класс для управления модалкой аутонтификации (вход/регистрация)
@@ -309,7 +313,10 @@ class AuthModal {
             // Добавляем залипание на кнопку
             setButtonLoading(this.#loginSubmitBtn, true);
 
-            await login(email, password);
+            // Получаем токен от капчи для этого действия
+            const recaptchaToken = await getRecaptchaToken("login");
+
+            await login(email, password, recaptchaToken);
 
             window.location.href = "/";
         } catch (e) {
@@ -359,7 +366,9 @@ class AuthModal {
                 }
 
                 default:
-                    notification.open(message);
+                    notification.open(
+                        "Ошибка, попробуйте позже или обратитесь в поддержку",
+                    );
             }
         } finally {
             // Убираем залипание
