@@ -8,16 +8,24 @@ namespace App\Api;
 
 use App\Auth\AuthSession;
 use App\Account\AccountService;
+use App\Support\Flash;
 use App\Support\Logger;
 
 // Класс для управления классами пользователей (через методы сервиса)
 class AccountController extends BaseController {
     private AuthSession $authSession;
     private AccountService $accountService;
+    private Flash $flash;
 
-    public function __construct(AuthSession $authSession, AccountService $accountService, Logger $logger) {
+    public function __construct(
+        AuthSession $authSession,
+        AccountService $accountService,
+        Flash $flash,
+        Logger $logger
+    ) {
         $this->authSession = $authSession;
         $this->accountService = $accountService;
+        $this->flash = $flash;
         parent::__construct($logger);
     }
 
@@ -53,6 +61,10 @@ class AccountController extends BaseController {
             $this->logger->info('Name updated for {user_id}', [
                 'user_id' => $userId,
             ]);
+
+            $this->flash->set(
+                'Данные профиля успешно изменены'
+            );
 
             $this->success(200, ['name' => $name]);
 
