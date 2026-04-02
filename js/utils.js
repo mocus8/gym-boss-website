@@ -1,3 +1,5 @@
+/* global grecaptcha */ // глобальная переменная из скрипта, подключаемого в общем лэйауте
+
 // Функция запроса к API: добавляет baseUrl, парсит JSON, проверяет HTTP статус и флаг success, кидает осмысленную ошибку
 // Options - по умолчанию пустой объект {}, можеть быть таким: { method: 'POST', body: '...' }
 export async function requestApi(baseUrl, path, options = {}) {
@@ -42,6 +44,36 @@ export async function requestApi(baseUrl, path, options = {}) {
 
     // Если поле data нет, то возвращаем объект целиком
     return data;
+}
+
+// Функция для получения токена от капчи
+export async function getRecaptchaToken(action) {
+    if (!action) {
+        throw new Error("reCAPTCHA action is required");
+    }
+
+    const siteKey = document.body?.dataset?.recaptchaSiteKey;
+    if (!siteKey) {
+        throw new Error("reCAPTCHA site key is missing on <body>");
+    }
+
+    if (typeof grecaptcha === "undefined") {
+        throw new Error("reCAPTCHA script is not loaded");
+    }
+
+    // Ждём, пока библиотека будет готова
+    await new Promise((resolve) => {
+        grecaptcha.ready(resolve);
+    });
+
+    // Получаем токен для конкретного действия
+    const token = await grecaptcha.execute(siteKey, { action });
+
+    if (!token) {
+        throw new Error("Failed to get reCAPTCHA token");
+    }
+
+    return token;
 }
 
 // Debounce функция: делает задержку перед вызовом функции, и отменяет предыдущие вызовы при появлении новых
@@ -113,6 +145,7 @@ const ERROR_CODE_MESSAGES = {
     INTERNAL_SERVER_ERROR: "Внутренняя ошибка сервера. Попробуйте позже",
     INVALID_REQUEST: "Ошибка в запросе. Обновите страницу и попробуйте снова",
     VALIDATION_ERROR: "Ошибка в данных. Проверьте введённую информацию",
+    RECAPTCHA_FAILED: "Подозрительная активность, попробуйте позже",
     UNAUTHENTICATED:
         "Войдите в аккаунт и повторите попытку либо свяжитесь с поддержкой",
     ALREADY_AUTHENTICATED: "Вход в аккаунт уже выполнен, обновите страницу",

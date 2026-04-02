@@ -23,7 +23,15 @@
     </div>
 </div>
 
-<div class="order_container">
+<!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога, времени доставки/самовывоза -->
+<div class="order_container" id="checkout-container"
+    data-courier-free-threshold="<?= (int)$deliveryConfig['free_delivery_threshold'] ?>"
+    data-courier-price="<?= (int)$deliveryConfig['courier_delivery_price'] ?>"
+    data-courier-delivery-from-hours="<?= (int)$deliveryConfig['courier_delivery_from_hours'] ?>"
+    data-courier-delivery-to-hours="<?= (int)$deliveryConfig['courier_delivery_to_hours'] ?>"
+    data-pickup-ready-from-hours="<?= (int)$deliveryConfig['pickup_ready_from_hours'] ?>"
+    data-pickup-ready-to-hours="<?= (int)$deliveryConfig['pickup_ready_to_hours'] ?>"
+>
     <div class="order_delivery_type" data-order-type="courier">
         <div class="order_left">
             <div class="map_search_form">
@@ -138,16 +146,3 @@
         </div>
     </div>
 </div>
-
-<!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога, времени доставки/самовывоза
-через глобальный объект, делаем это через навешивание объекта GYM_BOSS_DELIVERY на window -->
-<script>
-  window.GYM_BOSS_DELIVERY = {
-    courierFreeThreshold: <?= (int)$deliveryConfig['free_delivery_threshold'] ?>,
-    courierPrice: <?= (int)$deliveryConfig['courier_delivery_price'] ?>,
-    courierDeliveryFromHours: <?= (int)$deliveryConfig['courier_delivery_from_hours'] ?>,
-    courierDeliveryToHours: <?= (int)$deliveryConfig['courier_delivery_to_hours'] ?>,
-    pickupReadyFromHours: <?= (int)$deliveryConfig['pickup_ready_from_hours'] ?>,
-    pickupReadyToHours: <?= (int)$deliveryConfig['pickup_ready_to_hours'] ?>,
-  };
-</script>

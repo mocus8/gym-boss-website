@@ -37,6 +37,7 @@ use App\Support\Logger;
 use App\Db\Db;    // используем класс Db из пространства имен App\Db
 use App\Support\Flash;
 use App\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
+use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Integrations\Resend\ResendGateway;
 use App\Mail\MailService;
 use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
@@ -72,6 +73,7 @@ require_once __DIR__ . '/Db/Db.php';    // подключаем файл с кл
 require_once __DIR__ . '/Support/Flash.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
+require_once __DIR__ . '/Integrations/GoogleRecaptcha/GoogleRecaptchaClient.php';
 require_once __DIR__ . '/Support/AppException.php';
 require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
 require_once __DIR__ . '/Integrations/Resend/ResendGateway.php';    // файл с gateway-ем Resend-а, оберткой над его sdk
@@ -136,6 +138,9 @@ $mailService = new MailService($resendGateway);
 $productService = new ProductService($db);    // создаем экземпляр класса
 $productController = new ProductController($productService, $logger);    // создаем экземпляр класса
 
+// Создаем клиент для обращения к гугл рекапче
+$googleRecaptchaClient = new GoogleRecaptchaClient($servicesConfig['recaptcha']['secret_key'], $logger);
+
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
 $authService = new AuthService($db, $mailService, $baseUrl, $logger);
@@ -143,7 +148,15 @@ $accountService = new AccountService($db);
 $accountController = new AccountController($authSession, $accountService, $flash, $logger);
 $cartSession = new CartSession();
 $cartService = new CartService($db, $productService);
-$authController = new AuthController($authSession, $authService, $cartSession, $cartService, $flash, $logger);
+$authController = new AuthController(
+    $authSession, 
+    $authService, 
+    $cartSession, 
+    $cartService, 
+    $googleRecaptchaClient, 
+    $flash, 
+    $logger
+);
 $cartController = new CartController($cartSession, $authSession, $cartService, $logger);
 
 // Создаем сервис заказов

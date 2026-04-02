@@ -11,6 +11,7 @@ use App\Auth\AuthSession;
 use App\Auth\AuthService;
 use App\Cart\CartSession;
 use App\Cart\CartService;
+use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Support\Flash;
 use App\Support\Logger;
 
@@ -20,6 +21,7 @@ class AuthController extends BaseController {
     private AuthService $authService;
     private CartSession $cartSession;
     private CartService $cartService;
+    private GoogleRecaptchaClient $googleRecaptchaClient;
     private Flash $flash;
 
     public function __construct(
@@ -27,6 +29,7 @@ class AuthController extends BaseController {
         AuthService $authService,
         CartSession $cartSession,
         CartService $cartService,
+        GoogleRecaptchaClient $googleRecaptchaClient,
         Flash $flash,
         Logger $logger
     ) {
@@ -34,6 +37,7 @@ class AuthController extends BaseController {
         $this->authService = $authService;
         $this->cartSession = $cartSession;
         $this->cartService = $cartService;
+        $this->googleRecaptchaClient = $googleRecaptchaClient;
         $this->flash = $flash;
         parent::__construct($logger);
     }
@@ -143,6 +147,22 @@ class AuthController extends BaseController {
                     'Authentication required'
                 );
 
+                return;
+            }
+
+            // Получаем json тело запроса и декодируем его через приватный метод
+            $data = $this->getJsonBody();
+            if ($data === null) return;
+
+            // Проверяем токен от капчи
+            $recaptchaToken = isset($data['recaptcha_token']) ? (string)$data['recaptcha_token'] : null;
+            if (!$this->googleRecaptchaClient->validate($recaptchaToken, 'resend_verification_email')) {
+                $this->error(
+                    429,
+                    'RECAPTCHA_FAILED',
+                    'reCAPTCHA validation failed for resend_verification_email'
+                );
+    
                 return;
             }
 
@@ -353,6 +373,18 @@ class AuthController extends BaseController {
             $data = $this->getJsonBody();
             if ($data === null) return;
 
+            // Проверяем токен от капчи
+            $recaptchaToken = isset($data['recaptcha_token']) ? (string)$data['recaptcha_token'] : null;
+            if (!$this->googleRecaptchaClient->validate($recaptchaToken, 'password_reset_request')) {
+                $this->error(
+                    429,
+                    'RECAPTCHA_FAILED',
+                    'reCAPTCHA validation failed for password_reset_request'
+                );
+    
+                return;
+            }
+
             // Валидируем email через метод
             $email = isset($data['email']) ? (string)$data['email'] : null;
             $email = $this->validateEmail($email);
@@ -470,6 +502,18 @@ class AuthController extends BaseController {
     // Приватный метод для валидации входных полей при регистрации
     // Возвращает проверенный массив либо null
     private function validateRegisterInput(array $data): ?array {
+        // Проверяем токен от капчи
+        $recaptchaToken = isset($data['recaptcha_token']) ? (string)$data['recaptcha_token'] : null;
+        if (!$this->googleRecaptchaClient->validate($recaptchaToken, 'register')) {
+            $this->error(
+                429,
+                'RECAPTCHA_FAILED',
+                'reCAPTCHA validation failed for register'
+            );
+
+            return null;
+        }
+
         // Проверяем email через метод
         $email = isset($data['email']) ? (string)$data['email'] : null;
         $email = $this->validateEmail($email);
@@ -502,6 +546,18 @@ class AuthController extends BaseController {
     // Метод для валидации входных полей при входе в аккаунт
     // Возвращает проверенный массив либо null
     private function validateLoginInput(array $data): ?array {
+        // Проверяем токен от капчи
+        $recaptchaToken = isset($data['recaptcha_token']) ? (string)$data['recaptcha_token'] : null;
+        if (!$this->googleRecaptchaClient->validate($recaptchaToken, 'login')) {
+            $this->error(
+                429,
+                'RECAPTCHA_FAILED',
+                'reCAPTCHA validation failed for login'
+            );
+
+            return null;
+        }
+
         // Проверяем email через метод
         $email = isset($data['email']) ? (string)$data['email'] : null;
         $email = $this->validateEmail($email);

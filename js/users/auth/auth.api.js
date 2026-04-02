@@ -12,12 +12,13 @@ async function requestAuth(path, options = {}) {
 
 // Функция для входа в аккаунт
 // Отправляет запрос POST /api/auth/login
-export function login(email, password) {
+export function login(email, password, recaptchaToken) {
     return requestAuth("/login", {
         method: "POST",
         body: JSON.stringify({
             email: email,
             password: password,
+            recaptcha_token: recaptchaToken,
         }),
     });
 }
@@ -32,32 +33,37 @@ export function logout() {
 
 // Функция для регистрации
 // Отправляет запрос POST /api/auth/register
-export function register(email, password, name) {
+export function register(email, password, name, recaptchaToken) {
     return requestAuth("/register", {
         method: "POST",
         body: JSON.stringify({
             email: email,
             password: password,
             name: name,
+            recaptcha_token: recaptchaToken,
         }),
     });
 }
 
 // Функция для повторной отправки email-а для подтверждения аккаунта
 // Отправляет запрос POST /api/auth/email/resend
-export function resendVerificationEmail() {
+export function resendVerificationEmail(recaptchaToken) {
     return requestAuth("/email/resend", {
         method: "POST",
+        body: JSON.stringify({
+            recaptcha_token: recaptchaToken,
+        }),
     });
 }
 
 // Функция для старта сброса пароля
 // Отправляет запрос POST /api/auth/password/forgot
-export function forgotPassword(email) {
+export function forgotPassword(email, recaptchaToken) {
     return requestAuth("/password/forgot", {
         method: "POST",
         body: JSON.stringify({
             email: email,
+            recaptcha_token: recaptchaToken,
         }),
     });
 }

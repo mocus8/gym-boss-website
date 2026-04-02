@@ -307,8 +307,10 @@ function updateCourierDeliveryNote() {
     const deliveryNoteEl = document.getElementById("checkout-delivery-note");
     if (!deliveryNoteEl) return;
 
-    const deliveryConfig = window.GYM_BOSS_DELIVERY ?? {};
-    const threshold = Number(deliveryConfig.courierFreeThreshold ?? 0);
+    const checkoutContainer = document.getElementById("checkout-container");
+    if (!checkoutContainer) return;
+
+    const threshold = Number(checkoutContainer.dataset.courierFreeThreshold);
 
     if (threshold > 0) {
         deliveryNoteEl.textContent = `(бесплатно при заказе от ${formatPrice(threshold)} ₽)`;
@@ -325,9 +327,11 @@ function getCurrentDeliveryType() {
 
 // Функция для подсчета стоимости доставки
 function calcDeliveryPrice(cartTotal, deliveryType) {
-    const deliveryConfig = window.GYM_BOSS_DELIVERY ?? {};
-    const threshold = Number(deliveryConfig.courierFreeThreshold ?? 0);
-    const deliveryPrice = Number(deliveryConfig.courierPrice ?? 0);
+    const checkoutContainer = document.getElementById("checkout-container");
+    if (!checkoutContainer) return 0;
+
+    const threshold = Number(checkoutContainer.dataset.courierFreeThreshold);
+    const deliveryPrice = Number(checkoutContainer.dataset.courierPrice);
 
     // Если доставка не курьрером - то бесплатная
     if (deliveryType !== "courier") {
@@ -341,7 +345,9 @@ function calcDeliveryPrice(cartTotal, deliveryType) {
 // Функция для получения текста даты доставки (с ... до ...) по типу доставки (по переменным из конфига)
 function getDeliveryDateText(deliveryType) {
     const now = new Date();
-    const deliveryConfig = window.GYM_BOSS_DELIVERY ?? {};
+
+    const checkoutContainer = document.getElementById("checkout-container");
+    if (!checkoutContainer) return null;
 
     // Объявляем переменные окна времени доставки/готовности самовывоза
     let fromHours = null;
@@ -349,20 +355,20 @@ function getDeliveryDateText(deliveryType) {
 
     // Заполняем переменные
     if (deliveryType === "courier") {
-        fromHours = deliveryConfig.courierDeliveryFromHours
-            ? Number(deliveryConfig.courierDeliveryFromHours)
+        fromHours = checkoutContainer.dataset.courierDeliveryFromHours
+            ? Number(checkoutContainer.dataset.courierDeliveryFromHours)
             : null;
 
-        toHours = deliveryConfig.courierDeliveryToHours
-            ? Number(deliveryConfig.courierDeliveryToHours)
+        toHours = checkoutContainer.dataset.courierDeliveryToHours
+            ? Number(checkoutContainer.dataset.courierDeliveryToHours)
             : null;
     } else if (deliveryType === "pickup") {
-        fromHours = deliveryConfig.pickupReadyFromHours
-            ? Number(deliveryConfig.pickupReadyFromHours)
+        fromHours = checkoutContainer.dataset.pickupReadyFromHours
+            ? Number(checkoutContainer.dataset.pickupReadyFromHours)
             : null;
 
-        toHours = deliveryConfig.pickupReadyToHours
-            ? Number(deliveryConfig.pickupReadyToHours)
+        toHours = checkoutContainer.dataset.pickupReadyToHours
+            ? Number(checkoutContainer.dataset.pickupReadyToHours)
             : null;
     }
 
