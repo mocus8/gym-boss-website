@@ -26,7 +26,10 @@ $flashMessage = $flash->get();
 		<link rel="stylesheet" href="/styles.css">
 	</head>
 
-	<body class="body is-loading" aria-busy="true" data-yandex-maps-key="<?= $servicesConfig['yandex_maps']['key'] ?? '' ?>">
+	<body class="body is-loading" aria-busy="true"
+        data-yandex-maps-key="<?= $servicesConfig['yandex_maps']['key'] ?? '' ?>"
+        data-recaptcha-site-key="<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"
+    >
         <div class="loader-overlay" id="loader">
             <img class="loader" src="/img/loader.png" alt="">
             <span class="sr-only">Страница загружается</span>
