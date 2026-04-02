@@ -1,34 +1,26 @@
-// 1. Быстро показываем основной контент
-document.addEventListener('DOMContentLoaded', function() {
-    const loader = document.getElementById('loader');
-    const desktop = document.querySelector('.desktop');
-    
-    if (loader) {
-        // Сразу показываем страницу
-        desktop.classList.add('desktop_visible');
-        
-        // Прячем лоадер, но не удаляем (на случай долгой загрузки)
-        loader.style.opacity = '0';
-        loader.style.pointerEvents = 'none';
-    }
-});
+window.addEventListener("load", function () {
+    const loader = document.getElementById("loader");
 
-// 2. Полная очистка после загрузки всего
-window.addEventListener('load', function() {
-    const loader = document.getElementById('loader');
-    
-    // Полностью убираем лоадер
+    document.body.classList.remove("is-loading");
+    document.body.setAttribute("aria-busy", "false");
+
+    if (!loader) return;
+
+    loader.classList.add("is-hidden");
+
+    // После того как проигрывается анимация закрытия лоадера удаляем его
+    loader.addEventListener(
+        "transitionend",
+        () => {
+            loader.remove();
+        },
+        { once: true },
+    );
+
+    // Защита от зависшего лоадера
     setTimeout(() => {
-        if (loader && loader.parentNode) {
+        if (loader.parentNode) {
             loader.remove();
         }
-    }, 300);
+    }, 1000);
 });
-
-// 3. Защита от "зависшего" лоадера
-setTimeout(function() {
-    const loader = document.getElementById('loader');
-    if (loader && loader.style.opacity === '0' && loader.parentNode) {
-        loader.remove();
-    }
-}, 5000); // На всякий случай убираем через 5 сек
