@@ -5,7 +5,12 @@ import {
     updateCartItemQty,
     removeCartItem,
 } from "./cart.api.js";
-import { updateHeaderCounter, getErrorMessage, formatPrice } from "../utils.js";
+import {
+    updateHeaderCounter,
+    getErrorMessage,
+    setButtonLoading,
+    formatPrice,
+} from "../utils.js";
 import { notification } from "../ui/notification.js";
 
 // Функция для рендера блока товара
@@ -56,11 +61,11 @@ function createCartProductElement(item) {
     const minusBtn = document.createElement("button");
     minusBtn.classList.add("product_sign_button");
     minusBtn.type = "button";
+    minusBtn.setAttribute("data-subtract-cart", "");
+    minusBtn.dataset.productId = String(item.id);
     const minusImg = document.createElement("img");
     minusImg.classList.add("product_interaction_sign");
     minusImg.src = "/img/minus.png";
-    minusImg.setAttribute("data-subtract-cart", "");
-    minusImg.dataset.productId = String(item.id);
     minusBtn.appendChild(minusImg);
     countWrap.appendChild(minusBtn);
 
@@ -75,11 +80,11 @@ function createCartProductElement(item) {
     const plusBtn = document.createElement("button");
     plusBtn.classList.add("product_sign_button");
     plusBtn.type = "button";
+    plusBtn.setAttribute("data-add-cart", "");
+    plusBtn.dataset.productId = String(item.id);
     const plusImg = document.createElement("img");
     plusImg.classList.add("product_interaction_sign");
     plusImg.src = "/img/plus.png";
-    plusImg.setAttribute("data-add-cart", "");
-    plusImg.dataset.productId = String(item.id);
     plusBtn.appendChild(plusImg);
     countWrap.appendChild(plusBtn);
 
@@ -87,11 +92,11 @@ function createCartProductElement(item) {
     const removeBtn = document.createElement("button");
     removeBtn.classList.add("product_sign_button");
     removeBtn.type = "button";
+    removeBtn.setAttribute("data-remove-cart", "");
+    removeBtn.dataset.productId = String(item.id);
     const removeImg = document.createElement("img");
     removeImg.classList.add("product_interaction_delete");
     removeImg.src = "/img/trash.png";
-    removeImg.setAttribute("data-remove-cart", "");
-    removeImg.dataset.productId = String(item.id);
     removeBtn.appendChild(removeImg);
     interaction.appendChild(removeBtn);
 
@@ -123,7 +128,7 @@ function updateCartItemCounter(productId, qty) {
         productElement.remove();
     } else {
         productCounter.textContent = String(qtyNumber);
-        productTotal.textContent = `${qtyNumber * itemPrice} ₽`;
+        productTotal.textContent = `${formatPrice(qtyNumber * itemPrice)} ₽`;
     }
 }
 
@@ -200,9 +205,9 @@ async function initCartPage(productContainer, startOrderBtn) {
         const target = e.target;
 
         // Минус
-        const subtractItem = target.closest("[data-subtract-cart]");
-        if (subtractItem) {
-            const productId = Number(subtractItem.dataset.productId);
+        const subtractBtn = target.closest("[data-subtract-cart]");
+        if (subtractBtn) {
+            const productId = Number(subtractBtn.dataset.productId);
             if (!productId) return;
 
             const counterEl = document.getElementById(
@@ -217,6 +222,8 @@ async function initCartPage(productContainer, startOrderBtn) {
             const newQty = Math.max(currentQty - 1, 0);
 
             try {
+                setButtonLoading(subtractBtn, true);
+
                 const response = await updateCartItemQty(productId, newQty);
 
                 const { items, count } = response;
@@ -248,18 +255,22 @@ async function initCartPage(productContainer, startOrderBtn) {
                 // Показ ошибки пользователю
                 const message = getErrorMessage(e.code, e.status);
                 notification.open(message);
+            } finally {
+                setButtonLoading(subtractBtn, false);
             }
 
             return;
         }
 
         // Плюс
-        const addItem = target.closest("[data-add-cart]");
-        if (addItem) {
-            const productId = Number(addItem.dataset.productId);
+        const addBtn = target.closest("[data-add-cart]");
+        if (addBtn) {
+            const productId = Number(addBtn.dataset.productId);
             if (!productId) return;
 
             try {
+                setButtonLoading(addBtn, true);
+
                 const response = await addCartItem(productId, 1); // response = { success: true, data: { items, count, total } }
 
                 const { items, count } = response;
@@ -287,18 +298,22 @@ async function initCartPage(productContainer, startOrderBtn) {
                 // Показ ошибки пользователю
                 const message = getErrorMessage(e.code, e.status);
                 notification.open(message);
+            } finally {
+                setButtonLoading(addBtn, false);
             }
 
             return;
         }
 
         // Удаление
-        const removeItem = target.closest("[data-remove-cart]");
-        if (removeItem) {
-            const productId = Number(removeItem.dataset.productId);
+        const removeBtn = target.closest("[data-remove-cart]");
+        if (removeBtn) {
+            const productId = Number(removeBtn.dataset.productId);
             if (!productId) return;
 
             try {
+                setButtonLoading(removeBtn, true);
+
                 const response = await removeCartItem(productId);
 
                 const { count } = response;
@@ -324,6 +339,8 @@ async function initCartPage(productContainer, startOrderBtn) {
                 // Показ ошибки пользователю
                 const message = getErrorMessage(e.code, e.status);
                 notification.open(message);
+            } finally {
+                setButtonLoading(removeBtn, false);
             }
 
             return;

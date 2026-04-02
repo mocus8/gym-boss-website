@@ -50,21 +50,21 @@
 
                                 <?php foreach ($items as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?>
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
                                     </p>
                                 <?php } ?>
 
                                 <p style="margin:0 0 16px;">
-                                    Стоимость товаров: <?= $itemsPrice ?>
+                                    Стоимость товаров: <?= $itemsPrice ?> ₽
                                 </p>
 
                                 <?php if ($deliveryTypeCode === 'courier') { ?>
                                     <p style="margin:0 0 8px;">
-                                        Стоимость доставки: <?= $deliveryCost ?>
+                                        Стоимость доставки: <?= $deliveryCost ?> ₽
                                     </p>
 
                                     <p style="margin:0 0 16px;">
-                                        Итоговая стоимость заказа: <?= $totalPrice ?>
+                                        Итоговая стоимость заказа: <?= $totalPrice ?> ₽
                                     </p>
 
                                     <p style="margin:0 0 8px;">
@@ -80,7 +80,7 @@
                                     </p>
                                 <?php } elseif ($deliveryTypeCode === 'pickup') { ?>
                                     <p style="margin:0 0 16px;">
-                                        Итоговая стоимость заказа: <?= $totalPrice ?>
+                                        Итоговая стоимость заказа: <?= $totalPrice ?> ₽
                                     </p>
 
                                     <p style="margin:0 0 8px;">

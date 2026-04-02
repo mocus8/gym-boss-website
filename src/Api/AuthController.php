@@ -11,6 +11,7 @@ use App\Auth\AuthSession;
 use App\Auth\AuthService;
 use App\Cart\CartSession;
 use App\Cart\CartService;
+use App\Support\Flash;
 use App\Support\Logger;
 
 // Класс для управления аутентификацией пользователей (через методы сервиса)
@@ -19,18 +20,21 @@ class AuthController extends BaseController {
     private AuthService $authService;
     private CartSession $cartSession;
     private CartService $cartService;
+    private Flash $flash;
 
     public function __construct(
         AuthSession $authSession,
         AuthService $authService,
         CartSession $cartSession,
         CartService $cartService,
+        Flash $flash,
         Logger $logger
     ) {
         $this->authSession = $authSession;
         $this->authService = $authService;
         $this->cartSession = $cartSession;
         $this->cartService = $cartService;
+        $this->flash = $flash;
         parent::__construct($logger);
     }
 
@@ -74,6 +78,11 @@ class AuthController extends BaseController {
             $this->logger->info('User {user_id} created', [
                 'user_id' => $userId,
             ]);
+
+            // Записываем в сессию сообщение о успешной регистрации
+            $this->flash->set(
+                'Регистрация прошла успешно. Вам на почту отправлено письмо для подтверждения email.'
+            );
 
             $this->success(201, [
                 'user_id' => $userId,
