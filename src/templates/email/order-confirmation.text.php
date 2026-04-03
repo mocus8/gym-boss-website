@@ -1,28 +1,28 @@
 Здравствуйте, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>.
 
-Ваш заказ №<?= $orderId ?> оплачен и принят в обработку.
+Ваш заказ №<?= (int)$orderId ?> оплачен и принят в обработку.
 
 Состав заказа:
 <?php foreach ($items as $item) { ?>
-    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
+    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= (int)$item['quantity'] ?> шт.) - <?= (float)$item['price'] ?> ₽
 <?php } ?>
 
-Стоимость товаров: <?= $itemsPrice ?>
+Стоимость товаров: <?= (float)$itemsPrice ?>
 <?php if ($deliveryTypeCode === 'courier') { ?>
-    Стоимость доставки: <?= $deliveryCost ?> ₽
-    Итоговая стоимость заказа: <?= $totalPrice ?> ₽
+    Стоимость доставки: <?= (float)$deliveryCost ?> ₽
+    Итоговая стоимость заказа: <?= (float)$totalPrice ?> ₽
 
     Тип доставки: <?= htmlspecialchars($deliveryTypeName, ENT_QUOTES, 'UTF-8') ?>
     Адрес доставки: <?= htmlspecialchars($deliveryAddressText, ENT_QUOTES, 'UTF-8') ?>
 
-    Примерный срок доставки: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
+    Примерный срок доставки: с <?= htmlspecialchars($deliveryFrom, ENT_QUOTES, 'UTF-8') ?> до <?= htmlspecialchars($deliveryTo, ENT_QUOTES, 'UTF-8') ?>
 <?php } elseif ($deliveryTypeCode === 'pickup') { ?>
-    Итоговая стоимость заказа: <?= $totalPrice ?> ₽
+    Итоговая стоимость заказа: <?= (float)$totalPrice ?> ₽
 
     Тип доставки: <?= htmlspecialchars($deliveryTypeName, ENT_QUOTES, 'UTF-8') ?>
     Выбранный для самовывоза магазин: <?= htmlspecialchars($deliveryAddressText, ENT_QUOTES, 'UTF-8') ?>
 
-    Примерный срок готовности заказа: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
+    Примерный срок готовности заказа: с <?= htmlspecialchars($deliveryFrom, ENT_QUOTES, 'UTF-8') ?> до <?= htmlspecialchars($deliveryTo, ENT_QUOTES, 'UTF-8') ?>
 <?php } ?>
 
 Ссылка на страницу заказа: <?= htmlspecialchars($orderUrl, ENT_QUOTES, 'UTF-8') ?>

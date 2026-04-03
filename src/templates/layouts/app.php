@@ -27,8 +27,8 @@ $flashMessage = $flash->get();
 	</head>
 
 	<body class="body is-loading" aria-busy="true"
-        data-yandex-maps-key="<?= $servicesConfig['yandex_maps']['key'] ?? '' ?>"
-        data-recaptcha-site-key="<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"
+        data-yandex-maps-key="<?= htmlspecialchars($servicesConfig['yandex_maps']['key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+        data-recaptcha-site-key="<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
     >
         <div class="loader-overlay" id="loader">
             <img class="loader" src="/img/loader.png" alt="">
@@ -60,7 +60,7 @@ $flashMessage = $flash->get();
         <!-- Подключаем разные скрипты -->
 
         <!-- Обязательные для всех страниц -->
-        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= $servicesConfig['recaptcha']['site_key'] ?? '' ?>"></script>
+        <script defer src="https://www.google.com/recaptcha/api.js?render=<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"></script>
         <script defer src="/js/loader.js"></script>
         <script type="module" src="/js/ui/flash-notifications.js"></script>
         <script type="module" src="/js/ui/auth-modal.js"></script>

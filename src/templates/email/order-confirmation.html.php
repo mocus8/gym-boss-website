@@ -23,7 +23,7 @@
                                     font-size: 22px;
                                     font-weight: 700;
                                 ">
-                                    Заказ №<?= $orderId ?>, GymBoss
+                                    Заказ №<?= (int)$orderId ?>, GymBoss
                                 </p>
                             </td>
                         </tr>
@@ -41,7 +41,7 @@
                                     margin:0 0 16px;
                                     font-size: 16px;
                                 ">
-                                    Ваш заказ №<?= $orderId ?> оплачен и принят в обработку.
+                                    Ваш заказ №<?= (int)$orderId ?> оплачен и принят в обработку.
                                 </p>
 
                                 <p style="margin:0 0 16px;">
@@ -50,21 +50,21 @@
 
                                 <?php foreach ($items as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= (int)$item['quantity'] ?> шт.) - <?= (float)$item['price'] ?> ₽
                                     </p>
                                 <?php } ?>
 
                                 <p style="margin:0 0 16px;">
-                                    Стоимость товаров: <?= $itemsPrice ?> ₽
+                                    Стоимость товаров: <?= (float)$itemsPrice ?> ₽
                                 </p>
 
                                 <?php if ($deliveryTypeCode === 'courier') { ?>
                                     <p style="margin:0 0 8px;">
-                                        Стоимость доставки: <?= $deliveryCost ?> ₽
+                                        Стоимость доставки: <?= (float)$deliveryCost ?> ₽
                                     </p>
 
                                     <p style="margin:0 0 16px;">
-                                        Итоговая стоимость заказа: <?= $totalPrice ?> ₽
+                                        Итоговая стоимость заказа: <?= (float)$totalPrice ?> ₽
                                     </p>
 
                                     <p style="margin:0 0 8px;">
@@ -76,11 +76,11 @@
                                     </p>
 
                                     <p style="margin:0 0 16px;">
-                                        Примерный срок доставки: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
+                                        Примерный срок доставки: с <?= htmlspecialchars($deliveryFrom, ENT_QUOTES, 'UTF-8') ?> до <?= htmlspecialchars($deliveryTo, ENT_QUOTES, 'UTF-8') ?>
                                     </p>
                                 <?php } elseif ($deliveryTypeCode === 'pickup') { ?>
                                     <p style="margin:0 0 16px;">
-                                        Итоговая стоимость заказа: <?= $totalPrice ?> ₽
+                                        Итоговая стоимость заказа: <?= (float)$totalPrice ?> ₽
                                     </p>
 
                                     <p style="margin:0 0 8px;">
@@ -92,7 +92,7 @@
                                     </p>
 
                                     <p style="margin:0 0 16px;">
-                                        Примерный срок готовности заказа: с <?= $deliveryFrom ?> до <?= $deliveryTo ?>
+                                        Примерный срок готовности заказа: с <?= htmlspecialchars($deliveryFrom, ENT_QUOTES, 'UTF-8') ?> до <?= htmlspecialchars($deliveryTo, ENT_QUOTES, 'UTF-8') ?>
                                     </p>
                                 <?php } ?>
 

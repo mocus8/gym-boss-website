@@ -79,7 +79,7 @@
                     <img class="header_button_icon" src="/img/cart.png">
 
                     <div class="header_button_text">
-                        Корзина (<span id="header-cart-counter"><?= $cartCount ?></span>)
+                        Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)
                     </div>
                 </div>
             </a>

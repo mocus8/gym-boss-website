@@ -9,7 +9,7 @@
     </a>
 </div>
 
-<div class="order_back" id="order-container" data-order-id="<?= $orderId ?>">
+<div class="order_back" id="order-container" data-order-id="<?= (int)$orderId ?>">
     <div>
         <div class="order_row">
             Номер заказа: <span id="order-id">загрузка...</span>
