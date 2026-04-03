@@ -14,7 +14,7 @@
         Сброс пароля
     </div>
 
-    <input type="hidden" name="token" value="<?= $token ?>">
+    <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
     <div class="registration_modal_input_back">
         <span class="registration_modal_input_text">
