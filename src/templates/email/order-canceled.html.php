@@ -23,7 +23,7 @@
                                     font-size: 22px;
                                     font-weight: 700;
                                 ">
-                                    Заказ №<?= $orderId ?>, GymBoss
+                                    Заказ №<?= (int)$orderId ?>, GymBoss
                                 </p>
                             </td>
                         </tr>
@@ -41,7 +41,7 @@
                                     margin:0 0 16px;
                                     font-size: 16px;
                                 ">
-                                    Ваш заказ №<?= $orderId ?> был отменён.
+                                    Ваш заказ №<?= (int)$orderId ?> был отменён.
                                 </p>
 
                                 <p style="margin:0 0 16px;">
@@ -50,12 +50,12 @@
 
                                 <?php foreach ($items as $item) { ?>
                                     <p style="margin:0 0 8px;">
-                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
+                                        <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= (int)$item['quantity'] ?> шт.) - <?= (float)$item['price'] ?> ₽
                                     </p>
                                 <?php } ?>
 
                                 <p style="margin:8px 0 16px 0;">
-                                    Сумма заказа: <?= $itemsPrice ?> ₽
+                                    Сумма заказа: <?= (float)$itemsPrice ?> ₽
                                 </p>
 
                                 <p style="margin:0 0 16px;">

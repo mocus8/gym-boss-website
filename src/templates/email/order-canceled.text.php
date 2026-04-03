@@ -1,13 +1,13 @@
 Здравствуйте, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>.
 
-Ваш заказ №<?= $orderId ?> был отменён.
+Ваш заказ №<?= (int)$orderId ?> был отменён.
 
 Состав заказа:
 <?php foreach ($items as $item) { ?>
-    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.) - <?= $item['price'] ?> ₽
+    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= (int)$item['quantity'] ?> шт.) - <?= (float)$item['price'] ?> ₽
 <?php } ?>
 
-Сумма заказа: <?= $itemsPrice ?> ₽
+Сумма заказа: <?= (float)$itemsPrice ?> ₽
 
 <?php if ($canceledBy === 'user') { ?>
     Заказ был отменён по вашему запросу

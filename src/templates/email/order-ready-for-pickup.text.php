@@ -1,10 +1,10 @@
 Здравствуйте, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>.
 
-Ваш заказ №<?= $orderId ?> готов к получению.
+Ваш заказ №<?= (int)$orderId ?> готов к получению.
 
 Состав заказа:
 <?php foreach ($items as $item) { ?>
-    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= $item['quantity'] ?> шт.)
+    <?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?> (<?= (int)$item['quantity'] ?> шт.)
 <?php } ?>
 
 Вы можете получить заказ в выбранном вами магазине: <?= htmlspecialchars($storeAddress, ENT_QUOTES, 'UTF-8') ?>.
