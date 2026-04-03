@@ -3,19 +3,19 @@
 namespace App\Auth;
 
 // Класс-репозиторий для взаимодействия с бд
-class PasswordResetTokenRepository {
+class EmailVerificationTokenRepository {
     private \mysqli $db;
 
     public function __construct(\mysqli $db) {
         $this->db = $db;
     }
 
-    // Метод для создаения токена
-    public function create(string $email, string $hashedToken): void {
-        // Если есть старый токен для почты - он перезаписывается
+    // Метод для записи токена
+    public function create(int $userId, string $hashedToken): void {
+        // Если есть старый токен для пользователя - он перезаписывается
         $sql = "
-            INSERT INTO password_reset_tokens (
-                email,
+            INSERT INTO email_verification_tokens (
+                user_id,
                 token,
                 created_at
             )
@@ -31,7 +31,7 @@ class PasswordResetTokenRepository {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
     
-        $stmt->bind_param('sss', $email, $hashedToken, $hashedToken);
+        $stmt->bind_param('iss', $userId, $hashedToken, $hashedToken);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
@@ -42,11 +42,11 @@ class PasswordResetTokenRepository {
         $stmt->close();
     }
 
-    // Метод для удаление токена по email
-    public function deleteByEmail(string $email): void {
+    // Метод для удаление токена
+    public function delete(string $hashedToken): void {
         $sql = "
-            DELETE FROM password_reset_tokens
-            WHERE email = ?
+            DELETE FROM email_verification_tokens
+            WHERE token = ?
         ";
     
         $stmt = $this->db->prepare($sql);
@@ -55,7 +55,7 @@ class PasswordResetTokenRepository {
             throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
         }
     
-        $stmt->bind_param('s', $email);
+        $stmt->bind_param('s', $hashedToken);
 
         if (!$stmt->execute()) {
             $error = $stmt->error ?: $this->db->error;
@@ -66,13 +66,50 @@ class PasswordResetTokenRepository {
         $stmt->close();
     }
 
-    // Метод для нахождения времени создания прошлого токена
-    public function findTokenInfo(string $hashedToken): ?array {
+    // Метод для поиска токена по id пользователя
+    public function findByUserId(int $userId): ?array {
+        $sql = "
+            SELECT created_at
+            FROM email_verification_tokens
+            WHERE user_id = ?
+            LIMIT 1;        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $userId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return $row;
+    }
+
+    // Получение данных о токене по самому токену
+    public function findVerificationTokenInfo(string $hashedToken): ?array {
         $sql = "
             SELECT
-                email,
+                user_id,
                 created_at
-            FROM password_reset_tokens
+            FROM email_verification_tokens
             WHERE token = ?
         ";
 
@@ -102,42 +139,5 @@ class PasswordResetTokenRepository {
         $stmt->close();
 
         return $row;
-    }
-
-    // Метод для нахождения времени создания прошлого токена
-    public function findPreviousTokenCreatedAt(string $email): ?string {
-        $sql = "
-            SELECT created_at
-            FROM password_reset_tokens
-            WHERE email = ?
-            LIMIT 1;        
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        return $row['created_at'] ?? null;
     }
 }

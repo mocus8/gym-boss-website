@@ -37,6 +37,8 @@ use App\Support\Logger;
 use App\Db\Db;
 use App\Support\Flash;
 use App\Users\UserRepository;
+use App\Auth\EmailVerificationTokenRepository;
+use App\Auth\LoginAttemptRepository;
 use App\Auth\PasswordResetTokenRepository;
 use App\Api\BaseController;
 use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
@@ -74,6 +76,8 @@ require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
 require_once __DIR__ . '/Support/Flash.php';
 require_once __DIR__ . '/Users/UserRepository.php';
+require_once __DIR__ . '/Auth/EmailVerificationTokenRepository.php';
+require_once __DIR__ . '/Auth/LoginAttemptRepository.php';
 require_once __DIR__ . '/Auth/PasswordResetTokenRepository.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
@@ -148,12 +152,27 @@ $googleRecaptchaClient = new GoogleRecaptchaClient($servicesConfig['recaptcha'][
 // Репозиторий для взаимодействия с таблицей users в бд
 $userRepository = new UserRepository($db);
 
+// Репозиторий для взаимодействия с таблицей email_verification_tokens в бд
+$EmailVerificationTokenRepository = new EmailVerificationTokenRepository($db);
+
+// Репозиторий для взаимодействия с таблицей login_attempts в бд
+$loginAttemptRepository = new LoginAttemptRepository($db);
+
 // Репозиторий для взаимодействия с таблицей password_reset_token в бд
 $passwordResetTokenRepository = new PasswordResetTokenRepository($db);
 
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
-$authService = new AuthService($db, $mailService, $baseUrl, $logger);
+$authService = new AuthService(
+    $db, 
+    $userRepository, 
+    $EmailVerificationTokenRepository, 
+    $loginAttemptRepository,
+    $passwordResetTokenRepository, 
+    $mailService, 
+    $baseUrl, 
+    $logger
+);
 $accountService = new AccountService($db, $userRepository, $passwordResetTokenRepository);
 $accountController = new AccountController($authSession, $accountService, $flash, $logger);
 $cartSession = new CartSession();
