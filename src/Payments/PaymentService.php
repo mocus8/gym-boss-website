@@ -7,7 +7,7 @@
 // Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Payments;
 use App\Orders\OrderService;
-use App\Account\AccountService;
+use App\Users\UserRepository;
 use App\Integrations\Yookassa\YookassaGateway;
 use App\Support\Logger;
 
@@ -17,7 +17,7 @@ class PaymentService {
     private \mysqli $db;
     private string $baseUrl;
     private OrderService $orderService;    // экземпляр сервиса для заказов (dependency injection)
-    private AccountService $accountService;
+    private UserRepository $userRepository;
     private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
     private int $deliveryVatCode;    // код НДС для доставки
     private Logger $logger;
@@ -31,7 +31,7 @@ class PaymentService {
         \mysqli $db,
         string $baseUrl,
         OrderService $orderService,
-        AccountService $accountService,
+        UserRepository $userRepository,
         YookassaGateway $yookassaGateway,
         int $deliveryVatCode,
         Logger $logger
@@ -39,7 +39,7 @@ class PaymentService {
         $this->db = $db;
         $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
-        $this->accountService = $accountService;
+        $this->userRepository = $userRepository;
         $this->yookassaGateway = $yookassaGateway;
         $this->deliveryVatCode = $deliveryVatCode;
         $this->logger = $logger;
@@ -106,8 +106,12 @@ class PaymentService {
             // 2. через gateway юкассы создаем платеж в самой юкассе 
             // 3. если платеж в юкассе создан - дополняем запись платежа в бд, если нет - помечаем как failed
 
-            // Получаем логин пользователя через метод AccountService для формирования чека
-            $email = $this->accountService->getEmail($userId);
+            // Получаем логин пользователя для формирования чека
+            $email = $this->userRepository->findEmailById($userId);
+            if ($email === null) {
+                throw new \RuntimeException('User email not found');
+            }
+
             // Получаем залоченые позиции заказа из order_items
             $items = $this->orderService->getItemsForReceipt($orderId);
             // Cоздаём массив товаров в нужном для чека формате
