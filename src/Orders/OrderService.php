@@ -1222,11 +1222,11 @@ class OrderService {
 
         // Собираем итоговый массив позиций корзины: товар + quantity
         $items = [];
-        foreach ($products as $productId => $product) {
-            // Прибавляем к элементу product массива products поле, и все это вместе кладем в items
-            $items[] = array_merge($product, [
-                'quantity' => $quantityByIds[$productId] ?? 0,
-                'price' => $priceByIds[$productId] ?? $product['price']
+        foreach ($quantityByIds as $productId => $quantity) {
+            if (!isset($products[$productId])) continue;
+            $items[] = array_merge($products[$productId], [
+                'quantity' => $quantity,
+                'price'    => $priceByIds[$productId] ?? $products[$productId]['price']
             ]);
         }
 
