@@ -40,7 +40,7 @@ class AuthService {
     ) {
         $this->db = $db;
         $this->userRepository = $userRepository;
-        $this->EmailVerificationTokenRepository = $emailVerificationTokenRepository;
+        $this->emailVerificationTokenRepository = $emailVerificationTokenRepository;
         $this->loginAttemptRepository = $loginAttemptRepository;
         $this->passwordResetTokenRepository = $passwordResetTokenRepository;
         $this->mailService = $mailService;
