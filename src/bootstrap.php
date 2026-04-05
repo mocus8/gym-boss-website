@@ -151,11 +151,7 @@ $googleRecaptchaClient = new GoogleRecaptchaClient($servicesConfig['recaptcha'][
 
 // Репозиторий для взаимодействия с таблицей users в бд
 $userRepository = new UserRepository($db);
-
-// Репозиторий для взаимодействия с таблицей email_verification_tokens в бд
-$EmailVerificationTokenRepository = new EmailVerificationTokenRepository($db);
-
-// Репозиторий для взаимодействия с таблицей login_attempts в бд
+$emailVerificationTokenRepository = new EmailVerificationTokenRepository($db);
 $loginAttemptRepository = new LoginAttemptRepository($db);
 
 // Репозиторий для взаимодействия с таблицей password_reset_token в бд
@@ -166,7 +162,7 @@ $authSession = new AuthSession();
 $authService = new AuthService(
     $db, 
     $userRepository, 
-    $EmailVerificationTokenRepository, 
+    $emailVerificationTokenRepository, 
     $loginAttemptRepository,
     $passwordResetTokenRepository, 
     $mailService, 

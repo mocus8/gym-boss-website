@@ -13,7 +13,7 @@ use App\Support\Logger;
 class AuthService {
     private \mysqli $db;
     private UserRepository $userRepository;
-    private EmailVerificationTokenRepository $EmailVerificationTokenRepository;
+    private EmailVerificationTokenRepository $emailVerificationTokenRepository;
     private LoginAttemptRepository $loginAttemptRepository;
     private PasswordResetTokenRepository $passwordResetTokenRepository;
     private MailService $mailService;
@@ -31,7 +31,7 @@ class AuthService {
     public function __construct(
         \mysqli $db, 
         UserRepository $userRepository,
-        EmailVerificationTokenRepository $EmailVerificationTokenRepository,
+        EmailVerificationTokenRepository $emailVerificationTokenRepository,
         LoginAttemptRepository $loginAttemptRepository,
         PasswordResetTokenRepository $passwordResetTokenRepository,
         MailService $mailService, 
@@ -40,7 +40,7 @@ class AuthService {
     ) {
         $this->db = $db;
         $this->userRepository = $userRepository;
-        $this->EmailVerificationTokenRepository = $EmailVerificationTokenRepository;
+        $this->EmailVerificationTokenRepository = $emailVerificationTokenRepository;
         $this->loginAttemptRepository = $loginAttemptRepository;
         $this->passwordResetTokenRepository = $passwordResetTokenRepository;
         $this->mailService = $mailService;
@@ -122,7 +122,7 @@ class AuthService {
         }
 
         // Получаем время создания прошлого токена
-        $tokenInfo = $this->EmailVerificationTokenRepository->findByUserId($userId);
+        $tokenInfo = $this->emailVerificationTokenRepository->findByUserId($userId);
 
         // Если прошлый токен найден и кулдаун не прошел - исключение по лимиту отправки
         if ($tokenInfo !== null) {
@@ -183,7 +183,7 @@ class AuthService {
         $hashedToken = hash('sha256', $rawToken);
 
         // Получаем инфу о токене из бд
-        $tokenInfo = $this->EmailVerificationTokenRepository->findVerificationTokenInfo($hashedToken);
+        $tokenInfo = $this->emailVerificationTokenRepository->findVerificationTokenInfo($hashedToken);
 
         // Токен не найден
         if ($tokenInfo === null) {
@@ -216,7 +216,7 @@ class AuthService {
             $this->userRepository->markEmailAsVerified($userId);
 
             // Удаляем использованный токен подтверждения
-            $this->EmailVerificationTokenRepository->delete($hashedToken);
+            $this->emailVerificationTokenRepository->delete($hashedToken);
 
             // Комитим транзакцию
             $this->db->commit();
@@ -399,7 +399,7 @@ class AuthService {
         $hashedToken = hash('sha256', $rawToken);
 
         // Записываем в бд новую строку с токеном для подтверждения почты
-        $this->EmailVerificationTokenRepository->create($userId, $hashedToken);
+        $this->emailVerificationTokenRepository->create($userId, $hashedToken);
 
         return $rawToken;
     }
