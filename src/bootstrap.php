@@ -40,6 +40,8 @@ use App\Users\UserRepository;
 use App\Auth\EmailVerificationTokenRepository;
 use App\Auth\LoginAttemptRepository;
 use App\Auth\PasswordResetTokenRepository;
+use App\Cart\CartRepository;
+use App\Cart\CartItemRepository;
 use App\Api\BaseController;
 use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Integrations\Resend\ResendGateway;
@@ -79,6 +81,8 @@ require_once __DIR__ . '/Users/UserRepository.php';
 require_once __DIR__ . '/Auth/EmailVerificationTokenRepository.php';
 require_once __DIR__ . '/Auth/LoginAttemptRepository.php';
 require_once __DIR__ . '/Auth/PasswordResetTokenRepository.php';
+require_once __DIR__ . '/Cart/CartRepository.php';
+require_once __DIR__ . '/Cart/CartItemRepository.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Integrations/GoogleRecaptcha/GoogleRecaptchaClient.php';
@@ -149,13 +153,13 @@ $productController = new ProductController($productService, $logger);    // со
 // Создаем клиент для обращения к гугл рекапче
 $googleRecaptchaClient = new GoogleRecaptchaClient($servicesConfig['recaptcha']['secret_key'], $logger);
 
-// Репозиторий для взаимодействия с таблицей users в бд
+// Создаем репозитории для работой с бд
 $userRepository = new UserRepository($db);
 $emailVerificationTokenRepository = new EmailVerificationTokenRepository($db);
 $loginAttemptRepository = new LoginAttemptRepository($db);
-
-// Репозиторий для взаимодействия с таблицей password_reset_token в бд
 $passwordResetTokenRepository = new PasswordResetTokenRepository($db);
+$cartRepository = new CartRepository($db);
+$cartItemRepository = new CartItemRepository($db);
 
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
@@ -172,7 +176,7 @@ $authService = new AuthService(
 $accountService = new AccountService($db, $userRepository, $passwordResetTokenRepository);
 $accountController = new AccountController($authSession, $accountService, $flash, $logger);
 $cartSession = new CartSession();
-$cartService = new CartService($db, $productService);
+$cartService = new CartService($cartRepository, $cartItemRepository, $productService);
 $authController = new AuthController(
     $authSession, 
     $authService, 
