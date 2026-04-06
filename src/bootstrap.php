@@ -42,6 +42,8 @@ use App\Auth\LoginAttemptRepository;
 use App\Auth\PasswordResetTokenRepository;
 use App\Cart\CartRepository;
 use App\Cart\CartItemRepository;
+use App\Orders\OrderRepository;
+use App\Orders\OrderItemRepository;
 use App\Api\BaseController;
 use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Integrations\Resend\ResendGateway;
@@ -83,6 +85,8 @@ require_once __DIR__ . '/Auth/LoginAttemptRepository.php';
 require_once __DIR__ . '/Auth/PasswordResetTokenRepository.php';
 require_once __DIR__ . '/Cart/CartRepository.php';
 require_once __DIR__ . '/Cart/CartItemRepository.php';
+require_once __DIR__ . '/Orders/OrderRepository.php';
+require_once __DIR__ . '/Orders/OrderItemRepository.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Integrations/GoogleRecaptcha/GoogleRecaptchaClient.php';
@@ -160,6 +164,8 @@ $loginAttemptRepository = new LoginAttemptRepository($db);
 $passwordResetTokenRepository = new PasswordResetTokenRepository($db);
 $cartRepository = new CartRepository($db);
 $cartItemRepository = new CartItemRepository($db);
+$orderRepository = new OrderRepository($db);
+$orderItemRepository = new OrderItemRepository($db);
 
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
@@ -194,6 +200,8 @@ $orderService = new OrderService(
     $db,
     $productService,
     $cartService,
+    $orderRepository,
+    $orderItemRepository,
     $deliveryConfig['courier_delivery_price'],
     $deliveryConfig['free_delivery_threshold'],
     $deliveryConfig['pickup_ready_from_hours'],

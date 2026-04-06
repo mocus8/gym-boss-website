@@ -1,20 +1,18 @@
 <?php
-// Класс-сервис для взаимодействия с бд, будет использовать в контроллерах и других файлах
-// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo
+// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo, будет использовать в контроллерах и других файлах
 // Тут просто выбрасываем исключения, ловим их уже в endpoint-ах и других файлах
-// В этих файлах перед вызовом этих методов нужно валидировать данные
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Orders;
-use App\Products\ProductService;    // используем класс ProductService из пространства имен App\Products
-use App\Cart\CartService;    // Используем класс CartService из пространства имен App\Cart
 
-// Класс для управления корзинами пользователей
+use App\Products\ProductService;
+use App\Cart\CartService;
+
 class OrderService {
-    // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;
-    private ProductService $productService;    // экземпляр сервиса для товаров (dependency injection)
-    private CartService $cartService;    // экземпляр сервиса для корзины (dependency injection)
+    private OrderRepository $orderRepository;
+    private OrderItemRepository $orderItemRepository;
+    private ProductService $productService;
+    private CartService $cartService;
 
     // Константы для типов доставки
     private const DELIVERY_TYPE_COURIER = 1;
@@ -38,6 +36,8 @@ class OrderService {
         \mysqli $db,
         ProductService $productService,
         CartService $cartService,
+        OrderRepository $orderRepository,
+        OrderItemRepository $orderItemRepository,
         float $deliveryCourierPrice,
         float $deliveryFreeThreshold,
         int $pickupReadyFromHours,
@@ -48,6 +48,8 @@ class OrderService {
         $this->db = $db;
         $this->productService = $productService;
         $this->cartService = $cartService;
+        $this->orderRepository = $orderRepository;
+        $this->orderItemRepository = $orderItemRepository;
         $this->deliveryCourierPrice = $deliveryCourierPrice;
         $this->deliveryFreeThreshold = $deliveryFreeThreshold;
         $this->pickupReadyFromHours = $pickupReadyFromHours;
@@ -62,42 +64,10 @@ class OrderService {
             return $this->statusIdCache[$code];
         }
 
-        $sql = "SELECT id FROM order_statuses WHERE code = ? LIMIT 1";
+        $statusId = $this->orderRepository->findOrderStatusIdByCode($code);
+        $this->statusIdCache[$code] = $statusId;
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param('s', $code);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        if (!$row) {
-            throw new \RuntimeException('Order status id not found: ' . $code);
-        }
-
-        $id = (int)$row['id'];
-
-        $this->statusIdCache[$code] = $id;
-
-        return $id;
+        return $statusId;
     }
 
     // Метод создания order на основе cart (возвращает id созданного заказа)
@@ -161,29 +131,8 @@ class OrderService {
         $this->db->begin_transaction();
 
         try {
-            $sql = "
-                INSERT INTO orders (
-                    user_id,
-                    total_quantity,
-                    total_price,
-                    delivery_type_id,
-                    delivery_cost,
-                    delivery_address_text,
-                    delivery_postal_code,
-                    store_id,
-                    status_id
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param(
-                'iididssii',
+            // Создаем заказ
+            $orderId = $this->orderRepository->createFromCart(
                 $userId,
                 $totalQty,
                 $totalPrice,
@@ -195,69 +144,8 @@ class OrderService {
                 $statusId
             );
 
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            // Получаем order_id как AUTO_INCREMENT последней успешно вставленной строки для этого соединения
-            $orderId = $this->db->insert_id;
-
-            $stmt->close();
-
-            // Строим плейсхолдеры ?,?,?, ... и массив params для заполнения order_items
-            $placeholders = [];
-            $params = [];
-
-            foreach ($items as $item) {
-                $placeholders[] = '(?, ?, ?, ?, ?, ?)';
-
-                $params[] = $orderId;
-                $params[] = $item["id"];
-                $params[] = $item["name"];
-                $params[] = $item["quantity"];
-                $params[] = $item["price"];
-                $params[] = $item["vat_code"];
-            }
-
-            if ($placeholders === []) {
-                throw new \InvalidArgumentException('Empty placeholders while filling order_items');
-            }
-
-            // Собираем строку типов для вставки params
-            $types = str_repeat('iisidi', count($placeholders));
-
-            // Конвертируем массив placeholders в строку, разделяем запятыми
-            $placeholders = implode(',', $placeholders);
-
-            $sql = "
-                INSERT INTO order_items (
-                    order_id,
-                    product_id,
-                    product_name,
-                    quantity,
-                    price,
-                    vat_code
-                )
-                VALUES" . $placeholders
-            ;
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-        
-            $stmt->bind_param($types, ...$params);
-    
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-        
-            $stmt->close();
+            // Заполняем товары
+            $this->orderItemRepository->fill($orderId, $items);
 
             // Помечаем корзину как конвертированную
             $this->cartService->convert($cartId);
@@ -281,46 +169,7 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid orderId');
         }
 
-        // Получаем всю инфу о заказе (таблицы order, delivery_types, order_statuses)
-        // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
-        $sql = "
-            SELECT
-                o.id,
-                o.user_id,
-                u.name AS user_name,
-                u.email AS user_email,
-                o.total_quantity,
-                o.total_price,
-                o.delivery_type_id,
-                dt.code AS delivery_type_code,
-                dt.name AS delivery_type_name,
-                o.delivery_cost,
-                o.delivery_address_text,
-                o.delivery_postal_code,
-                o.store_id,
-                s.address AS store_address,
-                s.work_hours AS store_work_hours,
-                o.courier_delivery_from,
-                o.courier_delivery_to,
-                o.ready_for_pickup_from,
-                o.ready_for_pickup_to,
-                o.status_id,
-                os.code AS status_code,
-                os.name AS status_name,
-                o.created_at,
-                o.updated_at,
-                o.paid_at,
-                o.canceled_at
-            FROM orders AS o
-            LEFT JOIN users AS u ON o.user_id = u.id
-            LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
-            LEFT JOIN stores AS s ON o.store_id = s.id
-            LEFT JOIN order_statuses AS os ON o.status_id = os.id
-            WHERE o.id = ?
-            LIMIT 1
-        ";
-
-        return $this->fetchOrderWithItemsBySql($sql, "i", $orderId);
+        return $this->getOrderWithItems($orderId, null);
     }
 
     // Метод для получения инфы о заказе и всех товаров в нем (с первой фотографией) по его id и по user id
@@ -335,46 +184,7 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid userId');
         }
 
-        // Получаем всю инфу о заказе (таблицы order, delivery_types, order_statuses)
-        // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
-        $sql = "
-            SELECT
-                o.id,
-                o.user_id,
-                u.name AS user_name,
-                u.email AS user_email,
-                o.total_quantity,
-                o.total_price,
-                o.delivery_type_id,
-                dt.code AS delivery_type_code,
-                dt.name AS delivery_type_name,
-                o.delivery_cost,
-                o.delivery_address_text,
-                o.delivery_postal_code,
-                o.store_id,
-                s.address AS store_address,
-                s.work_hours AS store_work_hours,
-                o.courier_delivery_from,
-                o.courier_delivery_to,
-                o.ready_for_pickup_from,
-                o.ready_for_pickup_to,
-                o.status_id,
-                os.code AS status_code,
-                os.name AS status_name,
-                o.created_at,
-                o.updated_at,
-                o.paid_at,
-                o.canceled_at
-            FROM orders AS o
-            LEFT JOIN users AS u ON o.user_id = u.id
-            LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
-            LEFT JOIN stores AS s ON o.store_id = s.id
-            LEFT JOIN order_statuses AS os ON o.status_id = os.id
-            WHERE o.id = ? AND o.user_id = ?
-            LIMIT 1
-        ";
-
-        return $this->fetchOrderWithItemsBySql($sql, "ii", $orderId, $userId);
+        return $this->getOrderWithItems($orderId, $userId);
     }
 
     // Метод для получения инфы о всех заказах пользователя по userId
@@ -383,74 +193,11 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid userId');
         }
 
-        // Получаем всю инфу о заказах (таблицы order, delivery_types, order_statuses)
-        // Вместе с id статуса и типа доставки возвращаем поля code и name из других таблиц
-        $sql = "
-            SELECT
-                o.id,
-                o.user_id,
-                o.total_quantity,
-                o.total_price,
-                o.delivery_type_id,
-                dt.code AS delivery_type_code,
-                dt.name AS delivery_type_name,
-                o.delivery_cost,
-                o.delivery_address_text,
-                o.delivery_postal_code,
-                o.store_id,
-                s.address AS store_address,
-                o.courier_delivery_from,
-                o.courier_delivery_to,
-                o.ready_for_pickup_from,
-                o.ready_for_pickup_to,
-                o.status_id,
-                os.code AS status_code,
-                os.name AS status_name,
-                o.created_at,
-                o.updated_at,
-                o.paid_at,
-                o.canceled_at
-            FROM orders AS o
-            LEFT JOIN delivery_types AS dt ON o.delivery_type_id = dt.id
-            LEFT JOIN stores AS s ON o.store_id = s.id
-            LEFT JOIN order_statuses AS os ON o.status_id = os.id
-            WHERE o.user_id = ?
-            ORDER BY created_at DESC
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // orders - ассоциативный массив с инфой о заказах (подходящие строки из таблицы orders)
-        $orders = [];
-        while ($row = $result->fetch_assoc()) {
-            $orders[] = $row;
-        }
-
-        $stmt->close();
-
-        return $orders;
+        return $this->orderRepository->findUserOrders($userId);
     }
 
-    // Метод для пометки заказа как отменненого (должен вызываться только внутри транзакции)
+    // Метод для пометки заказа как отменненого с привязкой к user id
+    // Должен вызываться только внутри транзакции
     public function markCancelByUserInTx(int $orderId, int $userId): bool {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
@@ -460,44 +207,8 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid userId');
         }
 
-        // Получаем статус заказа с блокировкой строки (FOR UPDATE)
-        $sql = "
-            SELECT status_id
-            FROM orders
-            WHERE id = ? AND user_id = ?
-            FOR UPDATE
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ii", $orderId, $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        if (!$row) {
-            throw new \InvalidArgumentException('Order not found');
-        }
-
-        $orderStatusId = (int)$row["status_id"];
+        // Получаем статус заказа с блокировкой строки
+        $orderStatusId = $this->orderRepository->findForStatusUpdate($orderId, $userId);
 
         $canceledStatusId = $this->getStatusIdByCode('canceled');
         $pendingStatusId = $this->getStatusIdByCode('pending_payment');
@@ -513,79 +224,21 @@ class OrderService {
         }
 
         // Обновляем статус заказа на canceled
-        $sql = "
-            UPDATE orders
-            SET 
-                status_id = ?,
-                canceled_at = NOW()
-            WHERE id = ? AND user_id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("iii", $canceledStatusId, $orderId, $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $stmt->close();
+        $this->orderRepository->markAsCanceled($canceledStatusId, $orderId, $userId);
 
         return true;
     }
 
     
-    // Метод для пометки заказа как отменненого (отмены от провайдера/юкассы или из вебхука, должен вызываться внутри транзакции) 
+    // Метод для пометки заказа как отменненого, отмены от провайдера/юкассы или из вебхука
+    // Должен вызываться только внутри транзакции
     public function markCancelFromPaymentProviderInTx(int $orderId): bool {
-
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
 
-        // Получаем статус заказа с блокировкой строки (FOR UPDATE)
-        $sql = "
-            SELECT status_id
-            FROM orders
-            WHERE id = ?
-            FOR UPDATE
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        if (!$row) {
-            throw new \InvalidArgumentException('Order not found');
-        }
-
-        $orderStatusId = (int)$row["status_id"];
+        // Получаем статус заказа с блокировкой строки
+        $orderStatusId = $this->orderRepository->findForStatusUpdate($orderId, null);
 
         $canceledStatusId = $this->getStatusIdByCode('canceled');
         $pendingStatusId = $this->getStatusIdByCode('pending_payment');
@@ -601,78 +254,20 @@ class OrderService {
         }
 
         // Обновляем статус заказа на canceled
-        $sql = "
-            UPDATE orders
-            SET 
-                status_id = ?,
-                canceled_at = NOW()
-            WHERE id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ii", $canceledStatusId, $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $stmt->close();
+        $this->orderRepository->markAsCanceled($canceledStatusId, $orderId, null);
 
         return true;
     }
 
-    // Метод пометки заказа как оплаченного: только логика, должен вызываться только внутри открытой транзакции
+    // Метод пометки заказа как оплаченного: только логика
+    // Должен вызываться только внутри транзакции
     public function markPaidInTx(int $orderId): bool {
         // Получаем статус, тип доставки и время оплаты заказа с блокировкой строки (FOR UPDATE)
-        $sql = "
-            SELECT 
-                status_id,
-                delivery_type_id,
-                paid_at
-            FROM orders
-            WHERE id = ?
-            FOR UPDATE
-        ";
+        $paymentInfo = $this->orderRepository->findForPaymentUpdate($orderId);
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        if (!$row) {
-            throw new \InvalidArgumentException('Order not found');
-        }
-
-        $orderStatusId = (int)$row["status_id"];
-        $deliveryTypeId = (int)$row["delivery_type_id"];
-        $paidAtRow = $row["paid_at"];
+        $orderStatusId = (int)$paymentInfo["status_id"];
+        $deliveryTypeId = (int)$paymentInfo["delivery_type_id"];
+        $paidAtRow = $paymentInfo["paid_at"];
 
         $pendingStatusId = $this->getStatusIdByCode('pending_payment');
         $paidStatusId = $this->getStatusIdByCode('paid');
@@ -712,26 +307,7 @@ class OrderService {
         }
 
         // Обновляем статус заказа на paid
-        $sql = "
-            UPDATE orders
-            SET 
-                status_id = ?,
-                courier_delivery_from = ?,
-                courier_delivery_to = ?,
-                ready_for_pickup_from = ?,
-                ready_for_pickup_to = ?,
-                paid_at = ?
-            WHERE id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param(
-            "isssssi",
+        $this->orderRepository->markAsPaid(
             $paidStatusId,
             $courierFrom,
             $courierTo,
@@ -741,18 +317,11 @@ class OrderService {
             $orderId
         );
 
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $stmt->close();
-
         return true;
     }
 
-    // Метод пометки заказа как оплаченного (оболочка метода markPaidInTx с транзакцией)
+    // Метод пометки заказа как оплаченного 
+    // Оболочка метода markPaidInTx с транзакцией
     public function markPaid(int $orderId): bool {
 
         if ($orderId <= 0) {
@@ -786,46 +355,8 @@ class OrderService {
         $this->db->begin_transaction();
         
         try {
-
-            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
-            $sql = "
-                SELECT 
-                    status_id
-                FROM orders
-                WHERE id = ?
-                FOR UPDATE
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("i", $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $result = $stmt->get_result();
-
-            if (!$result) {
-                $stmt->close();
-                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-            }
-
-            $row = $result->fetch_assoc();
-
-            $stmt->close();
-
-            if (!$row) {
-                throw new \InvalidArgumentException('Order not found');
-            }
-
-            $orderStatusId = (int)$row["status_id"];
+            // Получаем статус заказа с блокировкой строки
+            $orderStatusId = $this->orderRepository->findForStatusUpdate($orderId, null);
 
             $shippedStatusId = $this->getStatusIdByCode('shipped');
             $paidStatusId = $this->getStatusIdByCode('paid');
@@ -842,27 +373,7 @@ class OrderService {
             }
 
             // Обновляем статус заказа на shipped
-            $sql = "
-                UPDATE orders
-                SET status_id = ?
-                WHERE id = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("ii", $shippedStatusId, $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $stmt->close();
+            $this->orderRepository->setStatus($shippedStatusId, $orderId);
 
             // Комитим транзакцию
             $this->db->commit();
@@ -885,46 +396,8 @@ class OrderService {
         $this->db->begin_transaction();
         
         try {
-
-            // Получаем статус заказа с блокировкой строки (FOR UPDATE)
-            $sql = "
-                SELECT 
-                    status_id
-                FROM orders
-                WHERE id = ?
-                FOR UPDATE
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("i", $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $result = $stmt->get_result();
-
-            if (!$result) {
-                $stmt->close();
-                throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-            }
-
-            $row = $result->fetch_assoc();
-
-            $stmt->close();
-
-            if (!$row) {
-                throw new \InvalidArgumentException('Order not found');
-            }
-
-            $orderStatusId = (int)$row["status_id"];
+            // Получаем статус заказа с блокировкой строки
+            $orderStatusId = $this->orderRepository->findForStatusUpdate($orderId, null);
 
             $readyForPickupStatusId = $this->getStatusIdByCode('ready_for_pickup');
             $paidStatusId = $this->getStatusIdByCode('paid');
@@ -941,27 +414,7 @@ class OrderService {
             }
 
             // Обновляем статус заказа на ready_for_pickup
-            $sql = "
-                UPDATE orders
-                SET status_id = ?
-                WHERE id = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("ii", $readyForPickupStatusId, $orderId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $stmt->close();
+            $this->orderRepository->setStatus($readyForPickupStatusId, $orderId);
 
             // Комитим транзакцию
             $this->db->commit();
@@ -984,48 +437,8 @@ class OrderService {
             throw new \InvalidArgumentException('Invalid userId');
         }
 
-        // Получаем базовую инфу о заказе с блокировкой строки (FOR UPDATE)
-        $sql = "
-            SELECT
-                id,
-                user_id,
-                total_price,
-                delivery_type_id,
-                delivery_cost,
-                status_id
-            FROM orders
-            WHERE id = ? AND user_id = ?
-            FOR UPDATE
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ii", $orderId, $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $order = $result->fetch_assoc();
-
-        $stmt->close();
-
-        if (!$order) {
-            throw new \InvalidArgumentException('Order not found');
-        }
+        // Получаем базовую инфу о заказе с блокировкой строки
+        $order = $this->orderRepository->lockForPayment($orderId, $userId);
 
         return $order;
     }
@@ -1037,88 +450,15 @@ class OrderService {
         }
 
         // Получаем инфу о составе заказа
-        $sql = "
-            SELECT
-                order_id,
-                product_id,
-                product_name,
-                quantity,
-                price,
-                vat_code
-            FROM order_items
-            WHERE order_id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $items = [];
-        while ($row = $result->fetch_assoc()) {
-            $items[] = $row;
-        }
-
-        $stmt->close();
-
-        if (empty($items)) {
-            throw new \InvalidArgumentException('Empty order items');
-        }
+        $items = $this->orderItemRepository->findItemsForReceipt($orderId);
 
         return $items;
     }
 
     // Приватный вспомагательный метод для нахождения заказа
     // В зависимости от параметров ищет заказ либо просто по id либо с привязкой к user id
-    // ...$params - это набор аргументов переменной длинны
-    private function fetchOrderWithItemsBySql(string $sql, string $types, ...$params): array {
-        // Подготавливаем выражение из параметров метода
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param($types, ...$params);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // order - ассоциативный массив с инфой о заказе (строка orders)
-        $order = $result->fetch_assoc();
-
-        if (!$order) {
-            $stmt->close();
-            throw new \InvalidArgumentException('Order not found');
-        }
-
-        $stmt->close();
+    private function getOrderWithItems(int $orderId, ?int $userId): array {
+        $order = $this->orderRepository->findInfo($orderId, $userId);
 
         // Объявляем примерные/фактические сроки доставки/самовывоза
         $deliveryFrom = null;
@@ -1162,71 +502,27 @@ class OrderService {
         $order['delivery_from'] = $deliveryFrom;
         $order['delivery_to'] = $deliveryTo;
 
-        $sql = "
-            SELECT 
-                product_id,
-                quantity,
-                price
-            FROM order_items
-            WHERE order_items.order_id = ?
-        ";
+        $itemsQuantity = $this->orderItemRepository->findItems($order["id"]);
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $order['id']);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // Объявляем и заполняем массивы id => quantity, id => price и id товаров из заказа
-        $quantityByIds = [];
-        $priceByIds = [];
-        $ids = [];
-        while ($row = $result->fetch_assoc()) {
-            $productId = (int)$row['product_id'];
-            $quantity = (int)$row['quantity'];
-            $price = (float)$row['price'];
-
-            $quantityByIds[$productId] = $quantity;
-            $priceByIds[$productId] = $price;
-            $ids[] = $productId;
-        }
-
-        if ($ids === []) {
-            $stmt->close();
-
+        if ($itemsQuantity === []) {
             return [
                 'order' => $order,
                 'items' => []
             ];
         }
 
-        $stmt->close();
-
         // Получаем массив товаров через productService
-        $products = $this->productService->getByIds($ids);
+        $itemsIds = array_keys($itemsQuantity);
+        $products = $this->productService->getByIds($itemsIds);
 
-        // Собираем итоговый массив позиций корзины: товар + quantity
+        // Собираем итоговый массив позиций корзины: товар + quantity + price на момент заказа
         $items = [];
-        foreach ($quantityByIds as $productId => $quantity) {
+        foreach ($itemsQuantity as $productId => $item) {
             if (!isset($products[$productId])) continue;
+
             $items[] = array_merge($products[$productId], [
-                'quantity' => $quantity,
-                'price'    => $priceByIds[$productId] ?? $products[$productId]['price']
+                'quantity' => $item['quantity'],
+                'price'    => $item['price']
             ]);
         }
 
