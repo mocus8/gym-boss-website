@@ -46,6 +46,7 @@ use App\Orders\OrderRepository;
 use App\Orders\OrderItemRepository;
 use App\Payments\PaymentRepository;
 use App\Products\ProductRepository;
+use App\Stores\StoreRepository;
 use App\Api\BaseController;
 use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Integrations\Resend\ResendGateway;
@@ -91,6 +92,7 @@ require_once __DIR__ . '/Orders/OrderRepository.php';
 require_once __DIR__ . '/Orders/OrderItemRepository.php';
 require_once __DIR__ . '/Payments/PaymentRepository.php';
 require_once __DIR__ . '/Products/ProductRepository.php';
+require_once __DIR__ . '/Stores/StoreRepository.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Integrations/GoogleRecaptcha/GoogleRecaptchaClient.php';
@@ -153,6 +155,7 @@ $orderRepository = new OrderRepository($db);
 $orderItemRepository = new OrderItemRepository($db);
 $paymentRepository = new PaymentRepository($db);
 $productRepository = new ProductRepository($db);
+$storeRepository = new StoreRepository($db);
 
 // Работаем с серверными флеш-уведомлениями
 $flash = new Flash();
@@ -259,7 +262,7 @@ $dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // с
 $dadataController = new DadataController($dadataClient, $logger);
 
 // Работаем с сервисом и контроллером магазинов
-$storeService = new StoreService($db);
+$storeService = new StoreService($storeRepository);
 $storeController = new StoreController($storeService, $logger);
 
 // Устанавливаем на все приложение хендлер
