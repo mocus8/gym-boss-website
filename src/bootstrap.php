@@ -44,6 +44,7 @@ use App\Cart\CartRepository;
 use App\Cart\CartItemRepository;
 use App\Orders\OrderRepository;
 use App\Orders\OrderItemRepository;
+use App\Payments\PaymentRepository;
 use App\Products\ProductRepository;
 use App\Api\BaseController;
 use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
@@ -88,6 +89,7 @@ require_once __DIR__ . '/Cart/CartRepository.php';
 require_once __DIR__ . '/Cart/CartItemRepository.php';
 require_once __DIR__ . '/Orders/OrderRepository.php';
 require_once __DIR__ . '/Orders/OrderItemRepository.php';
+require_once __DIR__ . '/Payments/PaymentRepository.php';
 require_once __DIR__ . '/Products/ProductRepository.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
@@ -149,6 +151,7 @@ $cartRepository = new CartRepository($db);
 $cartItemRepository = new CartItemRepository($db);
 $orderRepository = new OrderRepository($db);
 $orderItemRepository = new OrderItemRepository($db);
+$paymentRepository = new PaymentRepository($db);
 $productRepository = new ProductRepository($db);
 
 // Работаем с серверными флеш-уведомлениями
@@ -218,6 +221,7 @@ $paymentService = new PaymentService(
     $db, 
     $baseUrl, 
     $orderService, 
+    $paymentRepository,
     $userRepository,
     $yookassaGateway, 
     $deliveryConfig['vat_code'],

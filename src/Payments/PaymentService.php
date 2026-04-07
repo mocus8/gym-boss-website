@@ -1,11 +1,10 @@
 <?php
-// Класс-сервис для взаимодействия с бд, будет использовать в контроллерах и других файлах
-// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo
+// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo, будет использовать в контроллерах и других файлах
 // Тут просто выбрасываем исключения, ловим их уже в endpoint-ах и других файлах
 // Вызывается из OrderController, без отдельного контроллера 
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Payments;
+
 use App\Orders\OrderService;
 use App\Users\UserRepository;
 use App\Integrations\Yookassa\YookassaGateway;
@@ -13,12 +12,12 @@ use App\Support\Logger;
 
 // Класс для управления платежами
 class PaymentService {
-    // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;
     private string $baseUrl;
-    private OrderService $orderService;    // экземпляр сервиса для заказов (dependency injection)
+    private OrderService $orderService;
+    private PaymentRepository $paymentRepository;
     private UserRepository $userRepository;
-    private YookassaGateway $yookassaGateway;    // экземпляр YookassaGateway для взаимодействия с sdk
+    private YookassaGateway $yookassaGateway;
     private int $deliveryVatCode;    // код НДС для доставки
     private Logger $logger;
 
@@ -26,11 +25,11 @@ class PaymentService {
     private const DELIVERY_TYPE_COURIER = 1;
     private const DELIVERY_TYPE_PICKUP = 2;
 
-    // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
     public function __construct(
         \mysqli $db,
         string $baseUrl,
         OrderService $orderService,
+        PaymentRepository $paymentRepository,
         UserRepository $userRepository,
         YookassaGateway $yookassaGateway,
         int $deliveryVatCode,
@@ -39,6 +38,7 @@ class PaymentService {
         $this->db = $db;
         $this->baseUrl = $baseUrl;
         $this->orderService = $orderService;
+        $this->paymentRepository = $paymentRepository;
         $this->userRepository = $userRepository;
         $this->yookassaGateway = $yookassaGateway;
         $this->deliveryVatCode = $deliveryVatCode;
@@ -68,9 +68,6 @@ class PaymentService {
         // Эти переменные могут не объявится если во время транзакции что-то упадет
         $draftPaymentInfo = null;
 
-        // Статус "черновика" платежа
-        $creatingStatus = 'creating';
-
         // Начинаем транзакцию (либо все либо ничего для sql)
         $this->db->begin_transaction();
 
@@ -87,7 +84,7 @@ class PaymentService {
             }
 
             // Смотрим, есть ли активная ссылка на платеж
-            $paymentConfirmationUrl = $this->getActivePaymentUrl($orderId);
+            $paymentConfirmationUrl = $this->paymentRepository->findActivePaymentUrl($orderId);
 
             // Если ссылка есть то просто возвращаем ее
             if ($paymentConfirmationUrl !== null) {
@@ -124,34 +121,7 @@ class PaymentService {
             $idempotencyKey = $this->generateUuidV4();
 
             // Создаем в бд платеж со статусом creating 
-            $sql = "
-                INSERT INTO payments (
-                    order_id,
-                    status,
-                    amount,
-                    idempotency_key
-                )
-                VALUES (?, ?, ?, ?)
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("isds", $orderId, $creatingStatus, $orderTotal, $idempotencyKey);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            // Получаем paymentId как AUTO_INCREMENT последней успешно вставленной строки для этого соединения
-            $paymentId  = $this->db->insert_id;
-            
-            $stmt->close();
+            $paymentId  = $this->paymentRepository->create($orderId, $orderTotal, $idempotencyKey);
 
             $this->db->commit();
 
@@ -203,48 +173,18 @@ class PaymentService {
             $createdPayment = $this->yookassaGateway->createPayment($payload, $draftPaymentInfo['idempotencyKey']);
         } catch (\Throwable $e) {
             // При ошибке ставим на "черновик" платежа ошибку и прокидываем ошибку
-            $this->markPaymentFailed($draftPaymentInfo['paymentId'], $this->mapToErrorCode($e), $e->getMessage());
+            $this->paymentRepository->setFailed($draftPaymentInfo['paymentId'], $this->mapToErrorCode($e), $e->getMessage());
             throw $e;
         }
 
-        $sql = "
-            UPDATE payments
-            SET status = 'pending',
-                external_payment_id = ?, 
-                confirmation_url = ?,
-                expires_at = ?
-            WHERE id = ?
-                AND status = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        // Переносим значения в локальные переменные для использовании в bind_param
+        // Переносим значения в локальные переменные для использовании в sql запросах
         // Если попытаться передать просто как поле DTO то может вылететь ошибка о попытке модификации приватного поля
         $externalPaymentId = $createdPayment->paymentId;
         $confirmationUrl = $createdPayment->confirmationUrl;
         $expiresAt = $createdPayment->expiresAt;
 
-        $stmt->bind_param(
-            "sssis",
-            $externalPaymentId,
-            $confirmationUrl,
-            $expiresAt,
-            $draftPaymentInfo['paymentId'],
-            $creatingStatus
-        );
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $stmt->close();
+        // Меняем статус платежа на pending и заполняем информацию по платежу
+        $this->paymentRepository->setPending($externalPaymentId, $confirmationUrl, $expiresAt, $draftPaymentInfo['paymentId']);
 
         $this->logger->info('Payment {external_payment_id} for order {order_id} created in Yookassa', [
             'order_id' => $orderId,
@@ -261,94 +201,12 @@ class PaymentService {
         }
 
         // Получаем информацию о последнем активном платеже на заказ
-        $sql = "
-            SELECT id,
-                order_id,
-                confirmation_url,
-                status,
-                external_payment_id,
-                expires_at,
-                last_sync_at
-            FROM payments
-            WHERE order_id = ? 
-                AND status = 'pending'
-                AND (expires_at IS NULL OR expires_at > NOW())
-                AND external_payment_id IS NOT NULL
-            ORDER BY created_at DESC
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $payment = $result->fetch_assoc();
-
-        $stmt->close();
-
-        return $payment ?: null;
+        return $this->paymentRepository->findActivePayment($orderId);
     }
 
     // Метод для получения id заказа по id платежа из провайдера (юкассы)
-    public function getOrderIdByExternalId(
-        string $externalPaymentId
-    ): int {
-        $sql = "
-            SELECT order_id
-            FROM payments
-            WHERE external_payment_id = ?
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $externalPaymentId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-        
-        if (!$row) {
-            $stmt->close();
-            throw new \RuntimeException('Payment not found by external_payment_id');
-        }
-
-        $stmt->close();
-
-        $orderId = (int)$row['order_id'];
-        return $orderId;
+    public function getOrderIdByExternalId(string $externalPaymentId): int {
+        return $this->paymentRepository->findOrderIdByExternalId($externalPaymentId);
     }
 
     // Метод для обновления статуса платежа по id из провайдера (юкассы)
@@ -359,80 +217,22 @@ class PaymentService {
         ?string $errorCode = null,
         ?string $errorMessage = null
     ): void {
-        // В бд для платежа безусловно устанавливаем provider_status и last_sync_at
-        // Далее если статус succeeded - не меняем поля, в другом случае устанавливаем новые
-        $sql = "
-        UPDATE payments
-        SET
-            provider_status = ?,
-            last_sync_at = NOW(),
-            status = CASE
-                WHEN status = 'succeeded' THEN status
-                ELSE ?
-            END,
-            error_code = CASE
-                WHEN status = 'succeeded' THEN error_code
-                ELSE ?
-            END,
-            error_message = CASE
-                WHEN status = 'succeeded' THEN error_message
-                ELSE ?
-            END
-        WHERE external_payment_id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("sssss", $newProviderStatus, $newStatus, $errorCode, $errorMessage, $externalPaymentId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $stmt->close();
+        $this->paymentRepository->updateStatusByExternalId(
+            $externalPaymentId,
+            $newStatus,
+            $newProviderStatus,
+            $errorCode,
+            $errorMessage
+        );
     }
 
     // Метод для пометки в бд всех платежей одного заказа как отмененнных
-    public function cancelAllByOrderId(
-        int $orderId,
-        ?string $errorCode = null,
-        ?string $errorMessage = null
-    ): void {
+    public function cancelAllByOrderId(int $orderId, ?string $errorCode = null, ?string $errorMessage = null): void {
         if ($orderId <= 0) {
             throw new \InvalidArgumentException('Invalid orderId');
         }
 
-        // Вносим в строку платежа статус и код + сообщение ошибки
-        $sql = "
-            UPDATE payments
-            SET status = 'canceled',
-                error_code = ?,
-                error_message = ?
-            WHERE order_id = ?
-                AND status IN ('creating','pending')
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ssi", $errorCode, $errorMessage, $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $stmt->close();
+        $this->paymentRepository->cancelAllByOrderId($orderId, $errorCode, $errorMessage);
     }
 
     // Вспомогательный приватный метод для генерации уникального кода UUID v4
@@ -442,58 +242,6 @@ class PaymentService {
         $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
     
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
-
-    // Вспомогательный приватный метод для получения ссылки для оплаты из активного платежа
-    private function getActivePaymentUrl(int $orderId): ?string {
-        if ($orderId <= 0) {
-            throw new \InvalidArgumentException('Invalid orderId');
-        }
-
-        // Получаем информацию о последнем активном платеже на заказ
-        $sql = "
-            SELECT confirmation_url
-            FROM payments
-            WHERE order_id = ? 
-                AND status = 'pending'
-                AND (expires_at IS NULL OR expires_at > NOW())
-                AND confirmation_url IS NOT NULL
-            ORDER BY created_at DESC
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $orderId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $payment = $result->fetch_assoc();
-
-        $stmt->close();
-
-        // Если платеж есть
-        if ($payment !== null && !empty($payment['confirmation_url'])) {
-            return $payment['confirmation_url'];
-        }
-
-        // Если платежа нет
-        return null;
     }
 
     // Вспомогательный приватный метод для формирования массива товаров для чека
@@ -547,43 +295,6 @@ class PaymentService {
         if (abs($receiptTotal - $orderTotal) > 0.01) {
             throw new \RuntimeException('Receipt total mismatch');
         }
-    }
-
-    // Вспомогательный приватный метод для пометки платежа как неудачного (создан черновик в бд, не создался в юкассе)
-    private function markPaymentFailed(
-        int $paymentId, 
-        string $errorCode,
-        string $errorMessage
-    ): void {
-        if ($paymentId <= 0) {
-            throw new \InvalidArgumentException('Invalid paymentId');
-        }
-
-        // Вносим в строку платежа статус failed и код + сообщение ошибки 
-        $sql = "
-            UPDATE payments
-            SET status = 'failed',
-                error_code = ?,
-                error_message = ?
-            WHERE id = ?
-                AND status = 'creating'
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("ssi", $errorCode, $errorMessage, $paymentId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-        
-        $stmt->close();
     }
 
     // Вспомогательный приватный метод для маппинга ошибки создания платежа в юкассе
