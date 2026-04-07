@@ -1,35 +1,48 @@
 <?php
-// Класс-сервис для взаимодействия с бд, будет использовать в контроллерах и других файлах
-// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo
+// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo, будет использовать в контроллерах и других файлах
 // Тут просто выбрасываем исключения, ловим их уже в endpoint-ах и других файлах
-// В этих файлах перед вызовом этих методов нужно валидировать данные
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Auth;
 
 use App\Support\AppException;
+use App\Users\UserRepository;
 use App\Mail\MailService;
 use App\Support\Logger;
 
 // Класс для управления авторизацией пользователей
 class AuthService {
-    // Приватное свойство (переменная класса), привязанная к объекту
     private \mysqli $db;
+    private UserRepository $userRepository;
+    private EmailVerificationTokenRepository $emailVerificationTokenRepository;
+    private LoginAttemptRepository $loginAttemptRepository;
+    private PasswordResetTokenRepository $passwordResetTokenRepository;
     private MailService $mailService;
     private string $baseUrl;
     private Logger $logger;
 
     private array $verifiedEmailsCache = [];    // кэш с верификацией пользователей: userId -> bool
-    private const SEND_EMAIL_COOLDOWN_SECONDS = 60;    // константа с временем кулдауна на отправку писем
-    private const VERIFY_TOKEN_TTL_SECONDS = 86400;    // константа с временем жизни токена подверждения (24 часа)
-    private const LOGIN_ATTEMPTS_WINDOW = 900; // константа с окном для ввода непраивльного пароля (15 минут)
-    private const MAX_LOGIN_ATTEMPTS = 5;    // константа с кол-вом попыток ввода пароля
-    private const LOGIN_ATTEMPTS_TTL = 86400;    // константа с временем жизни попыток входа, для аналитики
-    private const RESET_PASSWORD_TOKEN_TTL_SECONDS = 3600;    // константа с временем жизни токена подверждения (60 минут)
+    private const SEND_EMAIL_COOLDOWN_SECONDS = 60;    // время кулдауна на отправку писем
+    private const VERIFY_TOKEN_TTL_SECONDS = 86400;    // время жизни токена подверждения (24 часа)
+    private const LOGIN_ATTEMPTS_WINDOW = 900; // окно для ввода непраивльного пароля (15 минут)
+    private const MAX_LOGIN_ATTEMPTS = 5;    // кол-во попыток ввода пароля
+    private const LOGIN_ATTEMPTS_TTL = 86400;    // время жизни попыток входа, для аналитики
+    private const RESET_PASSWORD_TOKEN_TTL_SECONDS = 3600;    // время жизни токена подверждения (60 минут)
 
-    // Конструктор (магический метод), просто присваиваем внешние переменные в переменную создоваемого объекта
-    public function __construct(\mysqli $db, MailService $mailService, string $baseUrl, Logger $logger) {
+    public function __construct(
+        \mysqli $db, 
+        UserRepository $userRepository,
+        EmailVerificationTokenRepository $emailVerificationTokenRepository,
+        LoginAttemptRepository $loginAttemptRepository,
+        PasswordResetTokenRepository $passwordResetTokenRepository,
+        MailService $mailService, 
+        string $baseUrl, 
+        Logger $logger
+    ) {
         $this->db = $db;
+        $this->userRepository = $userRepository;
+        $this->emailVerificationTokenRepository = $emailVerificationTokenRepository;
+        $this->loginAttemptRepository = $loginAttemptRepository;
+        $this->passwordResetTokenRepository = $passwordResetTokenRepository;
         $this->mailService = $mailService;
         $this->baseUrl = $baseUrl;
         $this->logger = $logger;
@@ -41,40 +54,10 @@ class AuthService {
         $this->logger->info('User registration started');
         
         // Ищем этот email в бд
-        $sql = "
-            SELECT id
-            FROM users
-            WHERE email = ?
-            LIMIT 1;        
-        ";
+        $userId = $this->userRepository->findIdByEmail($email);
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        // Если строчка нашлась - ошибку
-        if ($row) {
+        // Если не нашелся - ошибку
+        if ($userId) {
             throw new AppException('EMAIL_TAKEN', 'User with this email already exists');
         }
 
@@ -89,40 +72,7 @@ class AuthService {
             }
 
             // Создаем строку в бд с новым пользователем
-            $sql = "
-                INSERT INTO users (
-                    email,
-                    password,
-                    name
-                )
-                VALUES (?, ?, ?)
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param('sss', $email, $hashedPassword, $name);
-
-            if (!$stmt->execute()) {
-                $errno = $stmt->errno ?: $this->db->errno;    // код ошибки
-                $error = $stmt->error ?: $this->db->error;    // текст ошибки
-                $stmt->close();
-
-                // Защита от гонок по созданию пользователя с одинаковым email (при duplicate entry)
-                if ($errno === 1062) {
-                    throw new AppException('EMAIL_TAKEN', 'User with this email already exists');
-                }
-
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            // Получаем userId как AUTO_INCREMENT последней успешно вставленной строки для этого соединения
-            $userId = $this->db->insert_id;
-
-            $stmt->close();
+            $userId = $this->userRepository->create($email, $hashedPassword, $name);
 
             // Генерируем и получаем токен через вспомагательный метод, также хешированный токен записывается в бд
             $rawToken = $this->createEmailVerificationToken($userId);
@@ -154,92 +104,29 @@ class AuthService {
         }
 
         // Получаем инфу о пользователе из бд
-        $sql = "
-            SELECT
-                email,
-                email_verified_at,
-                name
-            FROM users
-            WHERE id = ?
-            LIMIT 1;        
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        $userVerificationInfo = $this->userRepository->findUserVerificationInfoById($userId);
 
         // Пользователь не найден
-        if ($row === null) {
+        if ($userVerificationInfo === null) {
             throw new \RuntimeException("User not found: $userId");
         }
 
-        if ($row['email_verified_at'] !== null) {
+        if ($userVerificationInfo['email_verified_at'] !== null) {
             throw new AppException('EMAIL_ALREADY_VERIFIED', 'Users email is already verified');
         }
 
-        $email = $row['email'];
-        $name = $row['name'];
+        $email = $userVerificationInfo['email'];
+        $name = $userVerificationInfo['name'];
         if (!$email || !$name) {
             throw new \RuntimeException('Empty user email or name');
         }
 
-        // Получаем время создания прошлого токена 
-        $sql = "
-            SELECT created_at
-            FROM email_verification_tokens
-            WHERE user_id = ?
-            LIMIT 1;        
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        // Получаем время создания прошлого токена
+        $tokenInfo = $this->emailVerificationTokenRepository->findByUserId($userId);
 
         // Если прошлый токен найден и кулдаун не прошел - исключение по лимиту отправки
-        if ($row !== null) {
-            $tokenCreatedAtRaw = $row['created_at'];
+        if ($tokenInfo !== null) {
+            $tokenCreatedAtRaw = $tokenInfo['created_at'];
             if (!$tokenCreatedAtRaw) {
                 throw new \RuntimeException('Empty created_at');
             }
@@ -270,52 +157,20 @@ class AuthService {
         if ($userId < 1) {
             throw new \InvalidArgumentException('Invalid userId');
         }
-
-        // Сначала проверяем запись в кеше (в свойстве объекта класса), если есть - возвращаем ее 
+    
         if (array_key_exists($userId, $this->verifiedEmailsCache)) {
             return $this->verifiedEmailsCache[$userId];
         }
-
-        // Проверяем по бд
-        $sql = "
-            SELECT email_verified_at
-            FROM users
-            WHERE id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        // Пользователь не найден
-        if ($row === null) {
+    
+        $profile = $this->userRepository->findProfileById($userId);
+    
+        if ($profile === null) {
             throw new \RuntimeException("User not found: $userId");
         }
-
-        // Проверяем полученное состояние почты, кешируем и возвращаем результат
-        $isVerified = $row['email_verified_at'] !== null;
+    
+        $isVerified = $profile['email_verified_at'] !== null;
         $this->verifiedEmailsCache[$userId] = $isVerified;
+    
         return $isVerified;
     }
 
@@ -328,46 +183,15 @@ class AuthService {
         $hashedToken = hash('sha256', $rawToken);
 
         // Получаем инфу о токене из бд
-        $sql = "
-            SELECT
-                user_id,
-                created_at
-            FROM email_verification_tokens
-            WHERE token = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $hashedToken);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        $tokenInfo = $this->emailVerificationTokenRepository->findVerificationTokenInfo($hashedToken);
 
         // Токен не найден
-        if ($row === null) {
+        if ($tokenInfo === null) {
             throw new AppException('TOKEN_INVALID', 'Token not found');
         }
 
-        $userId = $row['user_id'];
-        $tokenCreatedAtRaw = $row['created_at'];
+        $userId = $tokenInfo['user_id'];
+        $tokenCreatedAtRaw = $tokenInfo['created_at'];
 
         // Если у пользователя уже подтвержденная почта - ошибку
         if ($this->isEmailVerified($userId)) {
@@ -389,49 +213,10 @@ class AuthService {
 
         try {
             // Помечаем почту пользователя как подтвержденную
-            $sql = "
-                UPDATE users
-                SET email_verified_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("i", $userId);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            $stmt->close();
+            $this->userRepository->markEmailAsVerified($userId);
 
             // Удаляем использованный токен подтверждения
-            $sql = "
-                DELETE FROM email_verification_tokens
-                WHERE token = ?
-            ";
-        
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-        
-            $stmt->bind_param('s', $hashedToken);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-        
-            $stmt->close();
+            $this->emailVerificationTokenRepository->delete($hashedToken);
 
             // Комитим транзакцию
             $this->db->commit();
@@ -452,61 +237,27 @@ class AuthService {
         $this->checkLoginLimit($email);
 
         // Находим в бд по email инфу о пользователе
-        $sql = "
-            SELECT
-                id,
-                email_verified_at,
-                password,
-                name
-            FROM users
-            WHERE email = ?
-            LIMIT 1;        
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        $authInfo = $this->userRepository->findAuthInfoByEmail($email);
 
         // Если пользователь не нашелся - ошибку
-        if (!$row) {
+        if (!$authInfo) {
             throw new AppException('INVALID_CREDENTIALS', 'Wrong password or email');
         }
 
-        $id = $row["id"];
-        $password = $row["password"];
-        $name = $row["name"];
-        $isVerified = $row["email_verified_at"] !== null;
+        $id = $authInfo["id"];
+        $password = $authInfo["password"];
+        $name = $authInfo["name"];
+        $isVerified = $authInfo["email_verified_at"] !== null;
 
         // Сравниваем пароли из бд и введеный через password_verify (сравнивает введеный с хешем из бд)
         if (!password_verify($inputPassword, $password)) {
             // Если пароль не подходит - записываем неудачную попытку и выкидываем исключение
-            $this->addLoginAttempt($email);
+            $this->loginAttemptRepository->addAttempt($email);
             throw new AppException('INVALID_CREDENTIALS', 'Wrong password or email');
         }
 
         // Удаляем записи о попытках для этого email
-        $this->deleteLoginAttemptsOnEmail($email);
+        $this->loginAttemptRepository->deleteAttemptsByEmail($email);
 
         // Возвращаем инфу о пользователе
         return [
@@ -518,76 +269,23 @@ class AuthService {
 
     // Метод для удаления устаревших попыток входа
     public function deleteOldLoginAttempts(): void {
-        $sql = "
-            DELETE FROM login_attempts
-            WHERE attempted_at < NOW() - INTERVAL ? SECOND
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
         $ttl = self::LOGIN_ATTEMPTS_TTL;
-        $stmt->bind_param('i', $ttl);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
+        $this->loginAttemptRepository->deleteOldAttempts($ttl);
     }
 
     // Метод для получения информации о пользователе по id
     public function getUserInfo(int $userId): array {
-        // Находим в бд по email инфу о пользователе
-        $sql = "
-            SELECT
-                id,
-                email,
-                email_verified_at,
-                name
-            FROM users
-            WHERE id = ?
-            LIMIT 1;        
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $userId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        // Находим в бд по id инфу о пользователе
+        $profileInfo = $this->userRepository->findProfileById($userId);
 
         // Если пользователь не нашелся - ошибку
-        if (!$row) {
+        if (!$profileInfo) {
             throw new \RuntimeException('User not found');
         }
 
-        $email = $row["email"];
-        $name = $row["name"];
-        $isVerified = $row["email_verified_at"] !== null;
+        $email = $profileInfo["email"];
+        $name = $profileInfo["name"];
+        $isVerified = $profileInfo["email_verified_at"] !== null;
 
         // Возвращаем инфу о пользователе
         return [
@@ -602,92 +300,23 @@ class AuthService {
     // Не выкидываем исключений, который могут раскрыть существование пользователя (user-enumeration)
     public function sendPasswordResetLink(string $email): void {
         // Находим в бд по email имя пользователя 
-        $sql = "
-            SELECT
-                name
-            FROM users
-            WHERE email = ?
-            LIMIT 1;        
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        $name = $this->userRepository->findNameByEmail($email);
 
         // Если пользователь не нашелся - тихо выходим
-        if (!$row) return;
-
-        $name = $row["name"];
+        if (!$name) return;
 
         // Получаем время создания прошлого токена 
-        $sql = "
-            SELECT created_at
-            FROM password_reset_tokens
-            WHERE email = ?
-            LIMIT 1;        
-        ";
+        $tokenCreatedAtRaw = $this->passwordResetTokenRepository->findPreviousTokenCreatedAt($email);
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
-
-        // Если прошлый токен найден и кулдаун не прошел - исключение по лимиту отправки
-        if ($row !== null) {
-            $tokenCreatedAtRaw = $row['created_at'];
-            if (!$tokenCreatedAtRaw) {
-                throw new \RuntimeException('Empty created_at');
-            }
-
+        if ($tokenCreatedAtRaw) {
             // Получаем настоящее время и разницу в секундах
             $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
             $now = new \DateTimeImmutable('now');
             $diffSeconds = $now->getTimestamp() - $tokenCreatedAt->getTimestamp();
-
+    
             // Считаем сколько осталось до снятия кулдауна
             $retryAfter = self::SEND_EMAIL_COOLDOWN_SECONDS - $diffSeconds;
-
+    
             // Если разница меньше заданного кулдауна - ошибку и понятный для фронта код
             if ($diffSeconds < self::SEND_EMAIL_COOLDOWN_SECONDS) {
                 throw new AppException('EMAIL_RATE_LIMIT', 'Email resend password attempt too soon', $retryAfter);
@@ -710,46 +339,15 @@ class AuthService {
         $hashedToken = hash('sha256', $rawToken);
 
         // Получаем инфу о токене из бд
-        $sql = "
-            SELECT
-                email,
-                created_at
-            FROM password_reset_tokens
-            WHERE token = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $hashedToken);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        $stmt->close();
+        $tokenInfo = $this->passwordResetTokenRepository->findTokenInfo($hashedToken);
 
         // Токен не найден
-        if ($row === null) {
+        if ($tokenInfo === null) {
             throw new AppException('TOKEN_INVALID', 'Token not found');
         }
 
-        $email = $row['email'];
-        $tokenCreatedAtRaw = $row['created_at'];
+        $email = $tokenInfo['email'];
+        $tokenCreatedAtRaw = $tokenInfo['created_at'];
 
         // Находим время, прошедшее с момента создания токена
         $tokenCreatedAt = new \DateTimeImmutable($tokenCreatedAtRaw);
@@ -772,56 +370,10 @@ class AuthService {
             }
 
             // Меняем пароль пользователя на новый
-            $sql = "
-                UPDATE users
-                SET password = ?
-                WHERE email = ?
-            ";
-
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-
-            $stmt->bind_param("ss", $hashedPassword, $email);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-
-            // Проверяем, что пароль действительно изменен
-            if ($stmt->affected_rows === 0) {
-                $stmt->close();
-                throw new \RuntimeException('User not found for token email');
-            }
-
-            $stmt->close();
+            $this->userRepository->setPasswordByEmail($hashedPassword, $email);
 
             // Удаляем использованный токен
-            // TODO: удаление токена сброса пароля потом вынести в репозиторий и вызывать из Auth и Account серисов
-            $sql = "
-                DELETE FROM password_reset_tokens
-                WHERE email = ?
-            ";
-        
-            $stmt = $this->db->prepare($sql);
-
-            if (!$stmt) {
-                throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-            }
-        
-            $stmt->bind_param('s', $email);
-
-            if (!$stmt->execute()) {
-                $error = $stmt->error ?: $this->db->error;
-                $stmt->close();
-                throw new \RuntimeException('DB execute failed: ' . $error);
-            }
-        
-            $stmt->close();
+            $this->passwordResetTokenRepository->deleteByEmail($email);
 
             // Комитим транзакцию
             $this->db->commit();
@@ -847,34 +399,7 @@ class AuthService {
         $hashedToken = hash('sha256', $rawToken);
 
         // Записываем в бд новую строку с токеном для подтверждения почты
-        // Если есть старый токен для пользователя - он перезаписывается
-        $sql = "
-            INSERT INTO email_verification_tokens (
-                user_id,
-                token,
-                created_at
-            )
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-            ON DUPLICATE KEY UPDATE
-                token = ?,
-                created_at = CURRENT_TIMESTAMP
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('iss', $userId, $hashedToken, $hashedToken);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
+        $this->emailVerificationTokenRepository->create($userId, $hashedToken);
 
         return $rawToken;
     }
@@ -902,107 +427,21 @@ class AuthService {
 
     // Приватный вспомагательный метод для проверки лимита на попытки ввода пароля по email
     private function checkLoginLimit(string $email): void {
-        // Находим кол-во попыток за время (задано в константе)
-        $sql = "
-            SELECT COUNT(*) AS attempts, MIN(attempted_at) AS first_attempt
-            FROM login_attempts
-            WHERE email = ?
-                AND attempted_at > NOW() - INTERVAL ? SECOND             
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
         $window = self::LOGIN_ATTEMPTS_WINDOW;
-        $stmt->bind_param("si", $email, $window);
 
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $row = $result->fetch_assoc();
-
-        if ($row === null) {
-            $stmt->close();
-            throw new \RuntimeException('DB fetch_row failed');
-        }
-
-        $stmt->close();
-
-        // Кол-во попыток за последние LOGIN_ATTEMPTS_WINDOW секунд
-        $count = (int)$row['attempts'];
+        // Находим кол-во попыток за время
+        $attemptsInfo = $this->loginAttemptRepository->findAttemptsInfoByEmail($email, $window);
+        
+        $count = (int)$attemptsInfo['attempts'];        
 
         // Если превысили лимит - ошибку 
         if ($count >= self::MAX_LOGIN_ATTEMPTS) {
-            $firstAttemptAt = strtotime($row['first_attempt']);    // переводится в unix-timestamp
+            $firstAttemptAt = strtotime($attemptsInfo['first_attempt']);    // переводится в unix-timestamp
             $fromFirstAttempt = time() - $firstAttemptAt;    // сколько секунд прошло с первой попытки
             $retryAfter = max($window - $fromFirstAttempt, 1);    // сколько ещё ждать (минимум 1 секунда)
 
             throw new AppException('LOGIN_ATTEMPTS_EXCEEDED', 'Too many login attempts', $retryAfter);
         }
-    }
-
-    // Приватный вспомагательный метод для фиксирования неудачной попытки
-    private function addLoginAttempt(string $email): void {
-        $sql = "
-            INSERT INTO login_attempts (
-                email,
-                attempted_at
-            )
-            VALUES (?, CURRENT_TIMESTAMP)
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('s', $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
-    }
-
-    // Приватный вспомагательный метод для удаления записи о попытках входах по email
-    private function deleteLoginAttemptsOnEmail(string $email): void {
-        $sql = "
-            DELETE FROM login_attempts
-            WHERE email = ?
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('s', $email);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
     }
 
     // Приватный вспомагательный метод для генерации токена для сброса пароля, его хеширования и записи в бд
@@ -1015,34 +454,7 @@ class AuthService {
         $hashedToken = hash('sha256', $rawToken);
 
         // Записываем в бд новую строку с токеном для сброса пароля
-        // Если есть старый токен для почты - он перезаписывается
-        $sql = "
-            INSERT INTO password_reset_tokens (
-                email,
-                token,
-                created_at
-            )
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-            ON DUPLICATE KEY UPDATE
-                token = ?,
-                created_at = CURRENT_TIMESTAMP
-        ";
-    
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-    
-        $stmt->bind_param('sss', $email, $hashedToken, $hashedToken);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-    
-        $stmt->close();
+        $this->passwordResetTokenRepository->create($email, $hashedToken);
 
         return $rawToken;
     }

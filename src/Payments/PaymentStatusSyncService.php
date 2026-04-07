@@ -110,7 +110,7 @@ class PaymentStatusSyncService {
         }
 
         $externalPaymentId = $paymentInfo['external_payment_id'];
-        if ($externalPaymentId === '') {
+        if (empty($externalPaymentId)) {
             throw new \RuntimeException('Active payment has no external_payment_id');
         }
 

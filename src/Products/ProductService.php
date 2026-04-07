@@ -1,22 +1,18 @@
 <?php
-// Класс-сервис для взаимодействия с бд, будет использовать в контроллерах и других файлах
-// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo
+// Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo, будет использовать в контроллерах и других файлах
 // Тут просто выбрасываем исключения, ловим их уже в endpoint-ах и других файлах
-// В этих файлах перед вызовом этих методов нужно валидировать данные
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Products;
 
 // Класс для получения инфы о товарах
 class ProductService {
-    private \mysqli $db;    // приватное свойство (переменная класса), привязанная к объекту
-    // Константы класса (не свойства, вызываются через self::)
-    private const CATALOG_CACHE_FILE = __DIR__ . '/../../storage/cache/catalog.cache';    // путь к файлу с кэшем каталога
-    private const CATALOG_CACHE_TTL  = 300;    // время кэширования (ttl - time to live)
+    private ProductRepository $productRepository;
 
-    // Конструктор (магический метод), просто присваиваем внешюю $db в переменную создоваемого объекта
-    public function __construct(\mysqli $db) {
-        $this->db = $db;
+    private const CATALOG_CACHE_FILE = __DIR__ . '/../../storage/cache/catalog.cache';    // путь к файлу с кэшем каталога
+    private const CATALOG_CACHE_TTL  = 300;    // время кэширования
+
+    public function __construct(ProductRepository $productRepository) {
+        $this->productRepository = $productRepository;
     }
 
     // Получение из бд всех категорий с товарами (для отображения каталога), либо его получение из кэша
@@ -24,265 +20,54 @@ class ProductService {
         $cacheFile = self::CATALOG_CACHE_FILE;
         $cacheTime = self::CATALOG_CACHE_TTL;
 
-        // Попытка прочитать кеш
+        // Пытаемся прочитать кеш
         if (is_file($cacheFile)) {
             $mtime = filemtime($cacheFile);
             if ($mtime !== false && (time() - $mtime) < $cacheTime) {
+                // Получаем каталог из кеша
                 $raw = file_get_contents($cacheFile);
-                if ($raw !== false) {
-                    $data = @unserialize($raw);    // @ - оператор подавления ошибки (не упадет в случае ошибки)
-                    if (is_array($data)) {
-                        return $data;
-                    }
+                $data = json_decode($raw, true);
+                if (is_array($data)) {
+                    return $data;
                 }
             }
         }
 
-        $sql = "
-            SELECT 
-                ctg.id as ctg_id,
-                ctg.name as ctg_name,
-                prdct.id as prdct_id,
-                prdct.slug as prdct_slug,
-                prdct.name as prdct_name,
-                prdct.price as prdct_price,
-                img.id as img_id,
-                img.image_path as image_path
-            FROM categories ctg
-            INNER JOIN products prdct ON ctg.id = prdct.category_id
-            LEFT JOIN product_images img ON prdct.id = img.product_id
-                AND img.id = (
-                    SELECT MIN(img2.id) 
-                    FROM product_images img2 
-                    WHERE img2.product_id = prdct.id
-                )
-            ORDER BY ctg.name, prdct.name
-        ";
+        // Если не нашлось в кеше - получаем каталог из бд
+        $catalog = $this->productRepository->findCatalog();
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // Объявляем и заполняем удобный массив каталога
-        $catalog = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $categoryId = $row['ctg_id'];
-            
-            if (!isset($catalog[$categoryId])) {
-                $catalog[$categoryId] = [
-                    'category' => [
-                        'id' => $categoryId,
-                        'name' => $row['ctg_name']
-                    ],
-                    'products' => []
-                ];
-            }
-            
-            $catalog[$categoryId]['products'][] = [
-                'id' => (int)$row['prdct_id'],
-                'slug' => $row['prdct_slug'],
-                'name' => $row['prdct_name'],
-                'price' => $row['prdct_price'],
-                'image_path' => !empty($row['image_path']) ? $row['image_path'] : '/img/default.png'
-            ];
-        }
-    
-        // Превращаем ключи категорий в обычный список
-        $catalog = array_values($catalog);
-
-        $stmt->close();
-
-        // Сохраняем в кэш (если не получится — просто пропускаем)
+        // Сохраняем в кэш (если не получится - просто пропускаем)
         if (!is_dir(dirname($cacheFile))) {
-            @mkdir(dirname($cacheFile), 0755, true);
+            mkdir(dirname($cacheFile), 0755, true);
         }
-        @file_put_contents($cacheFile, serialize($catalog));
+        file_put_contents($cacheFile, json_encode($catalog));
 
         return $catalog;
     }
 
     // Получение товара из бд по slug
     public function getBySlug(string $slug): ?array {
-        $sql = "
-            SELECT
-                id,
-                category_id,
-                slug,
-                name,
-                price,
-                vat_code,
-                description
-            FROM products
-            WHERE slug = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("s", $slug);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $product = $result->fetch_assoc();
-        $stmt->close();
-
-        // Если ничего не нашли - возвращаем null
-        if (!$product) {
-            return null;
-        }
-
-        return $product;
+        return $this->productRepository->findBySlug($slug);
     }
 
     // Получение товара из бд по id
     public function getById(int $id): ?array {
-        $sql = "
-            SELECT
-                id,
-                category_id,
-                slug,
-                name,
-                price,
-                vat_code,
-                description
-            FROM products
-            WHERE id = ?
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $id);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        $product = $result->fetch_assoc();
-        $stmt->close();
-
-        // Если ничего не нашли - возвращаем null
-        if (!$product) {
-            return null;
-        }
-
-        return $product;
+        return $this->productRepository->findById($id);
     }
 
     // Получение товаров из бд по массиву из id
     public function getByIds(array $ids): array {
         // Фильтруем и приводим к int:
-        // array_map('intval', $ids): array_map применяет функцию ко всем элементам массива, intval приводит значение к целому числу.
+        // array_map('intval', $ids): array_map применяет функцию ко всем элементам массива, intval приводит значение к целому числу
         // array_unique: убирает дубликаты из массива
-        // array_values: переформировывает массив так, чтобы ключи стали 0, 1, 2, ... подряд.        
+        // array_values: переформировывает массив так, чтобы ключи стали 0, 1, 2, ... подряд    
         $ids = array_values(array_unique(array_map('intval', $ids)));
     
         if ($ids === []) {
             return [];
         }
 
-        // Строим плейсхолдеры ?,?,?, ...
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-        $sql = "
-            SELECT 
-                p.id,
-                p.category_id,
-                p.slug,
-                p.name,
-                p.price,
-                p.vat_code,
-                p.description,
-                img.image_path
-            FROM products p
-            LEFT JOIN product_images img 
-                ON p.id = img.product_id
-                AND img.id = (
-                    SELECT MIN(img2.id)
-                    FROM product_images img2
-                    WHERE img2.product_id = p.id
-                )
-            WHERE p.id IN ($placeholders)
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        // Строка типов: столько же 'i', сколько id
-        $types = str_repeat('i', count($ids));
-
-        // Троеточие - оператор распаковки массива
-        $stmt->bind_param($types, ...$ids);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // Объявляем и заполняем массив с найденными товарами
-        // Сразу получается ассоциативный массив, где ключи - это id продукта
-        $products = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['image_path'] = $row['image_path'] ?: '/img/default.png';    // если нет картинки - дефолтную
-            $products[(int)$row['id']] = $row;
-        }
-    
-        $stmt->close();
-    
-        return $products;
+        return $this->productRepository->findByIds($ids);
     }
 
     // Получение цен товаров из бд по массиву из id
@@ -297,94 +82,14 @@ class ProductService {
             return [];
         }
 
-        // Строим плейсхолдеры ?,?,?, ...
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-        $sql = "
-            SELECT 
-                id,
-                price
-            FROM products
-            WHERE products.id IN ($placeholders)
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        // Строка типов: столько же 'i', сколько id
-        $types = str_repeat('i', count($ids));
-
-        // Троеточие - оператор распаковки массива
-        $stmt->bind_param($types, ...$ids);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        // Объявляем и заполняем массив с найденными ценами
-        // Сразу получается ассоциативный массив, где ключи - это id продуктов
-        $prices = [];
-        while ($row = $result->fetch_assoc()) {
-            $prices[(int)$row['id']] = $row['price'];
-        }
-    
-        $stmt->close();
-    
-        return $prices;
+        return $this->productRepository->findPricesByIds($ids);
     }
 
     // Получение картинок товара по id
     public function getImagesById(int $productId): array {
-        $sql = "
-            SELECT image_path 
-            FROM product_images 
-            WHERE product_id = ? 
-            ORDER BY id ASC
-        ";
+        $images = $this->productRepository->findImagesById($productId);
 
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param("i", $productId);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        //  Объявляем и заполняем массив с картинками
-        $images = [];
-
-        while ($row = $result->fetch_assoc()) {
-            $images[] = $row['image_path'];
-        }
-
-        $stmt->close();
-
-        // если картинок нет - дефолтная
+        // Если картинок нет - дефолтная
         if ($images === []) {
             $images[] = '/img/default.png';
         }
@@ -394,114 +99,23 @@ class ProductService {
 
     // Поиск товаров по query-выражению
     public function search(string $query): array {
-        // Объявляем массив полученных значений
-        $queryProducts = [];
+        // Обрезаем до 150 символов и убираем лишние пробелы
+        $query = substr(trim($query), 0, 150);
 
-        // Обрезаем до 150 символов
-        $query = substr($query, 0, 150);
-
-        // Пустой или состоящий из "мусора" query - отправляем пустой массив
-        if (trim($query) === '') {
-            return $queryProducts;
+        if ($query === '') {
+            return [];
         }
 
-        // разбиваем на слова для лучшего поиска
-        $words = explode(' ', $query);
-        $conditions = [];
-        $params = [];
-        $types = '';
-
-        // условия каждого слова для поиска
-        foreach ($words as $word) {
-            if (mb_strlen($word) >= 2) {
-                $baseWord = (mb_strlen($word) >= 5) ? mb_substr($word, 0, -2) : $word;
-                $conditions[] = "(prdct.name LIKE ? OR prdct.name LIKE ? OR prdct.description LIKE ? OR prdct.description LIKE ?)";
-                $params[] = '%' . $word . '%';
-                $params[] = '%' . $baseWord . '%';
-                $params[] = '%' . $word . '%';
-                $params[] = '%' . $baseWord . '%';
-                $types .= 'ssss';
-            }
+        // Разбиваем на слова для лучшего поиска и берем только слова с длинной >= 2
+        $words = array_filter(
+            explode(' ', $query),
+            fn($w) => mb_strlen($w) >= 2
+        );
+    
+        if (empty($words)) {
+            return [];
         }
 
-        // нет подходящих условий - пустой
-        if ($conditions === []) {
-            return $queryProducts;
-        }
-
-        // Ищем в бд схожие названия
-        $sql = "
-            SELECT 
-                prdct.id as prdct_id,
-                prdct.slug as prdct_slug,
-                prdct.name as prdct_name,
-                prdct.price as prdct_price,
-                prdct.description as prdct_description,
-                img.id as img_id,
-                img.image_path as img_path,
-                (CASE
-                    WHEN prdct.name LIKE ? THEN 40
-                    WHEN prdct.name LIKE ? THEN 30
-                    WHEN prdct.name LIKE ? THEN 20
-                    WHEN prdct.description LIKE ? THEN 1
-                    ELSE 0
-                END) as relevance
-            FROM products prdct
-            LEFT JOIN product_images img ON prdct.id = img.product_id
-                AND img.id = (
-                    SELECT MIN(img2.id) 
-                    FROM product_images img2 
-                    WHERE img2.product_id = prdct.id
-                )
-            WHERE " . implode(' OR ', $conditions) . "
-            HAVING relevance > 0
-            ORDER BY relevance DESC, prdct.name
-        ";
-
-        // оформляем параметры
-        $caseParams = array_slice($params, 0, 4);
-        $params = array_merge($caseParams, $params);
-        $types = 'ssss' . $types;
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!$stmt) {
-            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
-        }
-
-        $stmt->bind_param($types, ...$params);
-
-        if (!$stmt->execute()) {
-            $error = $stmt->error ?: $this->db->error;
-            $stmt->close();
-            throw new \RuntimeException('DB execute failed: ' . $error);
-        }
-
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            $stmt->close();
-            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
-        }
-
-        if ($result->num_rows == 0) {
-            $stmt->close();
-            return $queryProducts;
-        }
-            
-        // формируем массив полученных товаров
-        while ($row = $result->fetch_assoc()) {
-            $queryProducts[] = [
-                'id' => (int)$row['prdct_id'],
-                'slug' => $row['prdct_slug'],
-                'name' => $row['prdct_name'],
-                'price' => $row['prdct_price'],
-                'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/img/default.png',
-            ];
-        }
-
-        $stmt->close();
-
-        return $queryProducts;
+        return $this->productRepository->search($words);
     }
 }

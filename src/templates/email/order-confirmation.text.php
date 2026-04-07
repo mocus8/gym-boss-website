@@ -20,7 +20,7 @@
     Итоговая стоимость заказа: <?= (float)$totalPrice ?> ₽
 
     Тип доставки: <?= htmlspecialchars($deliveryTypeName, ENT_QUOTES, 'UTF-8') ?>
-    Выбранный для самовывоза магазин: <?= htmlspecialchars($deliveryAddressText, ENT_QUOTES, 'UTF-8') ?>
+    Выбранный для самовывоза магазин: <?= htmlspecialchars($storeAddress, ENT_QUOTES, 'UTF-8') ?>
 
     Примерный срок готовности заказа: с <?= htmlspecialchars($deliveryFrom, ENT_QUOTES, 'UTF-8') ?> до <?= htmlspecialchars($deliveryTo, ENT_QUOTES, 'UTF-8') ?>
 <?php } ?>

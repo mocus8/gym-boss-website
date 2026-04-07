@@ -34,29 +34,40 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Подключаем пространства имен
 use Dotenv\Dotenv;    // библиотека для прочтения .env файла
 use App\Support\Logger;
-use App\Db\Db;    // используем класс Db из пространства имен App\Db
+use App\Db\Db;
 use App\Support\Flash;
-use App\Api\BaseController;    // используем класс с базовым контроллером для наследования остальных
+use App\Users\UserRepository;
+use App\Auth\EmailVerificationTokenRepository;
+use App\Auth\LoginAttemptRepository;
+use App\Auth\PasswordResetTokenRepository;
+use App\Cart\CartRepository;
+use App\Cart\CartItemRepository;
+use App\Orders\OrderRepository;
+use App\Orders\OrderItemRepository;
+use App\Payments\PaymentRepository;
+use App\Products\ProductRepository;
+use App\Stores\StoreRepository;
+use App\Api\BaseController;
 use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
 use App\Integrations\Resend\ResendGateway;
 use App\Mail\MailService;
-use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth
+use App\Auth\AuthSession;
 use App\Auth\AuthService;
 use App\Api\AuthController;
 use App\Account\AccountService;
 use App\Api\AccountController;
-use App\Products\ProductService;    // используем класс ProductService из пространства имен App\Products
-use App\Api\ProductController;    // используем класс ProductController из пространства имен App\Api
-use App\Cart\CartSession;   // используем класс CartSession из пространства имен App\Cart
-use App\Cart\CartService;   // используем класс CartService из пространства имен App\Cart
-use App\Api\CartController;    // используем класс CartController из пространства имен App\Api
-use App\Orders\OrderService;   // используем класс OrderService из пространства имен App\Orders
+use App\Products\ProductService;
+use App\Api\ProductController;
+use App\Cart\CartSession;
+use App\Cart\CartService;
+use App\Api\CartController;
+use App\Orders\OrderService;
 use App\Orders\CancelOrderUseCase;    
-use App\Api\OrderController;   // используем класс OrderController из пространства имен App\Api
-use App\Integrations\Dadata\DadataClient;   // используем класс DadataClient из пространства имен App\Integrations\Dadata
-use App\Api\DadataController;   // используем класс DadataController из пространства имен App\Api
-use App\Stores\StoreService;   // используем класс StoreService из пространства имен App\Stores
-use App\Api\StoreController;   // используем класс StoreController из пространства имен App\Api
+use App\Api\OrderController;
+use App\Integrations\Dadata\DadataClient;
+use App\Api\DadataController;
+use App\Stores\StoreService;
+use App\Api\StoreController;
 use App\Integrations\Yookassa\YookassaGateway;
 use App\Payments\PaymentService;
 use App\Payments\PaymentStatusSyncService;
@@ -71,6 +82,17 @@ $dotenv->safeLoad();
 require_once __DIR__ . '/Support/Logger.php';
 require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
 require_once __DIR__ . '/Support/Flash.php';
+require_once __DIR__ . '/Users/UserRepository.php';
+require_once __DIR__ . '/Auth/EmailVerificationTokenRepository.php';
+require_once __DIR__ . '/Auth/LoginAttemptRepository.php';
+require_once __DIR__ . '/Auth/PasswordResetTokenRepository.php';
+require_once __DIR__ . '/Cart/CartRepository.php';
+require_once __DIR__ . '/Cart/CartItemRepository.php';
+require_once __DIR__ . '/Orders/OrderRepository.php';
+require_once __DIR__ . '/Orders/OrderItemRepository.php';
+require_once __DIR__ . '/Payments/PaymentRepository.php';
+require_once __DIR__ . '/Products/ProductRepository.php';
+require_once __DIR__ . '/Stores/StoreRepository.php';
 require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
 require_once __DIR__ . '/Api/BaseController.php';
 require_once __DIR__ . '/Integrations/GoogleRecaptcha/GoogleRecaptchaClient.php';
@@ -107,6 +129,9 @@ $appConfig = require __DIR__ . '/config/app.php';
 $deliveryConfig = require __DIR__ . '/config/delivery.php';
 $servicesConfig = require __DIR__ . '/config/services.php';
 
+// Создаем логгер
+$logger = new Logger($appConfig['log_file'], $appConfig['log_level']);
+
 // Получаем URL сайта из переменных окружения
 $appUrl = $appConfig['url'] ?? null;
 if (!$appUrl) {
@@ -116,11 +141,21 @@ if (!$appUrl) {
 
 $baseUrl = rtrim($appUrl, '/');
 
-// Создаем логгер
-$logger = new Logger($appConfig['log_file'], $appConfig['log_level']);
-
 // Подключение к БД через публичный, статический метод класса (не нужно создавать экземпляр)
 $db = Db::connect($servicesConfig['database'], $logger);
+
+// Создаем репозитории для работой с бд
+$userRepository = new UserRepository($db);
+$emailVerificationTokenRepository = new EmailVerificationTokenRepository($db);
+$loginAttemptRepository = new LoginAttemptRepository($db);
+$passwordResetTokenRepository = new PasswordResetTokenRepository($db);
+$cartRepository = new CartRepository($db);
+$cartItemRepository = new CartItemRepository($db);
+$orderRepository = new OrderRepository($db);
+$orderItemRepository = new OrderItemRepository($db);
+$paymentRepository = new PaymentRepository($db);
+$productRepository = new ProductRepository($db);
+$storeRepository = new StoreRepository($db);
 
 // Работаем с серверными флеш-уведомлениями
 $flash = new Flash();
@@ -135,19 +170,28 @@ $resendGateway = new ResendGateway(
 $mailService = new MailService($resendGateway);
 
 // Работаем с сервисом и контроллером товара
-$productService = new ProductService($db);    // создаем экземпляр класса
-$productController = new ProductController($productService, $logger);    // создаем экземпляр класса
+$productService = new ProductService($productRepository);
+$productController = new ProductController($productService, $logger);
 
 // Создаем клиент для обращения к гугл рекапче
 $googleRecaptchaClient = new GoogleRecaptchaClient($servicesConfig['recaptcha']['secret_key'], $logger);
 
 // Работаем с корзинами и пользователями
 $authSession = new AuthSession();
-$authService = new AuthService($db, $mailService, $baseUrl, $logger);
-$accountService = new AccountService($db);
+$authService = new AuthService(
+    $db, 
+    $userRepository, 
+    $emailVerificationTokenRepository, 
+    $loginAttemptRepository,
+    $passwordResetTokenRepository, 
+    $mailService, 
+    $baseUrl, 
+    $logger
+);
+$accountService = new AccountService($db, $userRepository, $passwordResetTokenRepository);
 $accountController = new AccountController($authSession, $accountService, $flash, $logger);
 $cartSession = new CartSession();
-$cartService = new CartService($db, $productService);
+$cartService = new CartService($cartRepository, $cartItemRepository, $productService);
 $authController = new AuthController(
     $authSession, 
     $authService, 
@@ -165,6 +209,8 @@ $orderService = new OrderService(
     $db,
     $productService,
     $cartService,
+    $orderRepository,
+    $orderItemRepository,
     $deliveryConfig['courier_delivery_price'],
     $deliveryConfig['free_delivery_threshold'],
     $deliveryConfig['pickup_ready_from_hours'],
@@ -178,7 +224,8 @@ $paymentService = new PaymentService(
     $db, 
     $baseUrl, 
     $orderService, 
-    $accountService, 
+    $paymentRepository,
+    $userRepository,
     $yookassaGateway, 
     $deliveryConfig['vat_code'],
     $logger
@@ -215,7 +262,7 @@ $dadataClient = new DadataClient($servicesConfig['dadata']['api_key']);    // с
 $dadataController = new DadataController($dadataClient, $logger);
 
 // Работаем с сервисом и контроллером магазинов
-$storeService = new StoreService($db);
+$storeService = new StoreService($storeRepository);
 $storeController = new StoreController($storeService, $logger);
 
 // Устанавливаем на все приложение хендлер

@@ -15,7 +15,7 @@ final readonly class CreatedPaymentDto {
     public string $confirmationUrl;
     public ?string $expiresAt;    // Поле expiresAt может быть null
 
-    public function __construct(string $paymentId, string $confirmationUrl, ?string $expiresAt) {
+    public function __construct(string $paymentId, string $confirmationUrl, ?string $expiresAt = null) {
         $this->paymentId = $paymentId;
         $this->confirmationUrl = $confirmationUrl;
         $this->expiresAt = $expiresAt;
