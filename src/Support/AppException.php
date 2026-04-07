@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Класс-исключение
 // Обертка над базовым Exception с дополнительным полем errorCode
 

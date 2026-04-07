@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Храним корзину неавторизированного пользователя в его куках
 
 namespace App\Cart;

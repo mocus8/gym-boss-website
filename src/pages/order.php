@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Контроллер страницы заказа
 
 $orderId = isset($_GET['orderId']) ? (int)$_GET['orderId'] : 0;

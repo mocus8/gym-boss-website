@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Всё взаимодействие с sdk юкассы оборачивается в методы этого класса, удобная интеграционная обёртка над sdk
 
 namespace App\Integrations\Yookassa;

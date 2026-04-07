@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 return [
     'env' => $_ENV['APP_ENV'] ?? 'local',

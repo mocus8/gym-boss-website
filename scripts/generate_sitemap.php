@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Генератор sitemap.xml
 
 require_once __DIR__ . '/../src/bootstrap.php';

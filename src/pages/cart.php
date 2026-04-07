@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Контроллер корзины
 
 $title  = 'Корзина товаров - Gym Boss';

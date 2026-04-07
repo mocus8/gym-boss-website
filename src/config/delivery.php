@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 return [
     'vat_code' => 11,   // НДС 22%

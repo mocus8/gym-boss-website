@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 $title  = 'Реализация проекта - Gym Boss';
 $canonical = $baseUrl . '/about';
 
