@@ -780,16 +780,16 @@
         },
         {
             "name": "resend/resend-php",
-            "version": "v1.1.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/resend/resend-php.git",
-                "reference": "c1ce4ee5dc8ca90a5e6a2dc6d772a06abbe7c9d3"
+                "reference": "038b8100c072f451b09efaa5c9c93b7298c33688"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/resend/resend-php/zipball/c1ce4ee5dc8ca90a5e6a2dc6d772a06abbe7c9d3",
-                "reference": "c1ce4ee5dc8ca90a5e6a2dc6d772a06abbe7c9d3",
+                "url": "https://api.github.com/repos/resend/resend-php/zipball/038b8100c072f451b09efaa5c9c93b7298c33688",
+                "reference": "038b8100c072f451b09efaa5c9c93b7298c33688",
                 "shasum": ""
             },
             "require": {
@@ -799,7 +799,7 @@
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.13",
                 "mockery/mockery": "^1.6",
-                "pestphp/pest": "^2.0|^3.0|^4.0"
+                "pestphp/pest": "^1.0|^2.0|^3.0|^4.0"
             },
             "type": "library",
             "autoload": {
@@ -831,9 +831,9 @@
             ],
             "support": {
                 "issues": "https://github.com/resend/resend-php/issues",
-                "source": "https://github.com/resend/resend-php/tree/v1.1.0"
+                "source": "https://github.com/resend/resend-php/tree/v1.2.0"
             },
-            "time": "2025-11-26T08:41:40+00:00"
+            "time": "2026-04-02T03:54:08+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -1240,16 +1240,16 @@
         },
         {
             "name": "yoomoney/yookassa-sdk-php",
-            "version": "3.12.0",
+            "version": "3.13.1",
             "source": {
                 "type": "git",
                 "url": "https://git.yoomoney.ru/scm/sdk/yookassa-sdk-php.git",
-                "reference": "f084130fc314a15f019317f8a273dc873fa77a11"
+                "reference": "6c6cd693a44a1c77ae60dbcbf56cf374fd9e9774"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://git.yoomoney.ru/rest/api/latest/projects/SDK/repos/yookassa-sdk-php/archive?at=refs%2Ftags%2F3.12.0&format=zip",
-                "reference": "f084130fc314a15f019317f8a273dc873fa77a11"
+                "url": "https://git.yoomoney.ru/rest/api/latest/projects/SDK/repos/yookassa-sdk-php/archive?at=refs%2Ftags%2F3.13.1&format=zip",
+                "reference": "6c6cd693a44a1c77ae60dbcbf56cf374fd9e9774"
             },
             "require": {
                 "ext-curl": "*",
@@ -1295,7 +1295,7 @@
                 "yookassa",
                 "yoomoney"
             ],
-            "time": "2025-12-17T09:09:15+00:00"
+            "time": "2026-03-13T08:10:01+00:00"
         },
         {
             "name": "yoomoney/yookassa-sdk-validator",
