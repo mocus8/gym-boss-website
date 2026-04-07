@@ -3,5 +3,13 @@
         "yoomoney/yookassa-sdk-php": "^3.11",
         "vlucas/phpdotenv": "^5.6",
         "resend/resend-php": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": [
+            "src/Support/helpers.php"
+        ]
     }
 }
