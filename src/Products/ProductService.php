@@ -28,12 +28,11 @@ class ProductService {
         if (is_file($cacheFile)) {
             $mtime = filemtime($cacheFile);
             if ($mtime !== false && (time() - $mtime) < $cacheTime) {
+                // Получаем каталог из кеша
                 $raw = file_get_contents($cacheFile);
-                if ($raw !== false) {
-                    $data = @unserialize($raw);    // @ - оператор подавления ошибки (не упадет в случае ошибки)
-                    if (is_array($data)) {
-                        return $data;
-                    }
+                $data = json_decode($raw, true);
+                if (is_array($data)) {
+                    return $data;
                 }
             }
         }
@@ -108,11 +107,11 @@ class ProductService {
 
         $stmt->close();
 
-        // Сохраняем в кэш (если не получится — просто пропускаем)
+        // Сохраняем в кэш (если не получится - просто пропускаем)
         if (!is_dir(dirname($cacheFile))) {
-            @mkdir(dirname($cacheFile), 0755, true);
+            mkdir(dirname($cacheFile), 0755, true);
         }
-        @file_put_contents($cacheFile, serialize($catalog));
+        file_put_contents($cacheFile, json_encode($catalog));
 
         return $catalog;
     }
