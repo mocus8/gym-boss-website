@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Чистая бизнес‑логика, не завязанная на HTTP, JSON, $_POST, echo, будет использовать в контроллерах и других файлах
 // Тут просто выбрасываем исключения, ловим их уже в endpoint-ах и других файлах
 // Вызывается из OrderController, без отдельного контроллера 
@@ -249,7 +251,7 @@ class PaymentService {
         // Cоздаём массив товаров в нужном для чека формате
         $itemsForReceipt = [];
         foreach ($items as $item) {
-            $price = number_format($item['price'], 2, '.', '');
+            $price = number_format((float)$item['price'], 2, '.', '');
     
             $itemsForReceipt[] = [
                 'description' => $item['product_name'],

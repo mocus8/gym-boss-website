@@ -1,4 +1,6 @@
 <?php 
+declare(strict_types=1);
+
 // Класс-сервис для синхронизации статуса заказа со статусом платежа в юкассе
 
 namespace App\Payments;

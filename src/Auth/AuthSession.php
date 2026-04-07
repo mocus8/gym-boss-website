@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 // Адаптер над $_SESSION, взаимодействие с user id в сессии
 
 namespace App\Auth;
