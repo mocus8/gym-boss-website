@@ -251,7 +251,7 @@ class PaymentService {
         // Cоздаём массив товаров в нужном для чека формате
         $itemsForReceipt = [];
         foreach ($items as $item) {
-            $price = number_format($item['price'], 2, '.', '');
+            $price = number_format((float)$item['price'], 2, '.', '');
     
             $itemsForReceipt[] = [
                 'description' => $item['product_name'],
