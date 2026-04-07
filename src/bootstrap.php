@@ -1,10 +1,68 @@
 <?php
 // bootstrap - общая инициализация окружения
 
+// Подключаем composer
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Dotenv\Dotenv;    // библиотека для прочтения .env файла
+
+use App\Support\Logger;
+use App\Db\Db;
+use App\Support\Flash;
+
+use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
+use App\Integrations\Yookassa\YookassaGateway;
+use App\Integrations\Dadata\DadataClient;
+use App\Integrations\Resend\ResendGateway;
+
+use App\Users\UserRepository;
+use App\Auth\AuthSession;
+use App\Auth\AuthService;
+use App\Auth\LoginAttemptRepository;
+use App\Auth\PasswordResetTokenRepository;
+use App\Auth\EmailVerificationTokenRepository;
+use App\Account\AccountService;
+
+use App\Stores\StoreRepository;
+use App\Stores\StoreService;
+
+use App\Products\ProductRepository;
+use App\Products\ProductService;
+
+use App\Mail\MailService;
+
+use App\Cart\CartSession;
+use App\Cart\CartRepository;
+use App\Cart\CartItemRepository;
+use App\Cart\CartService;
+
+use App\Orders\OrderRepository;
+use App\Orders\OrderItemRepository;
+use App\Orders\OrderService;
+use App\Orders\CancelOrderUseCase;   
+
+use App\Payments\PaymentRepository;
+use App\Payments\PaymentService;
+use App\Payments\PaymentStatusSyncService;
+use App\Payments\WebhookService;
+
+use App\Api\BaseController;
+use App\Api\DadataController;
+use App\Api\WebhookController;
+use App\Api\AuthController;
+use App\Api\AccountController;
+use App\Api\ProductController;
+use App\Api\CartController;
+use App\Api\OrderController;
+use App\Api\StoreController;
+
+// Работаем с библиотекой Dotenv, загружаем .env файл
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->safeLoad();
+
 // Безопасный старт и управление сессией
 session_name('PHPSESSID');
 session_start();
-
 // Сохраниение текущего времени
 $now = time();
 
@@ -27,59 +85,6 @@ if (!isset($_SESSION['created'])) {
 
 // Обновляем отметку активности
 $_SESSION['last_activity'] = $now;
-
-// Подключаем composer
-require_once __DIR__ . '/../vendor/autoload.php';
-
-// Подключаем пространства имен
-use Dotenv\Dotenv;    // библиотека для прочтения .env файла
-use App\Support\Logger;
-use App\Db\Db;
-use App\Support\Flash;
-use App\Users\UserRepository;
-use App\Auth\EmailVerificationTokenRepository;
-use App\Auth\LoginAttemptRepository;
-use App\Auth\PasswordResetTokenRepository;
-use App\Cart\CartRepository;
-use App\Cart\CartItemRepository;
-use App\Orders\OrderRepository;
-use App\Orders\OrderItemRepository;
-use App\Payments\PaymentRepository;
-use App\Products\ProductRepository;
-use App\Stores\StoreRepository;
-use App\Api\BaseController;
-use App\Integrations\GoogleRecaptcha\GoogleRecaptchaClient;
-use App\Integrations\Resend\ResendGateway;
-use App\Mail\MailService;
-use App\Auth\AuthSession;
-use App\Auth\AuthService;
-use App\Api\AuthController;
-use App\Account\AccountService;
-use App\Api\AccountController;
-use App\Products\ProductService;
-use App\Api\ProductController;
-use App\Cart\CartSession;
-use App\Cart\CartService;
-use App\Api\CartController;
-use App\Orders\OrderService;
-use App\Orders\CancelOrderUseCase;    
-use App\Api\OrderController;
-use App\Integrations\Dadata\DadataClient;
-use App\Api\DadataController;
-use App\Stores\StoreService;
-use App\Api\StoreController;
-use App\Integrations\Yookassa\YookassaGateway;
-use App\Payments\PaymentService;
-use App\Payments\PaymentStatusSyncService;
-use App\Payments\WebhookService;
-use App\Api\WebhookController;
-
-// Работаем с библиотекой Dotenv, загружаем .env файл
-$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->safeLoad();
-
-// TODO: попробовать првести обновление зависимостей, записать в skills
-// мб что то еще добавить в composer.lock и что то еще с ним сделать, посмотреть
 
 // Подключаем конфиги (массивы из переменных с константами из .env)
 $appConfig = require __DIR__ . '/config/app.php';
