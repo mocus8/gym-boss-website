@@ -1,7 +1,6 @@
 <?php
 // Всё взаимодействие с sdk resend оборачивается в методы этого класса, удобная интеграционная обёртка над sdk
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Integrations\Resend;
 use Resend;
 use Resend\Client;

@@ -2,7 +2,6 @@
 // Класс для отправки писем, для этого он использует методы gateway-я
 // Не имеет своего контроллера, вызывается из разных сервисов
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Mail;
 use App\Integrations\Resend\EmailMessageDto;
 use App\Integrations\Resend\ResendGateway;

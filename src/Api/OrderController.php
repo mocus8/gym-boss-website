@@ -5,7 +5,6 @@
 
 // Тут добавить логирование и документацию для этого api
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Api;
 
 use App\Auth\AuthSession;    // используем класс AuthSession из пространства имен App\Auth

@@ -1,7 +1,6 @@
 <?php
 // Всё взаимодействие с sdk юкассы оборачивается в методы этого класса, удобная интеграционная обёртка над sdk
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Integrations\Yookassa;
 use YooKassa\Client;
 use YooKassa\Model\Notification\NotificationEventType;

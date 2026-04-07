@@ -1,6 +1,5 @@
 <?php
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Db;
 use App\Support\Logger;
 

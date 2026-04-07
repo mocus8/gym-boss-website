@@ -1,7 +1,6 @@
 <?php
 // Адаптер над $_SESSION, взаимодействие с user id в сессии
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Auth;
 
 class AuthSession {

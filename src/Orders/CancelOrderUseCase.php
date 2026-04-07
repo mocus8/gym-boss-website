@@ -1,7 +1,6 @@
 <?php
 // Use-case/координатор класс, для использования методов из двух других сервисов, для обхода цикличейской DI зависимости
 
-// Настриваем простанство имен (для будующего, когда буду заменять require_once на composer)
 namespace App\Orders;
 use App\Orders\OrderService;
 use App\Payments\PaymentService;

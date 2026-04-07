@@ -78,51 +78,8 @@ use App\Api\WebhookController;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
-// Подключаем общие файлы (позже замениться только на composer с настр-ми зав-ями)
-require_once __DIR__ . '/Support/Logger.php';
-require_once __DIR__ . '/Db/Db.php';    // подключаем файл с классом для подключения к бд
-require_once __DIR__ . '/Support/Flash.php';
-require_once __DIR__ . '/Users/UserRepository.php';
-require_once __DIR__ . '/Auth/EmailVerificationTokenRepository.php';
-require_once __DIR__ . '/Auth/LoginAttemptRepository.php';
-require_once __DIR__ . '/Auth/PasswordResetTokenRepository.php';
-require_once __DIR__ . '/Cart/CartRepository.php';
-require_once __DIR__ . '/Cart/CartItemRepository.php';
-require_once __DIR__ . '/Orders/OrderRepository.php';
-require_once __DIR__ . '/Orders/OrderItemRepository.php';
-require_once __DIR__ . '/Payments/PaymentRepository.php';
-require_once __DIR__ . '/Products/ProductRepository.php';
-require_once __DIR__ . '/Stores/StoreRepository.php';
-require_once __DIR__ . '/Support/helpers.php';    // подключаем файл с вспомогательными утилитами
-require_once __DIR__ . '/Api/BaseController.php';
-require_once __DIR__ . '/Integrations/GoogleRecaptcha/GoogleRecaptchaClient.php';
-require_once __DIR__ . '/Support/AppException.php';
-require_once __DIR__ . '/Integrations/Resend/EmailMessageDto.php';
-require_once __DIR__ . '/Integrations/Resend/ResendGateway.php';    // файл с gateway-ем Resend-а, оберткой над его sdk
-require_once __DIR__ . '/Mail/MailService.php';    // подключаем файл с классом-сервисом для отправки писем
-require_once __DIR__ . '/Auth/AuthSession.php';    // подключаем файл с классом для работы с сессией
-require_once __DIR__ . '/Auth/AuthService.php';    // подключаем файл с классом-сервисом для работы с пользователями
-require_once __DIR__ . '/Api/AuthController.php';    // подключаем файл с классом-контроллером для взаимодействия с пользователями
-require_once __DIR__ . '/Account/AccountService.php';
-require_once __DIR__ . '/Api/AccountController.php';
-require_once __DIR__ . '/Products/ProductService.php';    // подключаем файл с классом-сервисом для получения инфы о товарах
-require_once __DIR__ . '/Api/ProductController.php';    // подключаем файл с классом-контроллером для получения инфы о товарах
-require_once __DIR__ . '/Cart/CartSession.php';    // подключаем файл с классом для получения/установки cart id в куках
-require_once __DIR__ . '/Cart/CartService.php';    // подключаем файл с классом-сервисом для управления корзинами пользователей
-require_once __DIR__ . '/Api/CartController.php';    // подключаем файл с классом-контроллером для управления корзинами пользователей
-require_once __DIR__ . '/Orders/OrderService.php';    // подключаем файл с классом-сервисом для управления заказами
-require_once __DIR__ . '/Orders/CancelOrderUseCase.php';
-require_once __DIR__ . '/Api/OrderController.php';    // подключаем файл с классом-контроллером для управления заказами
-require_once __DIR__ . '/Integrations/Dadata/DadataClient.php';    // подключаем файл с классом-контроллером для управления заказами
-require_once __DIR__ . '/Api/DadataController.php';    // подключаем файл с классом-контроллером для получения подсказок
-require_once __DIR__ . '/Stores/StoreService.php';    // подключаем файл с классом-сервисом для получения данных о магазинах
-require_once __DIR__ . '/Api/StoreController.php';    // подключаем файл с классом-контроллером для получения магазинов
-require_once __DIR__ . '/Integrations/Yookassa/CreatedPaymentDto.php';    // файл с dto классом 
-require_once __DIR__ . '/Integrations/Yookassa/YookassaGateway.php';    // файл с gateway-ем юкассы, оберткой над ее sdk
-require_once __DIR__ . '/Payments/PaymentService.php';
-require_once __DIR__ . '/Payments/PaymentStatusSyncService.php';
-require_once __DIR__ . '/Payments/WebhookService.php';
-require_once __DIR__ . '/Api/WebhookController.php';
+// TODO: попробовать првести обновление зависимостей, записать в skills
+// мб что то еще добавить в composer.lock и что то еще с ним сделать, посмотреть
 
 // Подключаем конфиги (массивы из переменных с константами из .env)
 $appConfig = require __DIR__ . '/config/app.php';
