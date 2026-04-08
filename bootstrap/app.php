@@ -259,7 +259,7 @@ set_exception_handler(function (\Throwable $e) use ($logger) {
         ], JSON_UNESCAPED_UNICODE);
     } else {
         // Если web запрос - рендерим 500 страницу
-        require __DIR__ . '/pages/500.php';
+        require __DIR__ . '/../app/page-scripts/500.php';
     }
 
     exit;

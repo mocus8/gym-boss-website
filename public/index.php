@@ -234,13 +234,13 @@ $routes = [
 
 // Если маршрут есть в списке, подключаем соответствующий файл
 if (isset($routes[$uri])) {
-    require __DIR__ . '/../app/pages/' . $routes[$uri];
+    require __DIR__ . '/../app/page-scripts/' . $routes[$uri];
     exit;
 }
 // Страница товара: /products/slug
 elseif (preg_match('#^/products/([a-zA-Z0-9-]+)$#', $uri, $matches)) {
     $_GET['url'] = $matches[1];
-    require __DIR__ . '/../app/pages/product.php';
+    require __DIR__ . '/../app/page-scripts/product.php';
     exit;
 }
 // Страница заказа: /orders/123, также записываем в GET id
@@ -248,12 +248,12 @@ elseif (preg_match('#^/orders/([0-9]+)$#', $uri, $matches)) {
     requireWebAuth($authSession);
 
     $_GET['orderId'] = $matches[1];
-    require __DIR__ . '/../app/pages/order.php';
+    require __DIR__ . '/../app/page-scripts/order.php';
     exit;
 }
 // Любой другой путь - 404
 else {
     http_response_code(404);
-    require __DIR__ . '/../app/pages/404.php';
+    require __DIR__ . '/../app/page-scripts/404.php';
     exit;
 }
