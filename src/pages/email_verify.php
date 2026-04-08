@@ -19,12 +19,9 @@ try {
     $status = 'success';
 
 } catch (\App\Support\AppException $e) {
-    $this->error(
-        message: 'Failed to verify email',
-        context: [
-            'exception' => $e,
-        ]
-    );
+    $logger->warning('Email verification failed', [
+        'exception' => $e,
+    ]);
 
     // Переводим ошибку сервиса в статус
     $status = match ($e->getErrorCode()) {
@@ -35,6 +32,10 @@ try {
     };
 
 } catch (\Throwable $e) {
+    $logger->error('Unexpected error during email verification', [
+        'exception' => $e,
+    ]);
+
     $status = 'server_error';
 }
 

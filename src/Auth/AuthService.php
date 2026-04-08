@@ -52,7 +52,7 @@ class AuthService {
 
     // Метод для регистрации
     // Регистрирует пользователя и инициализирует verify-процесс
-    public function register(string $email, string $password, string $name): int {
+    public function register(string $email, string $password, string $name): array {
         $this->logger->info('User registration started');
         
         // Ищем этот email в бд
@@ -88,15 +88,33 @@ class AuthService {
             throw $e;
         }
 
-        // Собираем и отправляем ссылку для подтверждения почты через приватный метод
-        $this->createAndSendEmailVerificationLink($rawToken, $email, $name);
+        // Пробуем собрать и отправить ссылку для подтверждения почты
+        try {
+            $this->createAndSendEmailVerificationLink($rawToken, $email, $name);
+
+        } catch (\Throwable $e) {
+            $this->logger->warning('User {user_id} created, but verification email sending failed', [
+                'user_id' => $userId,
+                'email' => $email,
+                'exception' => $e,
+            ]);
+
+            // Если не удалось отправить письмо - все равно возвращаем user id и флаг о том что письмо не отправлено
+            return [
+                'user_id' => $userId,
+                'email_sent' => false
+            ];
+        }
 
         $this->logger->info('User {user_id} created', [
             'user_id' => $userId,
         ]);
 
-        // Возвращаем userId
-        return $userId;
+        // Возвращаем userId и флаг о том что письмо отправлено
+        return [
+            'user_id' => $userId,
+            'email_sent' => true
+        ];
     }
 
     // Метод для повторной отправки пользователю письма для подтверждения почты

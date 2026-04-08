@@ -71,7 +71,10 @@ class AuthController extends BaseController {
             $name = $validData['name'];
 
             // Вызываем метод регистрации в auth сервисе
-            $userId = $this->authService->register($email, $password, $name);
+            $registerInfo = $this->authService->register($email, $password, $name);
+
+            $userId = $registerInfo['user_id'];
+            $emailSent = $registerInfo['email_sent'];
 
             //Логиним пользователя
             $this->authSession->login($userId);
@@ -80,14 +83,16 @@ class AuthController extends BaseController {
             $cartSessionId = $this->cartSession->getId(); 
             $this->cartService->attachGuestCartToUser($cartSessionId, $userId);
 
-            $this->logger->info('User {user_id} created', [
-                'user_id' => $userId,
-            ]);
-
-            // Записываем в сессию сообщение о успешной регистрации
-            $this->flash->set(
-                'Регистрация прошла успешно. Вам на почту отправлено письмо для подтверждения email.'
-            );
+            // Записываем в сессию сообщение о успешной регистрации либо о том что письмо не отправлено
+            if (!$emailSent) {
+                $this->flash->set(
+                    'Не удалось отправить email для подтверждения почты, запросите повторную отправку письма или обратитесь в поддержку'
+                );
+            } else {
+                $this->flash->set(
+                    'Регистрация прошла успешно. Вам на почту отправлено письмо для подтверждения email.'
+                );
+            }
 
             $this->success(201, [
                 'user_id' => $userId,
