@@ -83,16 +83,43 @@ class Logger {
     private function normalizeContext(array $context): array {
         foreach ($context as $key => $value) {
             if ($value instanceof \Throwable) {
-                $context[$key] = [
-                    'class'   => get_class($value),
-                    'message' => $value->getMessage(),
-                    'file'    => $value->getFile(),
-                    'line'    => $value->getLine(),
-                    'trace'   => $value->getTraceAsString(),
-                ];
+                $context[$key] = $this->normalizeThrowable($value);
             }
         }
     
         return $context;
+    }
+
+    // Функция для раскладования Throwable исключения на составляющие (в том числе previous ошибки)
+    private function normalizeThrowable(\Throwable $e): array {
+        $result = [
+            'class' => get_class($e),
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+            'previous' => [],
+        ];
+
+        // Берем предыдущие исключение
+        $previous = $e->getPrevious();
+
+        // Проходимся по всем предыдущим исключениям
+        while ($previous !== null) {
+            $result['previous'][] = [
+                'class' => $previous::class,
+                'message' => $previous->getMessage(),
+                'code' => $previous->getCode(),
+                'file' => $previous->getFile(),
+                'line' => $previous->getLine(),
+                'trace' => $previous->getTraceAsString(),
+            ];
+
+            // Берем еще одно предыдущие исключение у предыдущего
+            $previous = $previous->getPrevious();
+        }
+
+        return $result;
     }
 }
