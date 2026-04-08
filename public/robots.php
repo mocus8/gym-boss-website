@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/src/bootstrap.php';
+require_once __DIR__ . '/../bootstrap/app.php';
 
 header('Content-Type: text/plain; charset=UTF-8');
 
@@ -18,7 +18,7 @@ echo "Disallow: /orders\n";
 echo "Disallow: /checkout\n";
 echo "Disallow: /db\n";
 echo "Disallow: /scripts\n";
-echo "Disallow: /src\n";
-echo "Disallow: /src/templates\n\n";
+echo "Disallow: /app\n";
+echo "Disallow: /app/templates\n\n";
 
 echo "Sitemap: {$baseUrl}/sitemap.xml\n";

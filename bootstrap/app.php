@@ -89,9 +89,9 @@ if (!isset($_SESSION['created'])) {
 $_SESSION['last_activity'] = $now;
 
 // Подключаем конфиги (массивы из переменных с константами из .env)
-$appConfig = require __DIR__ . '/config/app.php';
-$deliveryConfig = require __DIR__ . '/config/delivery.php';
-$servicesConfig = require __DIR__ . '/config/services.php';
+$appConfig = require __DIR__ . '/../config/app.php';
+$deliveryConfig = require __DIR__ . '/../config/delivery.php';
+$servicesConfig = require __DIR__ . '/../config/services.php';
 
 // Создаем логгер
 $logger = new Logger($appConfig['log_file'], $appConfig['log_level']);

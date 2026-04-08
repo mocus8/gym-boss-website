@@ -24,7 +24,7 @@ $flashMessage = $flash->get();
             <?= htmlspecialchars($title ?? 'Gym Boss - спорттовары', ENT_QUOTES, 'UTF-8') ?>
         </title>
         <link rel="canonical" href="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">
-        <link rel="icon" href="/public/favicon.ico" type="image/x-icon">
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" href="/styles.css">
 	</head>
 

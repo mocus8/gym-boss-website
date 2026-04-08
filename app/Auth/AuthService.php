@@ -251,7 +251,7 @@ class AuthService {
         $this->verifiedEmailsCache[$userId] = true;
 
         // Логируем успех
-        $logger->info('Email verification succeeded', [
+        $this->logger->info('Email verification succeeded', [
             'user_id' => $userId,
         ]);
     }
