@@ -231,6 +231,11 @@ class AuthService {
 
         // Обновляем кеш
         $this->verifiedEmailsCache[$userId] = true;
+
+        // Логируем успех
+        $logger->info('Email verification succeeded', [
+            'user_id' => $userId,
+        ]);
     }
 
     // Метод для входа пользователя в аккаунт, сверяется пароль и возвращается инфа о пользователе
