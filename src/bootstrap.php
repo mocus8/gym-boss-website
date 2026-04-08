@@ -62,8 +62,7 @@ use App\Api\StoreController;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
-// Меняем имя сессии для меньшей узнаваемости (безопасность) и начинаем сессию
-session_name('GYMBOSS');
+// Начинаем сессию
 session_start();
 
 // Сохраниение текущего времени
