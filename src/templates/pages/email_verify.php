@@ -19,7 +19,7 @@
         </div>
 
         <div class="contact_inf">
-            <?php if ($isAuthenticated) { ?>  
+            <?php if ($isAuthenticated && $pageData['showResend']) { ?>  
                 <button type="button" class="btn" id="resend-button">
                     Получить новое письмо
                 </button>
