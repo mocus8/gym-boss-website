@@ -62,9 +62,9 @@ use App\Api\StoreController;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
-// Безопасный старт и управление сессией
-session_name('PHPSESSID');
+// Начинаем сессию
 session_start();
+
 // Сохраниение текущего времени
 $now = time();
 
