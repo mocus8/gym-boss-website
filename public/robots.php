@@ -12,13 +12,12 @@ if (!$baseUrl) {
 }
 
 echo "User-agent: *\n";
-echo "Disallow: /404\n";
+echo "Disallow: /api/\n";
+echo "Disallow: /auth\n";
+echo "Disallow: /account\n";
 echo "Disallow: /cart\n";
-echo "Disallow: /orders\n";
 echo "Disallow: /checkout\n";
-echo "Disallow: /db\n";
-echo "Disallow: /scripts\n";
-echo "Disallow: /app\n";
-echo "Disallow: /app/templates\n\n";
+echo "Disallow: /dadata\n";
+echo "Disallow: /404\n\n";
 
 echo "Sitemap: {$baseUrl}/sitemap.xml\n";
