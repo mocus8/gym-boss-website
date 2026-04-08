@@ -91,7 +91,7 @@ foreach ($urls as $u) {
 }
 
 $xml .= '</urlset>' . "\n";
-$outPath = __DIR__ . '/../sitemap.xml';
+$outPath = __DIR__ . '/../public/sitemap.xml';
 
 if (file_put_contents($outPath, $xml) === false) {
     $logger->error('Failed to write sitemap file', [
