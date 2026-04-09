@@ -63,7 +63,7 @@ class MailService {
 
         // Задаем html-версию письма
         $html = $this->renderTemplate(
-            __DIR__ . '/../templates/email/reset-password.html.php', 
+            __DIR__ . '/../templates/email/reset_password.html.php', 
             [
                 'userName' => $userName,
                 'resetUrl' => $resetUrl,
@@ -72,7 +72,7 @@ class MailService {
 
         // Задаем text-версию письма
         $text = $this->renderTemplate(
-            __DIR__ . '/../templates/email/reset-password.text.php', 
+            __DIR__ . '/../templates/email/reset_password.text.php', 
             ['userName' => $userName, 'resetUrl' => $resetUrl]
         );
 
@@ -118,13 +118,13 @@ class MailService {
 
         // Задаем html-версию письма
         $html = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-confirmation.html.php',
+            __DIR__ . '/../templates/email/order_confirmation.html.php',
             $templateData
         );
 
         // Задаем text-версию письма
         $text = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-confirmation.text.php',
+            __DIR__ . '/../templates/email/order_confirmation.text.php',
             $templateData
         );
 
@@ -160,13 +160,13 @@ class MailService {
 
         // Задаем html-версию письма
         $html = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-canceled.html.php',
+            __DIR__ . '/../templates/email/order_canceled.html.php',
             $templateData
         );
 
         // Задаем text-версию письма
         $text = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-canceled.text.php',
+            __DIR__ . '/../templates/email/order_canceled.text.php',
             $templateData
         );
 
@@ -204,13 +204,13 @@ class MailService {
 
         // Задаем html-версию письма
         $html = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-shipped.html.php',
+            __DIR__ . '/../templates/email/order_shipped.html.php',
             $templateData
         );
 
         // Задаем text-версию письма
         $text = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-shipped.text.php',
+            __DIR__ . '/../templates/email/order_shipped.text.php',
             $templateData
         );
 
@@ -247,13 +247,13 @@ class MailService {
 
         // Задаем html-версию письма
         $html = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-ready-for-pickup.html.php',
+            __DIR__ . '/../templates/email/order_ready_for_pickup.html.php',
             $templateData
         );
 
         // Задаем text-версию письма
         $text = $this->renderTemplate(
-            __DIR__ . '/../templates/email/order-ready-for-pickup.text.php',
+            __DIR__ . '/../templates/email/order_ready_for_pickup.text.php',
             $templateData
         );
 
