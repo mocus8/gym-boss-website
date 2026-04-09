@@ -8,14 +8,14 @@
             “Gym Boss”
         </div>
 
-        <img class="billy" src="/img/billy.svg" alt="Мужик, качёк, крутой парень, Билли Харрингтон">
+        <img class="billy" src="/assets/images/ui/billy.svg" alt="Мужик, качёк, крутой парень, Билли Харрингтон">
 <!--                                                                        Добавлять этот атрибут для CEO-->
     </a>
 
     <div class="header_buttons">
         <a href="/">
             <div class="header_button">
-                <img class="header_button_icon" src="/img/catalog.png">
+                <img class="header_button_icon" src="/assets/images/ui/catalog.png">
                 
                 <div class="header_button_text">
                     Каталог
@@ -25,7 +25,7 @@
 
         <a href="/stores">
             <div class="header_button">
-                <img class="header_button_icon" src="/img/map.png">
+                <img class="header_button_icon" src="/assets/images/ui/map.png">
 
                 <div class="header_button_text">
                     Наши магазины
@@ -35,7 +35,7 @@
 
         <a href="/contacts">
             <div class="header_button">
-                <img class="header_button_icon" src="/img/phone.png">
+                <img class="header_button_icon" src="/assets/images/ui/phone.png">
 
                 <div class="header_button_text">
                     Контакты
@@ -45,7 +45,7 @@
 
         <a href="/about">
             <div class="header_button">
-                <img class="header_button_icon" src="/img/info.png">
+                <img class="header_button_icon" src="/assets/images/ui/info.png">
 
                 <div class="header_button_text">
                     О сайте
@@ -56,7 +56,7 @@
 
     <div class="header_search" id="header-search">
         <div class="header_search_click">
-            <img class="header_search_icon" src="/img/glass.png">
+            <img class="header_search_icon" src="/assets/images/ui/glass.png">
 
             <label for="header-search-input" class="header_search_text">
                 Поиск товаров:
@@ -72,11 +72,11 @@
 
     <div class="header_account">
         <div class="header_account_up">
-            <img class="header_account_icon" src="/img/person.png">
+            <img class="header_account_icon" src="/assets/images/ui/person.png">
 
             <a href="/cart">
                 <div class="header_button account">
-                    <img class="header_button_icon" src="/img/cart.png">
+                    <img class="header_button_icon" src="/assets/images/ui/cart.png">
 
                     <div class="header_button_text">
                         Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)

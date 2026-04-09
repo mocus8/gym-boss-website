@@ -36,7 +36,7 @@
                 </div>
 
                 <div class="form_error form_error_hidden">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                     <div class="error_modal_text"></div>
                 </div>
 
@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="form_error form_error_hidden">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                     <div class="error_modal_text"></div>
                 </div>
 
@@ -84,7 +84,7 @@
                 </div>
 
                 <div class="form_error form_error_hidden">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                     <div class="error_modal_text"></div>
                 </div>
 
@@ -104,7 +104,7 @@
                 </div>
 
                 <div class="form_error form_error_hidden">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                     <div class="error_modal_text"></div>
                 </div>
 
@@ -125,7 +125,7 @@
                 </div>
 
                 <div class="form_error form_error_hidden">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                     <div class="error_modal_text"></div>
                 </div>
 
@@ -145,7 +145,7 @@
                 </div>
 
                 <div class="form_error form_error_hidden">
-                    <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                     <div class="error_modal_text"></div>
                 </div>
 

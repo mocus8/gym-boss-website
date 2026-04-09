@@ -4,7 +4,7 @@
             <div class="button_return_text">
                 На главную
             </div>
-            <img class="button_return_img" src="/img/arrow_back.png">
+            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
         </div>
     </a>
 </div>
@@ -15,12 +15,12 @@
 
 <div class="cart_products" id="product-container">
     <div class="cart_products_loader">
-        Загрузка... <img class="loader" src="/img/loader.png" alt="Загрузка">
+        Загрузка... <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка">
     </div>
 </div>
 
 <div class="cart_right">
-    <img class="order_icon" src="/img/cart.png">
+    <img class="order_icon" src="/assets/images/ui/cart.png">
     <div class="order_inf">
         <div class="order_inf_price_text">
             Сумма заказа

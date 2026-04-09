@@ -4,7 +4,7 @@
             <div class="button_return_text">
                 На главную
             </div>
-            <img class="button_return_img" src="/img/arrow_back.png">
+            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
         </div>
     </a>
 
@@ -48,13 +48,13 @@
 
     <div class="product_button_add_in_cart hidden" type="button" id="button-change-qty">
         <button class="product_sign_button" type="button" data-product-subtract-cart data-product-id="<?= (int)$product['id'] ?>">
-            <img class="product_interaction_sign" src="/img/minus.png">
+            <img class="product_interaction_sign" src="/assets/images/ui/minus.png">
         </button>
 
         <span id="product-cart-counter"></span>
 
         <button class="product_sign_button" type="button" data-product-add-cart data-product-id="<?= (int)$product['id'] ?>">
-            <img class="product_interaction_sign" src="/img/plus.png"> 
+            <img class="product_interaction_sign" src="/assets/images/ui/plus.png"> 
         </button>
     </div>
 </div>

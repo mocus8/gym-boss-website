@@ -53,7 +53,7 @@ input:autofill:active {
 
 @font-face {
     font-family: "Jost";
-    src: url(./font/Jost_Italic.woff2) format("woff2");
+    src: url("/assets/fonts/Jost_Italic.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -61,7 +61,7 @@ input:autofill:active {
 
 @font-face {
     font-family: "Jaro";
-    src: url(./font/Jaro_Regular.woff2) format("woff2");
+    src: url("/assets/fonts/Jaro_Regular.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -160,7 +160,7 @@ button {
     margin: auto;
     width: 100%;
     height: 100vh;
-    background-image: url(./img/desktop.png);
+    background-image: url("/assets/images/ui/desktop.png");
     background-repeat: no-repeat;
     background-size: 100% 100%;
 }
@@ -185,7 +185,7 @@ button {
     position: relative;
     width: 100%;
     height: 22.5%;
-    background-image: url("./img/header_back.svg");
+    background-image: url("/assets/images/ui/header_back.svg");
     background-position: center;
     background-size: 97% 100%;
     background-repeat: no-repeat;
@@ -238,7 +238,7 @@ button {
     position: relative;
     width: 25%;
     height: 100%;
-    background-image: url("./img/header_button_click.svg");
+    background-image: url("/assets/images/ui/header_button_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -281,7 +281,7 @@ button {
     bottom: 0;
     width: 71.75%;
     height: 63.5%;
-    background-image: url("./img/header_search_back.svg");
+    background-image: url("/assets/images/ui/header_search_back.svg");
     background-position: bottom center;
     background-size: 100% 100%;
     background-repeat: no-repeat;
@@ -295,7 +295,7 @@ button {
     transform: translate(-50%, -37.5%);
     width: 77.5%;
     height: 60%;
-    background-image: url("./img/header_search_click.svg");
+    background-image: url("/assets/images/ui/header_search_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     justify-content: flex-start;
@@ -373,7 +373,7 @@ button {
     margin-top: 20%;
     width: min-content;
     height: min-content;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     padding: 0.5% 4% 0.5% 4%;
@@ -503,7 +503,7 @@ button {
     bottom: 12.5%;
     width: 50%;
     height: 34%;
-    background-image: url("./img/header_account_click.svg");
+    background-image: url("/assets/images/ui/header_account_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -543,7 +543,7 @@ button {
     margin-top: 5%;
     width: 65%;
     height: 27.5%;
-    background-image: url("./img/header_account_click.svg");
+    background-image: url("/assets/images/ui/header_account_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     font-size: 1.08vw;
@@ -574,7 +574,7 @@ button {
     right: 5%;
     top: 5%;
     padding: 1vw 3vw 1.5vw 3vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -658,7 +658,7 @@ button {
     right: 5%;
     top: 5%;
     padding: 1vw 3vw 1.5vw 3vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -759,7 +759,7 @@ button {
     transform: translateX(-50%);
     width: 50vw;
     height: 16vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -786,7 +786,7 @@ button {
     height: 3vw;
     padding: 0.5vw 1vw;
     box-sizing: border-box;
-    background-image: url("./img/header_search_click.svg");
+    background-image: url("/assets/images/ui/header_search_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -825,7 +825,7 @@ button {
     position: relative;
     width: 12.5vw;
     height: 55%;
-    background-image: url("./img/header_button_click.svg");
+    background-image: url("/assets/images/ui/header_button_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -944,7 +944,7 @@ button {
     width: 50vw;
     height: min-content;
     padding-bottom: 2%;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -971,7 +971,7 @@ button {
     height: 3vw;
     padding: 0.5vw 1vw;
     box-sizing: border-box;
-    background-image: url("./img/header_search_click.svg");
+    background-image: url("/assets/images/ui/header_search_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1076,7 +1076,7 @@ button {
     position: relative;
     width: 18vw;
     height: 55%;
-    background-image: url("./img/header_button_click.svg");
+    background-image: url("/assets/images/ui/header_button_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1223,7 +1223,7 @@ button {
     transform: translateX(-50%);
     width: 50vw;
     height: 20vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1261,7 +1261,7 @@ button {
     transform: translateX(-50%);
     width: 50vw;
     /* height: 9vw; */
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1424,7 +1424,8 @@ button {
     width: 13%;
     height: 4vw;
     background-image:
-        url("./img/side_button_click.svg"), url("./img/side_button_back.svg");
+        url("/assets/images/ui/side_button_click.svg"),
+        url("/assets/images/ui/side_button_back.svg");
     background-position:
         20% 55%,
         0% 0%;
@@ -1456,7 +1457,7 @@ button {
 .product {
     width: 14vw;
     height: 21vw;
-    background-image: url("./img/product_back.svg");
+    background-image: url("/assets/images/ui/product_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1482,7 +1483,7 @@ button {
     position: relative;
     width: 93%;
     height: 94.5%;
-    background-image: url("./img/product_click.svg");
+    background-image: url("/assets/images/ui/product_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
 }
@@ -1536,8 +1537,8 @@ button {
     width: 14.5%;
     height: 7.5vw;
     background-image:
-        url("./img/button_return_click.svg"),
-        url("./img/button_return_back.svg");
+        url("/assets/images/ui/button_return_click.svg"),
+        url("/assets/images/ui/button_return_back.svg");
     background-position:
         37.5% 25%,
         0% 0%;
@@ -1582,7 +1583,7 @@ button {
     width: 14.5%;
     height: 48.9vw;
     box-sizing: border-box;
-    background-image: url("./img/product_minor_images_back.svg");
+    background-image: url("/assets/images/ui/product_minor_images_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1628,7 +1629,7 @@ button {
     margin-top: 50.5vw;
     width: 97.75%;
     height: 5.35vw;
-    background-image: url("./img/product_description_head_back.svg");
+    background-image: url("/assets/images/ui/product_description_head_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     box-sizing: border-box;
@@ -1669,7 +1670,7 @@ button {
     height: auto;
     width: 100%;
     box-sizing: border-box;
-    background-image: url("./img/product_inf_back.svg");
+    background-image: url("/assets/images/ui/product_inf_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     padding-left: 3.25%;
@@ -1708,7 +1709,8 @@ button {
     height: 6.5vw;
     box-sizing: border-box;
     background-image:
-        url("./img/side_button_click.svg"), url("./img/side_button_back.svg");
+        url("/assets/images/ui/side_button_click.svg"),
+        url("/assets/images/ui/side_button_back.svg");
     background-position:
         20% 55%,
         0% 0%;
@@ -1747,7 +1749,8 @@ button {
     height: 6.5vw;
     box-sizing: border-box;
     background-image:
-        url("./img/side_button_click.svg"), url("./img/side_button_back.svg");
+        url("/assets/images/ui/side_button_click.svg"),
+        url("/assets/images/ui/side_button_back.svg");
     background-position:
         20% 55%,
         0% 0%;
@@ -1772,7 +1775,7 @@ button {
     margin-right: auto;
     width: max-content;
     height: 4.75vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     padding: 0.5% 4% 0.5% 4%;
@@ -1788,7 +1791,7 @@ button {
     width: 14%;
     height: 3.25vw;
     box-sizing: border-box;
-    background-image: url("./img/side_button_back.svg");
+    background-image: url("/assets/images/ui/side_button_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     padding-left: 0.5%;
@@ -1818,7 +1821,7 @@ button {
     margin-right: auto;
     width: 15vw;
     height: 4.75vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     padding: 0.5% 4% 0.5% 4%;
@@ -1831,7 +1834,7 @@ button {
     position: relative;
     width: 15.7vw;
     height: 26vw;
-    background-image: url("./img/product_back.svg");
+    background-image: url("/assets/images/ui/product_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -1947,7 +1950,7 @@ button {
     position: relative;
     width: 100%;
     height: 20vw;
-    background-image: url("./img/header_account_back.svg");
+    background-image: url("/assets/images/ui/header_account_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -2003,7 +2006,8 @@ button {
     width: 55.75%;
     height: 5.5vw;
     background-image:
-        url("./img/order_start_click.svg"), url("./img/order_start_back.svg");
+        url("/assets/images/ui/order_start_click.svg"),
+        url("/assets/images/ui/order_start_back.svg");
     background-position:
         75% 55%,
         0% 0%;
@@ -2055,7 +2059,7 @@ button {
     position: relative;
     width: 67vw;
     height: 12vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
 }
@@ -2092,7 +2096,7 @@ button {
     margin-top: -3.8vw;
     height: 27vw;
     width: 100%;
-    background-image: url("./img/store_back.svg");
+    background-image: url("/assets/images/ui/store_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     padding-top: 2vw;
@@ -2126,7 +2130,7 @@ button {
     margin-left: 3.25%;
     width: 27.5%;
     height: 3.6vw;
-    background-image: url("./img/button_return_click.svg");
+    background-image: url("/assets/images/ui/button_return_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     font-size: 1.3vw;
@@ -2166,7 +2170,7 @@ button {
     z-index: 2;
     width: 66vw;
     height: 47.5vw;
-    background-image: url("./img/yandex_map_back.svg");
+    background-image: url("/assets/images/ui/yandex_map_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     pointer-events: none;
@@ -2222,7 +2226,7 @@ button {
     position: relative;
     width: 60vw;
     height: 6.5vw;
-    background-image: url("./img/contacts_back.svg");
+    background-image: url("/assets/images/ui/contacts_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     text-align: center;
@@ -2240,7 +2244,7 @@ button {
     transform: translateX(-47.5%);
     width: 42.5vw;
     height: 15vw;
-    background-image: url("./img/404_back.svg");
+    background-image: url("/assets/images/ui/404_back.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
 }
@@ -2289,7 +2293,7 @@ button {
 .order_type {
     width: 12.5vw;
     height: 2.5vw;
-    background-image: url("./img/header_button_click.svg");
+    background-image: url("/assets/images/ui/header_button_click.svg");
     background-repeat: no-repeat;
     background-size: 100% 100%;
     font-size: 1.5vw;

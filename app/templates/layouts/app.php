@@ -25,7 +25,7 @@ $flashMessage = $flash->get();
         </title>
         <link rel="canonical" href="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
-		<link rel="stylesheet" href="/styles.css">
+		<link rel="stylesheet" href="/assets/css/app.css">
 	</head>
 
 	<body class="body is-loading" aria-busy="true"
@@ -33,7 +33,7 @@ $flashMessage = $flash->get();
         data-recaptcha-site-key="<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
     >
         <div class="loader-overlay" id="loader">
-            <img class="loader" src="/img/loader.png" alt="">
+            <img class="loader" src="/assets/images/ui/loader.png" alt="">
             <span class="sr-only">Страница загружается</span>
         </div>
 
@@ -50,7 +50,7 @@ $flashMessage = $flash->get();
             <button class="notification_close_btn" id="notification-close-btn">✕</button>
 
             <div class="notification_top">
-                <img class="notification_icon"src="/img/inf.png">
+                <img class="notification_icon"src="/assets/images/ui/inf.png">
                 <div class="notification_text" id="notification-text"></div>
             </div>
             

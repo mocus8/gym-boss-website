@@ -4,7 +4,7 @@
             <div class="button_return_text">
                 На главную
             </div>
-            <img class="button_return_img" src="/img/arrow_back.png">
+            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
         </div>
     </a>
 </div>
@@ -31,7 +31,7 @@
         </div>
 
         <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/img/error_modal_icon.png">
+            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
             <div class="error_modal_text"></div>
         </div>
 
@@ -83,7 +83,7 @@
         </div>
 
         <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/img/error_modal_icon.png">
+            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
             <div class="error_modal_text"></div>
         </div>
 
@@ -103,7 +103,7 @@
         </div>
 
         <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/img/error_modal_icon.png">
+            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
             <div class="error_modal_text"></div>
         </div>
 
@@ -123,7 +123,7 @@
         </div>
 
         <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/img/error_modal_icon.png">
+            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
             <div class="error_modal_text"></div>
         </div>
 

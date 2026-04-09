@@ -4,7 +4,7 @@
             <div class="button_return_text">
                 На главную
             </div>
-            <img class="button_return_img" src="/img/arrow_back.png">
+            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
         </div>
     </a>
 </div>

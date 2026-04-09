@@ -4,7 +4,7 @@
             <div class="button_return_text">
                 На главную
             </div>
-            <img class="button_return_img" src="/img/arrow_back.png">
+            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
         </div>
     </a>
 </div>
@@ -21,7 +21,7 @@
 
 <div class="stores_right">
     <div class="stores_map_loader" id="stores-map-loader">
-        <img class="loader" src="/img/loader.png" alt="Загрузка карты">
+        <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка карты">
     </div>
 
     <div class="yandex_map_back"></div>

@@ -175,7 +175,7 @@ export class StoresMap {
                 },
                 {
                     iconLayout: "default#image",
-                    iconImageHref: "/img/custom-map-pin.png",
+                    iconImageHref: "/assets/images/ui/custom-map-pin.png",
                     iconImageSize: [60, 55],
                     iconImageOffset: [-20, -40],
 
@@ -454,7 +454,7 @@ export class CourierMap {
             },
             {
                 iconLayout: "default#image",
-                iconImageHref: "/img/custom-map-pin.png",
+                iconImageHref: "/assets/images/ui/custom-map-pin.png",
                 iconImageSize: [60, 55],
                 iconImageOffset: [-20, -40],
 
@@ -909,7 +909,7 @@ export class PickupMap {
                 },
                 {
                     iconLayout: "default#image",
-                    iconImageHref: "/img/custom-map-pin.png",
+                    iconImageHref: "/assets/images/ui/custom-map-pin.png",
                     iconImageSize: [60, 55],
                     iconImageOffset: [-20, -40],
 
@@ -944,7 +944,8 @@ export class PickupMap {
                         btn.disabled = true;
 
                         placemark.options.set({
-                            iconImageHref: "/img/custom-map-pin-chosen.png",
+                            iconImageHref:
+                                "/assets/images/ui/custom-map-pin-chosen.png",
                         });
 
                         this.#selectedStoreMarker = placemark;
@@ -970,7 +971,8 @@ export class PickupMap {
                             // Если уже выбран другой магазин - сбрасываем его иконку
                             if (this.#selectedStoreMarker) {
                                 this.#selectedStoreMarker.options.set({
-                                    iconImageHref: "/img/custom-map-pin.png",
+                                    iconImageHref:
+                                        "/assets/images/ui/custom-map-pin.png",
                                 });
                             }
 
@@ -980,7 +982,8 @@ export class PickupMap {
                             btn.disabled = true;
 
                             placemark.options.set({
-                                iconImageHref: "/img/custom-map-pin-chosen.png",
+                                iconImageHref:
+                                    "/assets/images/ui/custom-map-pin-chosen.png",
                             });
 
                             this.#selectedStoreMarker = placemark;
@@ -1009,7 +1012,7 @@ export class PickupMap {
         // Стандартные балуны
         if (this.#selectedStoreMarker) {
             this.#selectedStoreMarker.options.set({
-                iconImageHref: "/img/custom-map-pin.png",
+                iconImageHref: "/assets/images/ui/custom-map-pin.png",
             });
             this.#selectedStoreMarker = null;
         }

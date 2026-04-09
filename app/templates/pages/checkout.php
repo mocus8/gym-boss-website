@@ -4,7 +4,7 @@
             <div class="button_return_text">
                 На главную
             </div>
-            <img class="button_return_img" src="/img/arrow_back.png">
+            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
         </div>
     </a>
 </div>
@@ -56,7 +56,7 @@
 
             <div class="map_container">
                 <div class="checkout_map_loader" id="courier-map-loader"> 
-                    <img class="loader" src="/img/loader.png" alt="Загрузка карты">
+                    <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка карты">
                 </div>
 
                 <div class="checkout_map" id="courier-map"></div>
@@ -78,7 +78,7 @@
 
             <div class="map_container">
                 <div class="checkout_map_loader" id="pickup-map-loader">
-                    <img class="loader" src="/img/loader.png" alt="Загрузка карты">
+                    <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка карты">
                 </div>
 
                 <div class="checkout_map" id="pickup-map"></div>
@@ -139,7 +139,7 @@
 
         <div class="payment_errors">
             <div class="order_rigth_notification">
-                <img class="error_modal_icon" src="/img/error_modal_icon.png">
+                <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
                 Сайт работает в тестовом режиме, не используейте реальные карты. <br>
                 Карты для теста: 5555555555554444 (успех), 5555555555554535 (ошибка)
             </div>

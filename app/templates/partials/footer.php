@@ -13,13 +13,13 @@
         </div>
         <div class="footer_social">
             Наши соцсети:
-            <a href="https://vk.com/zabijaka1488" target="_blank"><img class="footer_social_img" src="/img/vk.png"></a>
-            <a href="https://t.me/sldkvil" target="_blank"><img class="footer_social_img" src="/img/tg.png"></a>
+            <a href="https://vk.com/zabijaka1488" target="_blank"><img class="footer_social_img" src="/assets/images/ui/vk.png"></a>
+            <a href="https://t.me/sldkvil" target="_blank"><img class="footer_social_img" src="/assets/images/ui/tg.png"></a>
         </div>
         <div class="footer_pay">
-            <img class="footer_pay_img" src="/img/visa.png">
-            <img class="footer_pay_img" src="/img/mir.png">
-            <img class="footer_pay_img" src="/img/master_card.png">
+            <img class="footer_pay_img" src="/assets/images/ui/visa.png">
+            <img class="footer_pay_img" src="/assets/images/ui/mir.png">
+            <img class="footer_pay_img" src="/assets/images/ui/master_card.png">
         </div>
     </div>
 </footer>

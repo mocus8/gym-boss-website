@@ -65,7 +65,7 @@ function createCartProductElement(item) {
     minusBtn.dataset.productId = String(item.id);
     const minusImg = document.createElement("img");
     minusImg.classList.add("product_interaction_sign");
-    minusImg.src = "/img/minus.png";
+    minusImg.src = "/assets/images/ui/minus.png";
     minusBtn.appendChild(minusImg);
     countWrap.appendChild(minusBtn);
 
@@ -84,7 +84,7 @@ function createCartProductElement(item) {
     plusBtn.dataset.productId = String(item.id);
     const plusImg = document.createElement("img");
     plusImg.classList.add("product_interaction_sign");
-    plusImg.src = "/img/plus.png";
+    plusImg.src = "/assets/images/ui/plus.png";
     plusBtn.appendChild(plusImg);
     countWrap.appendChild(plusBtn);
 
@@ -96,7 +96,7 @@ function createCartProductElement(item) {
     removeBtn.dataset.productId = String(item.id);
     const removeImg = document.createElement("img");
     removeImg.classList.add("product_interaction_delete");
-    removeImg.src = "/img/trash.png";
+    removeImg.src = "/assets/images/ui/trash.png";
     removeBtn.appendChild(removeImg);
     interaction.appendChild(removeBtn);
 

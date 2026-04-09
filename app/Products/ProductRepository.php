@@ -74,7 +74,7 @@ class ProductRepository {
                 'slug' => $row['prdct_slug'],
                 'name' => $row['prdct_name'],
                 'price' => $row['prdct_price'],
-                'image_path' => !empty($row['image_path']) ? $row['image_path'] : '/img/default.png'
+                'image_path' => !empty($row['image_path']) ? $row['image_path'] : '/assets/images/products/default.png'
             ];
         }
   
@@ -234,7 +234,7 @@ class ProductRepository {
         // Объявляем и заполняем массив с найденными товарами
         $products = [];
         while ($row = $result->fetch_assoc()) {
-            $row['image_path'] = $row['image_path'] ?: '/img/default.png';    // если нет картинки - дефолтную
+            $row['image_path'] = $row['image_path'] ?: '/assets/images/products/default.png';    // если нет картинки - дефолтную
             $products[(int)$row['id']] = $row;
         }
     
@@ -425,7 +425,7 @@ class ProductRepository {
                 'slug' => $row['prdct_slug'],
                 'name' => $row['prdct_name'],
                 'price' => $row['prdct_price'],
-                'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/img/default.png',
+                'image_path' => !empty($row['img_path']) ? $row['img_path'] : '/assets/images/products/default.png',
             ];
         }
 
