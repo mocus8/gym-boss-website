@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $title  = 'Личный кабинет - Gym Boss';
 $robots = 'noindex,nofollow';
-$pageModuleScripts = ['/js/users/account/account.page.js'];
+$pageModuleScripts = ['/assets/js/users/account/account.page.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

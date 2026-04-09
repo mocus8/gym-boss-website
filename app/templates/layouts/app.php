@@ -63,10 +63,10 @@ $flashMessage = $flash->get();
 
         <!-- Обязательные для всех страниц -->
         <script defer src="https://www.google.com/recaptcha/api.js?render=<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"></script>
-        <script defer src="/js/loader.js"></script>
-        <script type="module" src="/js/ui/flash-notifications.js"></script>
-        <script type="module" src="/js/ui/auth-modal.js"></script>
-        <script type="module" src="/js/header.js"></script>
+        <script defer src="/assets/js/loader.js"></script>
+        <script type="module" src="/assets/js/ui/flash-notifications.js"></script>
+        <script type="module" src="/assets/js/ui/auth-modal.js"></script>
+        <script type="module" src="/assets/js/header.js"></script>
         
         <!-- Данные для флеш-уведомления, если оно есть -->
         <?php if ($flashMessage !== null) { ?>

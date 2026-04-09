@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $title  = 'Корзина товаров - Gym Boss';
 $robots = 'noindex,nofollow';
-$pageModuleScripts = ['/js/cart/cart.page.js'];
+$pageModuleScripts = ['/assets/js/cart/cart.page.js'];
 
 // Смотрим, залогинен ли пользователь 
 $isAuthenticated = $currentUser !== null;

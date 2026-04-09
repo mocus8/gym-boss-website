@@ -6,8 +6,8 @@ declare(strict_types=1);
 $title  = 'Магазины Gym Boss';
 $canonical = $baseUrl . '/stores';
 $pageModuleScripts = [
-    '/js/stores/stores.page.js',
-    '/js/maps/index.js'
+    '/assets/js/stores/stores.page.js',
+    '/assets/js/maps/index.js'
 ];
 
 // Через буфер записываем в переменную контент страницы

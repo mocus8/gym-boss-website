@@ -13,7 +13,7 @@ if ($orderId <= 0) {
 
 $title  = "Заказ № $orderId - Gym Boss";
 $robots = 'noindex, nofollow';
-$pageModuleScripts = ['/js/orders/order.page.js'];
+$pageModuleScripts = ['/assets/js/orders/order.page.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

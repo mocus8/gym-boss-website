@@ -8,7 +8,7 @@ $token = isset($_GET['token']) ? trim((string)$_GET['token']) : '';
 
 $title  = 'Сброс пароля - Gym Boss';
 $robots = 'noindex, nofollow';
-$pageModuleScripts = ['/js/users/auth/password-reset.page.js'];
+$pageModuleScripts = ['/assets/js/users/auth/password-reset.page.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

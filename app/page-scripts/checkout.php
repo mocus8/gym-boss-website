@@ -6,8 +6,8 @@ declare(strict_types=1);
 $title  = 'Оформление заказа - Gym Boss';
 $robots = 'noindex,nofollow';
 $pageModuleScripts = [
-    '/js/orders/checkout.page.js',
-    '/js/maps/index.js'
+    '/assets/js/orders/checkout.page.js',
+    '/assets/js/maps/index.js'
 ];
 
 // Через буфер записываем в переменную контент страницы
