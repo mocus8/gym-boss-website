@@ -2,9 +2,10 @@
     "name": "gymboss",
     "version": "1.0.0",
     "description": "**Стек:** PHP, MySQL, JavaScript, HTML/CSS\r **Статус:** Основной функционал реализован. Проект в активной разработке.",
-    "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "lint": "eslint public/assets/js --max-warnings=0",
+        "lint:fix": "eslint public/assets/js --fix",
+        "test": "echo \"No JS tests configured\""
     },
     "repository": {
         "type": "git",
@@ -13,7 +14,6 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "type": "commonjs",
     "bugs": {
         "url": "https://github.com/mocus8/gym-boss-website/issues"
     },
