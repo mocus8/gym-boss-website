@@ -430,21 +430,17 @@ button {
     cursor: pointer;
 }
 
-.header_account_trigger::after {
-    content: "";
-    display: inline-block;
-    margin-left: 6px;
-    width: 7px;
-    height: 7px;
+.header_account_trigger_arrow {
+    width: 8px;
+    height: 8px;
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
     transform: rotate(45deg);
-    transition: transform 0.16s ease;
-    align-self: center;
+    transition: transform 0.2s ease;
 }
 
-.header_account_data:hover .header_account_trigger::after {
-    transform: rotate(-135deg);
+.header_account_trigger[aria-expanded="true"] .header_account_trigger_arrow {
+    transform: rotate(225deg);
 }
 
 .header_account_inf {
@@ -454,28 +450,6 @@ button {
     text-overflow: ellipsis;
     font-size: 1.2vw;
     font-family: "Jost", Arial;
-}
-
-.header_account_dropdown {
-    z-index: 100;
-    position: absolute;
-    top: 100%;
-    width: 100%;
-    padding: 8px 0;
-    background-color: #4b4b4b;
-    border: 0.1vw solid black;
-    border-radius: 0.5vw;
-    font-size: 1.2vw;
-    font-family: "Jost", Arial;
-    box-sizing: border-box;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.header_account_data:hover .header_account_dropdown {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
 }
 
 .header_account_dropdown > * {

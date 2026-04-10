@@ -7,6 +7,54 @@ import { logout } from "./users/auth/auth.api.js";
 import { ConfirmationModal } from "./ui/confirmation-modal.js";
 import { notification } from "./ui/notification.js";
 
+// Инициализация дропдауна аккаунта
+function initAccountDropdown() {
+    const accountBlock = document.querySelector(".header_account_data");
+    const accountMenuTrigger = document.getElementById("account-menu-trigger");
+    const accountMenu = document.getElementById("account-menu");
+    if (!accountBlock || !accountMenuTrigger || !accountMenu) return;
+
+    // Обработчик клика на триггер
+    accountMenuTrigger.addEventListener("click", () => {
+        const isOpened =
+            accountMenuTrigger.getAttribute("aria-expanded") === "true";
+
+        // Переключаем состояние меню и aria атрибута
+        accountMenu.classList.toggle("hidden", isOpened);
+        accountMenuTrigger.setAttribute("aria-expanded", String(!isOpened));
+    });
+
+    // Обработчик закрытия по клику escape
+    document.addEventListener("keydown", (e) => {
+        const isOpened =
+            accountMenuTrigger.getAttribute("aria-expanded") === "true";
+
+        if (!isOpened || e.key !== "Escape") return;
+
+        hideMenu();
+
+        // Возвращаем фокус на триггер
+        accountMenuTrigger.focus();
+    });
+
+    // Обработчик закрытия при клике на фон
+    document.addEventListener("click", (e) => {
+        const isOpened =
+            accountMenuTrigger.getAttribute("aria-expanded") === "true";
+
+        if (accountBlock.contains(e.target) || !isOpened) return;
+
+        hideMenu();
+    });
+
+    // Функция для скрытия меню
+    function hideMenu() {
+        // Скрываем меню и добавляем aria атрибут о том что меню закрыто
+        accountMenu.classList.add("hidden");
+        accountMenuTrigger.setAttribute("aria-expanded", "false");
+    }
+}
+
 // Инициализация поиска
 function initHeaderSearch() {
     const searchBlock = document.getElementById("header-search");
@@ -30,6 +78,11 @@ function initHeaderSearch() {
 
         return;
     }
+
+    // Отменяем стандартную отправку формы
+    searchBlock.addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
 
     // Обработчик ввода в input-е
     // Если что то есть - даем результаты, если пусто - скрываем их
@@ -207,6 +260,7 @@ if (document.readyState === "loading") {
     document.addEventListener(
         "DOMContentLoaded",
         () => {
+            initAccountDropdown();
             initHeaderSearch();
             initLogoutBtn();
         },
@@ -215,6 +269,7 @@ if (document.readyState === "loading") {
         },
     );
 } else {
+    initAccountDropdown();
     initHeaderSearch();
     initLogoutBtn();
 }

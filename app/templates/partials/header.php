@@ -1,5 +1,5 @@
 <header class="header">
-    <a href="/" class="icon_href">
+    <a class="icon_href" href="/">
         <div class="internet_shop">
             Интернет-магазин спортивной атрибутики
         </div>
@@ -8,101 +8,126 @@
             “Gym Boss”
         </div>
 
-        <img class="billy" src="/assets/images/ui/billy.svg" alt="Мужик, качёк, крутой парень, Билли Харрингтон">
-<!--                                                                        Добавлять этот атрибут для CEO-->
+        <img class="billy" src="/assets/images/ui/billy.svg" alt="">
     </a>
 
-    <div class="header_buttons">
-        <a href="/">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/catalog.png">
-                
-                <div class="header_button_text">
-                    Каталог
-                </div>
-            </div>
-        </a>
+    <nav class="header_buttons">
+        <ul>
+            <li>
+                <a class="header_button" href="/">
+                    <img class="header_button_icon" src="/assets/images/ui/catalog.png" alt="">
+                    
+                    <span class="header_button_text">
+                        Каталог
+                    </span>
+                </a>
+            </li>
 
-        <a href="/stores">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/map.png">
+            <li>
+                <a class="header_button" href="/stores">
+                    <img class="header_button_icon" src="/assets/images/ui/map.png" alt="">
 
-                <div class="header_button_text">
-                    Наши магазины
-                </div>
-            </div>
-        </a>
+                    <span class="header_button_text">
+                        Наши магазины
+                    </span>
+                </a>
+            </li>
 
-        <a href="/contacts">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/phone.png">
+            <li>
+                <a class="header_button" href="/contacts">
+                    <img class="header_button_icon" src="/assets/images/ui/phone.png" alt="">
 
-                <div class="header_button_text">
-                    Контакты
-                </div>
-            </div>
-        </a>
+                    <span class="header_button_text">
+                        Контакты
+                    </span>
+                </a>
+            </li>
 
-        <a href="/about">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/info.png">
+            <li>
+                <a class="header_button" href="/about">
+                    <img class="header_button_icon" src="/assets/images/ui/info.png" alt="">
 
-                <div class="header_button_text">
-                    О сайте
-                </div>
-            </div>
-        </a>
-     </div>
+                    <span class="header_button_text">
+                        О сайте
+                    </span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
-    <div class="header_search" id="header-search">
-        <div class="header_search_click">
-            <img class="header_search_icon" src="/assets/images/ui/glass.png">
+    <form
+        id="header-search"
+        class="header_search"
+        role="search"
+        action="/api/products/search"
+        method="get"
+    >
+        <img class="header_search_icon" src="/assets/images/ui/glass.png" alt="">
 
-            <label for="header-search-input" class="header_search_text">
-                Поиск товаров:
-            </label>
+        <label for="header-search-input" class="header_search_text">
+            Поиск товаров:
+        </label>
 
-            <input type="search" id="header-search-input" name="q" placeholder="гриф для штанги ..." class="header_search_input" autocomplete="off" maxlength="150">
-            
-            <button class="header_search_cancel_button hidden" id="header-search-cancel-button">✕</button>
+        <input
+            id="header-search-input"
+            class="header_search_input"
+            type="search"
+            name="q"
+            maxlength="150"
+            placeholder="гриф для штанги ..."
+            autocomplete="off"
+        >
+        
+        <button
+            id="header-search-cancel-button"
+            class="header_search_cancel_button hidden"
+            type="button"
+            aria-label="Очистить поиск"
+        >
+            ✕
+        </button>
 
-            <div class="query_products_container hidden" id="search-results-container"></div>
-        </div>
-    </div>
+        <div id="search-results-container" class="query_products_container hidden"></div>
+    </form>
 
     <div class="header_account">
         <div class="header_account_up">
-            <img class="header_account_icon" src="/assets/images/ui/person.png">
+            <img class="header_account_icon" src="/assets/images/ui/person.png" alt="">
 
             <a href="/cart">
-                <div class="header_button account">
-                    <img class="header_button_icon" src="/assets/images/ui/cart.png">
+                <img class="header_button_icon" src="/assets/images/ui/cart.png" alt="">
 
-                    <div class="header_button_text">
-                        Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)
-                    </div>
-                </div>
+                <span class="header_button_text">
+                    Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)
+                </span>
             </a>
         </div>
 
         <?php if ($currentUser === null) { ?>
-            <button class="header_account_button_guest"  data-modal-open="auth-modal">
+            <button class="header_account_button_guest" data-modal-open="auth-modal" type="button">
                 Войти
             </button>
         <?php } else { ?>
             <div class="header_account_data">
-                <button class="header_account_trigger" type="button">
-                    <div class="header_account_inf">
-                        <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
-                    </div>
+                <button
+                    id="account-menu-trigger"
+                    class="header_account_trigger"
+                    type="button"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="account-menu"
+                >
+                    <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
+
+                    <span class="header_account_trigger_arrow" aria-hidden="true"></span>
                 </button>
 
-                <div class="header_account_dropdown">
+                <div id="account-menu" class="header_account_dropdown hidden" aria-labelledby="account-menu-trigger">
                     <a href="/account">Профиль</a>
 
                     <a href="/account/orders">Мои заказы</a>
 
-                    <button data-modal-open="logout-modal">Выйти</button>
+                    <button type="button" data-modal-open="logout-modal">Выйти</button>
                 </div>
             </div>
         <?php } ?>
