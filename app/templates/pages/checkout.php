@@ -37,14 +37,12 @@
             <div class="map_search_form">
                 <input type="text"
                     id="address-search-input"
-                    autocomplete="street-address"
+                    autocomplete="off"
                     autocorrect="off"
                     autocapitalize="off"
                     spellcheck="false"
                     class="map_search_input" 
                     placeholder="Введите адрес доставки"
-                    readonly
-                    onfocus="this.removeAttribute('readonly')"
                 >
 
                 <button type="button" id="address-search-btn" class="map_search_btn">
