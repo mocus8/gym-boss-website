@@ -93,6 +93,7 @@ document.addEventListener("click", async function (e) {
     // Определяем куда пришелся click
     const addBtn = e.target.closest("[data-product-add-cart]");
     const subBtn = e.target.closest("[data-product-subtract-cart]");
+    const minorImgBtn = e.target.closest(".product_minor_images_button");
 
     // Если нажали на "+" или "добавить в корзину"
     if (addBtn) {
@@ -184,5 +185,16 @@ document.addEventListener("click", async function (e) {
             // Отключаем залипание
             setProductButtonsLoading(false);
         }
+    }
+
+    // Если нажали на фото для переключения
+    if (minorImgBtn) {
+        const minorImg = minorImgBtn.querySelector("img");
+        const mainImg = document.querySelector(".product_main_img");
+
+        if (!minorImg || !mainImg) return;
+
+        mainImg.src = minorImg.src;
+        mainImg.alt = minorImg.alt;
     }
 });
