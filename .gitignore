@@ -19,15 +19,16 @@ docker-php-ext-mysqli.ini
 # PHP / Composer
 # =================================
 vendor/
-/vendor/
 .phpunit.result.cache
 
 # =================================
-# Laravel
+# Непостояные данные
 # =================================
-storage/logs/*.log
-storage/framework/*
-bootstrap/cache/*
+storage/logs/*
+storage/cache/*
+!storage/.gitkeep
+!storage/cache/.gitkeep
+!storage/logs/.gitkeep
 
 # =================================
 # Config
@@ -48,7 +49,6 @@ public/hot
 # =================================
 # NPM / Yarn
 # =================================
-package-lock.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

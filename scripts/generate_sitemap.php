@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // Генератор sitemap.xml
 
-require_once __DIR__ . '/../src/bootstrap.php';
+require_once __DIR__ . '/../bootstrap/app.php';
 
 // Если из bootatrap не пришел baseUrl
 if (!$baseUrl) {
@@ -91,7 +91,7 @@ foreach ($urls as $u) {
 }
 
 $xml .= '</urlset>' . "\n";
-$outPath = __DIR__ . '/../sitemap.xml';
+$outPath = __DIR__ . '/../public/sitemap.xml';
 
 if (file_put_contents($outPath, $xml) === false) {
     $logger->error('Failed to write sitemap file', [

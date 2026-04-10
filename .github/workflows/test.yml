@@ -1,11 +1,11 @@
-# CI pipeline for GymBoss project
-
 name: Test & Lint
+
 on: [pull_request, push]
 
 jobs:
     test:
         runs-on: ubuntu-latest
+
         steps:
             - uses: actions/checkout@v4
 
@@ -21,10 +21,10 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
+                  cache: "npm"
+
+            - name: Install Node dependencies
+              run: npm ci
 
             - name: ESLint (JS)
-              run: |
-                  cd js
-                  npm init -y
-                  npm install eslint@latest --save-dev
-                  npx eslint . --max-warnings=0 || true
+              run: npm run lint
