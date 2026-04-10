@@ -20,42 +20,56 @@ $flashMessage = $flash->get();
 	<head>
 		<meta charset="utf-8">
         <meta name="robots" content="<?= htmlspecialchars($robots, ENT_QUOTES, 'UTF-8') ?>">
-		<title>
-            <?= htmlspecialchars($title ?? 'Gym Boss - спорттовары', ENT_QUOTES, 'UTF-8') ?>
-        </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+		<title><?= htmlspecialchars($title ?? 'Gym Boss - спорттовары', ENT_QUOTES, 'UTF-8') ?></title>
         <link rel="canonical" href="<?= htmlspecialchars($canonical, ENT_QUOTES, 'UTF-8') ?>">
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" href="/assets/css/app.css">
 	</head>
 
-	<body class="body is-loading" aria-busy="true"
+	<body
+        class="body is-loading"
+        aria-busy="true"
         data-yandex-maps-key="<?= htmlspecialchars($servicesConfig['yandex_maps']['key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
         data-recaptcha-site-key="<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
     >
-        <div class="loader-overlay" id="loader">
+
+        <!-- Базовый skip-link для перехода сразу к содежимому минуя header итд -->
+        <a class="skip-link" href="#main-content">
+            Пропустить навигацию и перейти к содержимому
+        </a>
+
+        <div id="loader" class="loader-overlay" role="status">
             <img class="loader" src="/assets/images/ui/loader.png" alt="">
             <span class="sr-only">Страница загружается</span>
         </div>
 
-        <div class="desktop">
-            <?php require_once __DIR__ . '/../partials/header.php'; ?>
-            <main class="main">
-                <?= $content ?? '' ?>
-            </main>
-            <?php require_once __DIR__ . '/../partials/footer.php'; ?>
-        </div>
+        <?php require_once __DIR__ . '/../partials/header.php'; ?>
+
+        <main id="main-content" class="main">
+            <?= $content ?? '' ?>
+        </main>
+
+        <?php require_once __DIR__ . '/../partials/footer.php'; ?>
 
         <!-- Tost-уведомление -->
-        <div class="notification hidden" id="notification">
-            <button class="notification_close_btn" id="notification-close-btn">✕</button>
+        <div id="notification" class="notification hidden" role="status">
+            <button
+                id="notification-close-btn"
+                class="notification_close_btn"
+                type="button"
+                aria-label="Закрыть уведомление"
+            >
+                ✕
+            </button>
 
             <div class="notification_top">
-                <img class="notification_icon"src="/assets/images/ui/inf.png">
-                <div class="notification_text" id="notification-text"></div>
+                <img class="notification_icon" src="/assets/images/ui/inf.png" alt="">
+                <div id="notification-text" class="notification_text"></div>
             </div>
             
-            <div class="notification_progress">
-                <div class="notification_text_progress_fill" id="notification-progress-fill"></div>
+            <div class="notification_progress" aria-hidden="true">
+                <div id="notification-progress-fill" class="notification_text_progress_fill"></div>
             </div>
         </div>
 
@@ -98,6 +112,7 @@ $flashMessage = $flash->get();
 
         <!-- Универсальная модалка подтверждения -->
         <?php require __DIR__ . '/../partials/modals/confirmation_modal.php' ?>
+
         <!-- Модалка входа/регистрации -->
         <?php require __DIR__ . '/../partials/modals/auth_modal.php' ?>
 	</body>
