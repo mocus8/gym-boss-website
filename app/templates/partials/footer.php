@@ -2,6 +2,8 @@
     <div class="footer_disklamer">
         Внимание: Этот сайт создан для демонстрации навыков разработки и не осуществляет реальную коммерческую деятельность.
 
+        <a class="colour_href" href="/about">О сайте</a>
+
         <a class="colour_href" href="/privacy">Политика конфиденциальности</a>
     </div>
 
