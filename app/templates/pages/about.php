@@ -22,6 +22,6 @@
         Сайт представляет из себя макет интернет-магазина со всем необходимым функционалом, адаптирован под все устройства. 
     </div>
     <div class="customers_inf">
-        Связаться с разработчиком можно через почту <a href='mailto: mocus8@gmail' class="colour_href">(mocus8@gmail.com)</a>, через мессенджеры <a href="https://api.whatsapp.com/send?phone=89167413418" target="_blank" class="colour_href">WhatsApp (+7 916 741 34 18)</a> и <a href="https://t.me/sldkvil" target="_blank" class="colour_href">Telegram (@sldkvil)</a> 
+        Связаться с разработчиком можно через почту <a href='mailto: mocus8@gmail' class="colour_href">(mocus8@gmail.com)</a>, через мессенджеры <a href="https://api.whatsapp.com/send?phone=89167413418" target="_blank" rel="noopener noreferrer" class="colour_href">WhatsApp (+7 916 741 34 18)</a> и <a href="https://t.me/mocus8" target="_blank" rel="noopener noreferrer" class="colour_href">Telegram (@mocus8)</a> 
     </div>
 </div>

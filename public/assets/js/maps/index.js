@@ -159,7 +159,7 @@ export class StoresMap {
                             </div>
 
                             <div style="text-align: center;">
-                                <a href="${yandexMapsUrl}" target="_blank" style="
+                                <a href="${yandexMapsUrl}" target="_blank" rel="noopener noreferrer" rel="noopener noreferrer" style="
                                     display: inline-block;
                                     background: #4B4B4B;
                                     color: black;

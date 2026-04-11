@@ -26,8 +26,7 @@
             Электронная почта:
         </div>
         <div class="contact_inf">
-            <a href='mailto: mocus8@gmail' class="colour_href">mocus8@gmail.com</a> - по всем вопросам<br>
-            <a href='mailto: mocus8@gmail' class="colour_href">mocus8@gmail.com</a> - по вопросам сотрудничества
+            <a href='mailto:mocus8@gmail.com' class="colour_href">mocus8@gmail.com</a> - по всем вопросам<br>
         </div>
     </div>
     <div class="contact">
@@ -35,8 +34,8 @@
             Социальные сети:
         </div>
         <div class="contact_inf">
-            <a href="https://t.me/sldkvil" target="_blank" class="colour_href">Наш Телеграм - канал</a><br>
-            <a href="https://vk.com/zabijaka1488" target="_blank" class="colour_href">Наше сообщество ВКонтакте</a>
+            <a href="https://t.me/mocus8" target="_blank" rel="noopener noreferrer" class="colour_href">Telegram разработчика</a><br>
+            <a href="https://vk.com/zabijaka1488" target="_blank" rel="noopener noreferrer" class="colour_href">ВК профиль разработчика</a>
         </div>
     </div>
 </div>

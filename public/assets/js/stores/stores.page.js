@@ -91,7 +91,7 @@ function createStoreEl(store) {
     //                 <div style="margin-top: 10px;">${store.phone}</div>
     //             </a>
     //         </div>
-    //         <a href="${yandexMapsUrl}" target="_blank">
+    //         <a href="${yandexMapsUrl}" target="_blank" rel="noopener noreferrer">
     //             <div class="store_button">
     //                 На карте
     //             </div>
