@@ -35,7 +35,7 @@
         </div>
         <div class="contact_inf">
             <a href="https://t.me/mocus8" target="_blank" rel="noopener noreferrer" class="colour_href">Telegram разработчика</a><br>
-            <a href="https://vk.com/zabijaka1488" target="_blank" rel="noopener noreferrer" class="colour_href">ВК профиль разработчика</a>
+            <a href="https://vk.com/mocus8" target="_blank" rel="noopener noreferrer" class="colour_href">ВК профиль разработчика</a>
         </div>
     </div>
 </div>
