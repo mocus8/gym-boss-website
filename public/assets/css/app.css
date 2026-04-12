@@ -1,9 +1,5 @@
 /* Подключение всех стилей */
 
-/* Все legacy-стили
-TODO: потом удалить файл и это подключение */
-@import url("/assets/css/app-legacy.css");
-
 /* Базовые стили, папка css/base/ */
 @import url("/assets/css/base/variables.css");
 @import url("/assets/css/base/reset.css");
