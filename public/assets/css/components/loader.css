@@ -1,1 +1,20 @@
 /* Лоадеры */
+
+@keyframes loader-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-critical);
+    background: var(--color-bg);
+}
+
+.loader-overlay__spinner {
+    width: 7.5rem;
+    height: 7.5rem;
+    animation: loader-spin var(--loader-speed);
+}

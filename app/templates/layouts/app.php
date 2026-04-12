@@ -28,7 +28,7 @@ $flashMessage = $flash->get();
 	</head>
 
 	<body
-        class="body is-loading"
+        class="is-loading"
         aria-busy="true"
         data-yandex-maps-key="<?= htmlspecialchars($servicesConfig['yandex_maps']['key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
         data-recaptcha-site-key="<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
@@ -39,14 +39,14 @@ $flashMessage = $flash->get();
             Пропустить навигацию и перейти к содержимому
         </a>
 
-        <div id="loader" class="loader-overlay" role="status">
-            <img class="loader" src="/assets/images/ui/loader.png" alt="">
-            <span class="sr-only">Страница загружается</span>
+        <div id="loader" class="loader-overlay flex-center" role="status">
+            <img class="loader-overlay__spinner" src="/assets/images/ui/loader.png" alt="">
+            <span class="visually-hidden">Страница загружается</span>
         </div>
 
         <?php require_once __DIR__ . '/../partials/header.php'; ?>
 
-        <main id="main-content" class="main">
+        <main id="main-content">
             <?= $content ?? '' ?>
         </main>
 

@@ -55,9 +55,10 @@
     --container-width: 75rem;
     --container-padding: 1rem;
 
-    /* Скорость переходов */
+    /* Скорости переходов и анимаций */
     --transition-fast: 0.2s ease;
     --transition-base: 0.3s ease;
+    --loader-speed: 1.5s linear infinite;
 
     /* Header */
     --header-height: 4.5rem;
@@ -65,6 +66,7 @@
     /* Z-index */
     --z-dropdown: 100;
     --z-sticky: 200;
+    --z-skip-link: 300;
     --z-modal: 1000;
     --z-notification: 2000;
     --z-critical: 3000;
