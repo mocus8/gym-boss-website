@@ -1,1 +1,86 @@
 /* Маленькие служебные классы */
+
+/* Сброс внешнего вида кнопок/ссылок-кнопок */
+.btn-reset {
+    border: none;
+    background: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+/* Визуально скрытый, но доступный для скринридеров контент */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Невидимый элемент, но занимает место в layout */
+.is-hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity var(--transition-fast),
+        visibility var(--transition-fast);
+}
+
+/* Хелперы выравнивания по flex */
+.flex {
+    display: flex;
+}
+
+.inline-flex {
+    display: inline-flex;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* gap-хелперы */
+.gap-8 {
+    gap: var(--space-8);
+}
+
+.gap-12 {
+    gap: var(--space-12);
+}
+
+/* Выравнивание текста */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Ограничение ширины текста */
+.text-narrow {
+    max-width: 40rem;
+}
+
+/* Изображение на всю ширину контейнера */
+.img-full {
+    display: block;
+    width: 100%;
+    height: auto;
+}
