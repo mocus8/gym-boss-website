@@ -35,7 +35,7 @@ $flashMessage = $flash->get();
     >
 
         <!-- Базовый skip-link для перехода сразу к содежимому минуя header итд -->
-        <a class="skip-link" href="#main-content">
+        <a class="skip-link shape-cut-corners" href="#main-content">
             Пропустить навигацию и перейти к содержимому
         </a>
 

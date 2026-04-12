@@ -12,6 +12,7 @@
 @import url("/assets/css/layout/footer.css");
 
 /* Переиспользуемые компоненты, папка css/components/ */
+@import url("/assets/css/components/shapes.css");
 @import url("/assets/css/components/buttons.css");
 @import url("/assets/css/components/product-card.css");
 @import url("/assets/css/components/dropdown.css");
