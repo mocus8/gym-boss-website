@@ -5,7 +5,6 @@
 @import url("/assets/css/base/variables.css");
 @import url("/assets/css/base/reset.css");
 @import url("/assets/css/base/base.css");
-@import url("/assets/css/base/utilities.css");
 
 /* Каркас страницы, Layout, папка css/layout/ */
 @import url("/assets/css/layout/layout.css");
@@ -22,3 +21,6 @@
 
 /* Страницы, папка css/pages/ */
 @import url("/assets/css/pages/home.css");
+
+/* Небольшие утилиты */
+@import url("/assets/css/base/utilities.css");
