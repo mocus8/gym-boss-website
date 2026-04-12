@@ -53,25 +53,13 @@ $flashMessage = $flash->get();
         <?php require_once __DIR__ . '/../partials/footer.php'; ?>
 
         <!-- Tost-уведомление -->
-        <div id="notification" class="notification hidden" role="status">
-            <button
-                id="notification-close-btn"
-                class="notification_close_btn"
-                type="button"
-                aria-label="Закрыть уведомление"
-            >
-                ✕
-            </button>
+        <?php require __DIR__ . '/../partials/notification.php' ?>
 
-            <div class="notification_top">
-                <img class="notification_icon" src="/assets/images/ui/inf.png" alt="">
-                <div id="notification-text" class="notification_text"></div>
-            </div>
-            
-            <div class="notification_progress" aria-hidden="true">
-                <div id="notification-progress-fill" class="notification_text_progress_fill"></div>
-            </div>
-        </div>
+        <!-- Универсальная модалка подтверждения -->
+        <?php require __DIR__ . '/../partials/modals/confirmation_modal.php' ?>
+        
+        <!-- Модалка входа/регистрации -->
+        <?php require __DIR__ . '/../partials/modals/auth_modal.php' ?>
 
         <!-- Подключаем разные скрипты -->
 
@@ -109,11 +97,5 @@ $flashMessage = $flash->get();
                 <script type="module" src="<?= htmlspecialchars($script, ENT_QUOTES, 'UTF-8') ?>"></script>
             <?php } ?>
         <?php } ?>
-
-        <!-- Универсальная модалка подтверждения -->
-        <?php require __DIR__ . '/../partials/modals/confirmation_modal.php' ?>
-
-        <!-- Модалка входа/регистрации -->
-        <?php require __DIR__ . '/../partials/modals/auth_modal.php' ?>
 	</body>
 </html>

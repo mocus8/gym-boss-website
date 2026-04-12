@@ -35,14 +35,6 @@
 }
 
 /* Хелперы выравнивания по flex */
-.flex {
-    display: flex;
-}
-
-.inline-flex {
-    display: inline-flex;
-}
-
 .flex-center {
     display: flex;
     align-items: center;
@@ -55,22 +47,10 @@
     justify-content: space-between;
 }
 
-/* gap-хелперы */
-.gap-8 {
-    gap: var(--space-8);
-}
-
-.gap-12 {
-    gap: var(--space-12);
-}
-
-/* Выравнивание текста */
-.text-center {
-    text-align: center;
-}
-
-.text-right {
-    text-align: right;
+.inline-flex-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Ограничение ширины текста */
