@@ -140,7 +140,6 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 1px var(--color-primary);
     outline: none;
 }
 
@@ -173,22 +172,18 @@ button {
 
     background-color: var(--color-primary);
     color: var(--color-text);
-    box-shadow: var(--shadow-sm);
     transition:
         background-color var(--transition-fast),
         box-shadow var(--transition-fast),
-        transform var(--transition-fast);
 }
 
 .btn:hover {
-    background-color: var(--color-primary-hover);
-    box-shadow: var(--shadow-md);
+    background-color: var(--color-primary);
     transform: translateY(-1px);
 }
 
 .btn:active {
     transform: translateY(0);
-    box-shadow: var(--shadow-sm);
 }
 
 .btn:disabled {
