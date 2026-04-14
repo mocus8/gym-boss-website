@@ -80,12 +80,6 @@ table {
     border-spacing: 0;
 }
 
-/* Убираем стандартный marker у списков с [role="list"] */
-ul[role="list"],
-ol[role="list"] {
-    list-style: none;
-}
-
 /* Для настройки prefers-reduced-motion: reduce убираем все анимации и плавность */
 @media (prefers-reduced-motion: reduce) {
     html {

@@ -10,6 +10,32 @@
     cursor: pointer;
 }
 
+/* Убираем стандартный маркер у списков */
+.list-reset {
+    list-style: none;
+}
+
+/* Фокус-обертка для ссылок-кнопок со сложной формой */
+.link-shell {
+    display: inline-block;
+    border-radius: var(--radius-md);
+    color: inherit;
+    text-decoration: none;
+}
+
+.link-shell:visited,
+.link-shell:hover,
+.link-shell:active {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Фокус-обертка для кнопок со сложной формой */
+.btn-shell {
+    display: inline-block;
+    border-radius: var(--radius-md);
+}
+
 /* Визуально скрытый, но доступный для скринридеров контент */
 .visually-hidden {
     position: absolute;

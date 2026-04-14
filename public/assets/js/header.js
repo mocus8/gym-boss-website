@@ -9,7 +9,9 @@ import { notification } from "./ui/notification.js";
 
 // Инициализация дропдауна аккаунта
 function initAccountDropdown() {
-    const accountBlock = document.querySelector(".header_account_data");
+    const accountBlock = document.querySelector(
+        ".site-header__account-wrapper",
+    );
     const accountMenuTrigger = document.getElementById("account-menu-trigger");
     const accountMenu = document.getElementById("account-menu");
     if (!accountBlock || !accountMenuTrigger || !accountMenu) return;
@@ -20,7 +22,7 @@ function initAccountDropdown() {
             accountMenuTrigger.getAttribute("aria-expanded") === "true";
 
         // Переключаем состояние меню и aria атрибута
-        accountMenu.classList.toggle("hidden", isOpened);
+        accountMenu.classList.toggle("is-hidden", isOpened);
         accountMenuTrigger.setAttribute("aria-expanded", String(!isOpened));
     });
 
@@ -50,7 +52,7 @@ function initAccountDropdown() {
     // Функция для скрытия меню
     function hideMenu() {
         // Скрываем меню и добавляем aria атрибут о том что меню закрыто
-        accountMenu.classList.add("hidden");
+        accountMenu.classList.add("is-hidden");
         accountMenuTrigger.setAttribute("aria-expanded", "false");
     }
 }
@@ -108,8 +110,8 @@ function initHeaderSearch() {
         searchResultsContainer.appendChild(searchMessageEl);
 
         // Показываем контейнер с результатами и кнопку закрытия поисковика
-        searchCancelBtn.classList.remove("hidden");
-        searchResultsContainer.classList.remove("hidden");
+        searchCancelBtn.classList.remove("is-hidden");
+        searchResultsContainer.classList.remove("is-hidden");
 
         // Вызываем функцию поиска и рендера результатов
         // Функция с debounce оберткой для ограничения запросов на уровне фронта
@@ -121,7 +123,7 @@ function initHeaderSearch() {
     searchInput.addEventListener("click", function () {
         if (this.value.trim() === "") return;
 
-        searchResultsContainer.classList.remove("hidden");
+        searchResultsContainer.classList.remove("is-hidden");
     });
 
     // Обработчик клика на крестик
@@ -132,15 +134,15 @@ function initHeaderSearch() {
         // Если клик был внутри поисковика - выходим
         if (searchBlock.contains(e.target)) return;
 
-        searchResultsContainer.classList.add("hidden");
+        searchResultsContainer.classList.add("is-hidden");
     });
 
     // Функция для очистки всего блока поиска
     function clearSearchBlock() {
         debouncedSearchAndRenderProducts.cancel(); // отменяем отложенный вызов если он есть
         searchInput.value = "";
-        searchCancelBtn.classList.add("hidden");
-        searchResultsContainer.classList.add("hidden");
+        searchCancelBtn.classList.add("is-hidden");
+        searchResultsContainer.classList.add("is-hidden");
         searchResultsContainer.innerHTML = "";
     }
 

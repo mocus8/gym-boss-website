@@ -39,6 +39,28 @@ body.is-loading {
     transform: translateY(0);
 }
 
+/* Стилизация скролл-бара */
+html {
+    scrollbar-color: var(--color-primary) transparent;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-primary);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 /* Контейнер по ширине */
 .container {
     max-width: var(--container-width);
@@ -131,7 +153,6 @@ select {
     color: var(--color-text);
     transition:
         border-color var(--transition-fast),
-        box-shadow var(--transition-fast),
         background-color var(--transition-fast);
 }
 
@@ -164,17 +185,17 @@ button {
     justify-content: center;
     gap: var(--space-8);
 
-    padding-inline: var(--space-20);
-    padding-block: var(--space-12);
+    padding-inline: var(--space-12);
+    padding-block: var(--space-4);
 
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
 
-    background-color: var(--color-primary);
+    background-color: var(--color-surface-alt);
     color: var(--color-text);
     transition:
         background-color var(--transition-fast),
-        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .btn:hover {

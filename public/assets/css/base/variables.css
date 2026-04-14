@@ -19,6 +19,7 @@
     /* Цвета */
     --color-bg: #030303;
     --color-surface: #0b0a0b;
+    --color-surface-soft: #0b0a0bcc;
     --color-surface-alt: #221013;
 
     --color-text: #f6f1f1;
@@ -36,6 +37,7 @@
     --space-16: 16px;
     --space-20: 20px;
     --space-24: 24px;
+    --space-28: 28px;
     --space-32: 32px;
     --space-40: 40px;
     --space-48: 48px;
