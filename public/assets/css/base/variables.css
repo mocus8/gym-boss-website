@@ -63,9 +63,6 @@
     --transition-base: 0.3s ease;
     --loader-speed: 1.5s linear infinite;
 
-    /* Header */
-    --header-height: 4.5rem;
-
     /* Z-index */
     --z-dropdown: 100;
     --z-sticky: 200;
