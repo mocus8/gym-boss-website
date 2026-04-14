@@ -113,7 +113,7 @@
 }
 
 .site-header__search-control:focus-within {
-    background-color: var(--color-primary);
+    background-color: var(--color-primary-hover);
 }
 
 .site-header__search-input {
