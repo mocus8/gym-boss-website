@@ -1,1 +1,15 @@
 /* Общий каркас: body, main, общие контейнеры, max-width, сетка основных областей страницы */
+
+.site-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.site-layout > main {
+    flex: 1;
+}
+
+.site-layout > * + * {
+    margin-top: var(--space-24);
+}

@@ -44,13 +44,15 @@ $flashMessage = $flash->get();
             <span class="visually-hidden">Страница загружается</span>
         </div>
 
-        <?php require_once __DIR__ . '/../partials/header.php'; ?>
+        <div class="site-layout">
+            <?php require_once __DIR__ . '/../partials/header.php'; ?>
 
-        <main id="main-content">
-            <?= $content ?? '' ?>
-        </main>
+            <main id="main-content">
+                <?= $content ?? '' ?>
+            </main>
 
-        <?php require_once __DIR__ . '/../partials/footer.php'; ?>
+            <?php require_once __DIR__ . '/../partials/footer.php'; ?>
+        </div>
 
         <!-- Tost-уведомление -->
         <?php require __DIR__ . '/../partials/notification.php' ?>
