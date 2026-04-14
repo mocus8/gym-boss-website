@@ -102,12 +102,12 @@ function initHeaderSearch() {
         searchResultsContainer.innerHTML = "";
 
         // Создаем элемент сообщения для результатов
-        const searchMessageEl = document.createElement("div");
-        searchMessageEl.classList.add("search_empty");
-        searchMessageEl.textContent = "Поиск...";
+        const searchStatusEl = document.createElement("p");
+        searchStatusEl.classList.add("site-header__search-status");
+        searchStatusEl.textContent = "Поиск...";
 
         // Вставляем его в контейнер с результатами
-        searchResultsContainer.appendChild(searchMessageEl);
+        searchResultsContainer.appendChild(searchStatusEl);
 
         // Показываем контейнер с результатами и кнопку закрытия поисковика
         searchCancelBtn.classList.remove("is-hidden");
@@ -115,7 +115,7 @@ function initHeaderSearch() {
 
         // Вызываем функцию поиска и рендера результатов
         // Функция с debounce оберткой для ограничения запросов на уровне фронта
-        debouncedSearchAndRenderProducts(query, searchMessageEl);
+        debouncedSearchAndRenderProducts(query, searchStatusEl);
     });
 
     // Обработчик клика на input
@@ -148,21 +148,27 @@ function initHeaderSearch() {
 
     // Функция поиска и рендера результатов с debounced оберткой (переменная, которая хранит функцию)
     const debouncedSearchAndRenderProducts = debounce(
-        async (query, searchMessageEl) => {
+        async (query, searchStatusEl) => {
             try {
                 const foundProducts = await searchProducts(query);
 
                 if (foundProducts.length === 0) {
-                    searchMessageEl.textContent = "Ничего не найдено";
+                    searchStatusEl.textContent = "Ничего не найдено";
                     return;
                 }
 
-                // Очищаем содержимое контейнера с результатами и заполняем его товарами
+                // Очищаем содержимое контейнера с результатами
                 searchResultsContainer.innerHTML = "";
 
+                // Создаем список-обертку для результатов
+                const resultList = document.createElement("ul");
+                resultList.classList.add("list-reset");
+                resultList.classList.add("site-header__search-results-list");
+                searchResultsContainer.appendChild(resultList);
+
                 foundProducts.forEach((product) => {
-                    const productCard = createProductCard(product);
-                    searchResultsContainer.appendChild(productCard);
+                    const resultItem = createResultItem(product);
+                    resultList.appendChild(resultItem);
                 });
             } catch (e) {
                 // Логирование в консоль с полным контекстом
@@ -176,42 +182,44 @@ function initHeaderSearch() {
 
                 // Отображение ошибки в поле поисковика
                 const message = getErrorMessage(e.code, e.status);
-                searchMessageEl.textContent = message;
+                searchStatusEl.textContent = message;
             }
         },
         300,
     );
 
-    // Функция для создания карточки товара
-    function createProductCard(product) {
-        // Создаем ссылку-обертку вокруг карточки
+    // Функция для создания элементов списка результата поиска
+    function createResultItem(product) {
+        const itemWrapper = document.createElement("li");
+        itemWrapper.classList.add("site-header__search-results-item");
+
         const linkWrapper = document.createElement("a");
-        linkWrapper.href = `/products/${product.slug}`;
+        linkWrapper.classList.add("link-shell");
+        linkWrapper.href = `/products/${encodeURIComponent(product.slug)}`;
+        itemWrapper.appendChild(linkWrapper);
 
-        const productWrapper = document.createElement("div");
-        productWrapper.classList.add("product");
-        linkWrapper.appendChild(productWrapper);
-
-        const productClickEl = document.createElement("div");
-        productClickEl.classList.add("product_click");
-        productWrapper.appendChild(productClickEl);
+        const productCard = document.createElement("div");
+        productCard.classList.add("product-card");
+        productCard.classList.add("shape-cut-corners");
+        linkWrapper.appendChild(productCard);
 
         const productImg = document.createElement("img");
-        productImg.classList.add("product_img_1");
+        productImg.classList.add("img-full");
+        productImg.classList.add("shape-cut-corners");
         productImg.src = product.image_path;
-        productClickEl.appendChild(productImg);
+        productImg.alt = product.name;
+        productCard.appendChild(productImg);
 
-        const productNameEl = document.createElement("div");
-        productNameEl.classList.add("product_name_1");
-        productNameEl.textContent = product.name;
-        productClickEl.appendChild(productNameEl);
+        const productName = document.createElement("h3");
+        productName.textContent = product.name;
+        productCard.appendChild(productName);
 
-        const productPriceEl = document.createElement("div");
-        productPriceEl.classList.add("product_price_1");
-        productPriceEl.textContent = `${product.price} ₽`;
-        productClickEl.appendChild(productPriceEl);
+        const productPrice = document.createElement("p");
+        productPrice.classList.add("product-card__price");
+        productPrice.textContent = `${product.price} ₽`;
+        productCard.appendChild(productPrice);
 
-        return linkWrapper;
+        return itemWrapper;
     }
 }
 

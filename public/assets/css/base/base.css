@@ -96,15 +96,15 @@ h6 {
 
 /* Иерархия размеров заголовков */
 h1 {
-    font-size: var(--font-size-2xl);
-}
-
-h2 {
     font-size: var(--font-size-xl);
 }
 
-h3 {
+h2 {
     font-size: var(--font-size-lg);
+}
+
+h3 {
+    font-size: var(--font-size-base);
 }
 
 /* Отступы между текстовыми блоками */
