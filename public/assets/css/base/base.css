@@ -207,11 +207,6 @@ button {
     cursor: not-allowed;
 }
 
-/* Элементы списков */
-li + li {
-    margin-top: var(--space-4);
-}
-
 /* Скрываем бадж капчи */
 .grecaptcha-badge {
     visibility: hidden;

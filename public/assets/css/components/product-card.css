@@ -27,6 +27,7 @@
 }
 
 .product-card__price {
+    margin-top: auto;
     width: fit-content;
     padding: 2px var(--space-4);
 

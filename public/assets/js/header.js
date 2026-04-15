@@ -195,6 +195,7 @@ function initHeaderSearch() {
 
         const linkWrapper = document.createElement("a");
         linkWrapper.classList.add("link-shell");
+        linkWrapper.classList.add("full-size");
         linkWrapper.href = `/products/${encodeURIComponent(product.slug)}`;
         itemWrapper.appendChild(linkWrapper);
 
