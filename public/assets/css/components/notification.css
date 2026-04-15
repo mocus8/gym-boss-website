@@ -33,7 +33,7 @@
         transform var(--transition-fast);
 }
 
-.notification.is-visible {
+.notification.is-open {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;

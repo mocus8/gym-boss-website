@@ -48,7 +48,7 @@ class Notification {
         this.close();
 
         this.#text.textContent = innerText;
-        this.#notification.classList.add("is-visible");
+        this.#notification.classList.add("is-open");
 
         // Сброс и запуск анимации прогресса
         this.#progress.classList.remove("shrinking");
@@ -65,7 +65,7 @@ class Notification {
     close() {
         if (!this.#notification) return;
 
-        this.#notification.classList.remove("is-visible");
+        this.#notification.classList.remove("is-open");
         this.#progress.classList.remove("shrinking");
 
         if (this.#text) this.#text.textContent = "";
