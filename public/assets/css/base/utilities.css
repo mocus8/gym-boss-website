@@ -6,16 +6,6 @@
     }
 }
 
-/* Сброс внешнего вида кнопок/ссылок-кнопок */
-.btn-reset {
-    border: none;
-    background: none;
-    padding: 0;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-}
-
 /* Убираем стандартный маркер у списков */
 .list-reset {
     list-style: none;
