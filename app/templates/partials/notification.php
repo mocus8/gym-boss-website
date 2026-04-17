@@ -9,7 +9,7 @@
     </button>
 
     <div class="notification__content">
-        <img class="notification__icon" src="/assets/images/ui/inf.png" alt="">
+        <img class="notification__icon" src="/assets/images/ui/info.png" alt="">
         <div id="notification-text" class="notification__text"></div>
     </div>
     
