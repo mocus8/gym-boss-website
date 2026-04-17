@@ -1,5 +1,3 @@
-/* Домашняя страница/каталог */
-
 .catalog {
     display: flex;
     flex-direction: column;

@@ -1,6 +1,8 @@
 <!-- Контент главной страницы -->
 
 <div class="container catalog">
+    <h1 class="page-title">Каталог товаров</h1>
+
     <?php foreach ($catalog as $categoryData) { ?>
         <section class="catalog__section">
             <h2 class="catalog__section-title shape-cut-corners">

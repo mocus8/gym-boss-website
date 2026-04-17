@@ -13,3 +13,12 @@
 .site-layout > * + * {
     margin-top: var(--space-24);
 }
+
+.page-title::after {
+    content: "";
+    display: block;
+    width: min(45vw, 22rem);
+    height: 1px;
+    margin-top: var(--space-8);
+    background-color: var(--color-border);
+}
