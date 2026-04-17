@@ -1,30 +1,41 @@
 <div
     id="confirmation-modal"
-    class="modal hidden"
+    class="modal"
     data-modal
     role="dialog"
     aria-modal="true"
     aria-labelledby="confirmation-modal-title"
     aria-describedby="confirmation-modal-message"
 >
-    <div class="modal-overlay" data-modal-overlay></div>
+    <div class="modal__overlay" data-modal-overlay aria-hidden="true"></div>
 
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title" id="confirmation-modal-title" data-modal-title>Подтверждение действия</h2>
-            <button type="button" class="modal-close" data-modal-close aria-label="Закрыть модальное окно">×</button>
+    <div class="modal__content shape-cut-corners">
+        <div class="modal__header">
+            <h2 id="confirmation-modal-title" data-modal-title></h2>
+
+            <button class="btn-reset modal__close-btn btn-shell" data-modal-close type="button" aria-label="Закрыть модальное окно">
+                ✕
+            </button>
         </div>
 
-        <div class="modal-body">
-            <p class="modal-message" id="confirmation-modal-message" data-modal-message>
-                Вы уверены, что хотите выполнить это действие?
-            </p>
-            <p class="modal-warning hidden" data-modal-warning></p>
+        <div class="modal__body">
+            <p id="confirmation-modal-message" data-modal-message></p>
+
+            <p class="modal__warning" data-modal-warning hidden></p>
         </div>
 
-        <div class="modal-footer">
-            <button type="button" class="btn" data-modal-close data-modal-cancel>Отмена</button>
-            <button type="button" class="btn" data-modal-confirm>Подтвердить</button>
+        <div class="modal__footer">
+            <button class="btn-reset btn-shell" type="button" data-modal-close data-modal-cancel>
+                <span class="btn shape-cut-corners">
+                    Отмена
+                </span>
+            </button>
+
+            <button class="btn-reset btn-shell" type="button" data-modal-confirm>
+                <span class="btn shape-cut-corners">
+                    Подтвердить
+                </span>
+            </button>
         </div>
     </div>
 </div>

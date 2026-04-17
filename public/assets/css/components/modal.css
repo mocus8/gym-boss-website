@@ -140,3 +140,21 @@
     justify-content: center;
     gap: var(--space-8);
 }
+
+#confirmation-modal .modal__content {
+    gap: var(--space-32);
+    padding: var(--space-12);
+}
+
+#confirmation-modal .modal__body {
+    gap: var(--space-8);
+}
+
+#confirmation-modal .modal__footer {
+    gap: var(--space-16);
+}
+
+.modal__warning {
+    font-size: var(--font-size-lg);
+    color: var(--color-primary-hover);
+}

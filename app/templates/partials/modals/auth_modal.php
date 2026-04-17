@@ -185,19 +185,19 @@
         </div>
 
         <div class="modal__footer">
-            <button id="forgot-password-btn" class="btn-reset modal__submit-btn-shell btn-shell" type="button">
+            <button id="forgot-password-btn" class="btn-reset btn-shell" type="button">
                 <span class="btn shape-cut-corners">
                     Забыли пароль?
                 </span>
             </button>
 
-            <button class="btn-reset modal__submit-btn-shell btn-shell" type="button" data-auth-switch-to="register">
+            <button class="btn-reset btn-shell" type="button" data-auth-switch-to="register">
                 <span class="btn shape-cut-corners">
                     Нет аккаунта? Зарегистрируйтесь
                 </span>
             </button>
 
-            <button class="btn-reset modal__submit-btn-shell btn-shell" type="button" data-auth-switch-to="login" hidden>
+            <button class="btn-reset btn-shell" type="button" data-auth-switch-to="login" hidden>
                 <span class="btn shape-cut-corners">
                     Уже есть аккаунт? Авторизируйтесь
                 </span>
