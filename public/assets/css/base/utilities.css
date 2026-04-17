@@ -1,5 +1,11 @@
 /* Маленькие служебные классы */
 
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Сброс внешнего вида кнопок/ссылок-кнопок */
 .btn-reset {
     border: none;
@@ -58,6 +64,31 @@
     transition:
         opacity var(--transition-fast),
         visibility var(--transition-fast);
+}
+
+/* Состояние загрузки на элементе  */
+.is-loading {
+    position: relative;
+    cursor: wait;
+}
+
+.is-loading > * {
+    visibility: hidden;
+}
+
+.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    transform: translate(-50%, -50%);
+
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
 }
 
 /* Хелперы выравнивания по flex */
