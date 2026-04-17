@@ -137,6 +137,11 @@ a:not([class]) {
     outline: none;
 }
 
+/* Делаем important для hidden */
+[hidden] {
+    display: none !important;
+}
+
 /* Базовый внешний вид полей формы */
 input,
 textarea,
