@@ -6,131 +6,142 @@
     aria-modal="true"
     aria-labelledby="auth-modal-title"
 >
-    <div class="modal-overlay" data-modal-overlay></div>
+    <div class="modal__overlay" data-modal-overlay aria-hidden="true"></div>
 
-    <div class="modal-content">
-        <div class="modal-header">
+    <div class="modal__content shape-cut-corners">
+        <div class="modal__header">
             <h2 id="auth-modal-title" class="visually-hidden">
                 Вход и регистрация
             </h2>
 
             <div class="modal__tabs">
-                <button type="button" class="btn is-chosen" data-auth-tab="login">Войти</button>
-                <button type="button" class="btn" data-auth-tab="register">Зарегистрироваться</button>
+                <button class="btn-reset btn-shell" data-auth-tab="login" type="button">
+                    <span class="btn shape-cut-corners">
+                        Войти
+                    </span>
+                </button>
+
+                <button class="btn-reset btn-shell is-chosen" data-auth-tab="register" type="button">
+                    <span class="btn shape-cut-corners">
+                        Зарегистрироваться
+                    </span>
+                </button>
             </div>
 
-            <button type="button" class="modal-close" data-modal-close aria-label="Закрыть модальное окно">✕</button>
+            <button class="btn-reset modal__close-btn btn-shell" data-modal-close type="button" aria-label="Закрыть модальное окно">
+                ✕
+            </button>
         </div>
 
-        <div class="modal-body">
-            <form action="api/auth/login" method="POST" id="login-form" novalidate>
-                <div class="registration_modal_input_back">
-                    <label class="registration_modal_input_text" for="login-email">
+        <div>
+            <form id="login-form" class="modal__body" action="api/auth/login" method="POST" novalidate>
+                <div class="modal__field">
+                    <label for="login-email">
                         Ваш email:
                     </label>
 
                     <input
-                        required
                         id="login-email"
-                        class="registration_modal_input"
+                        class="shape-cut-corners"
                         type="email"
                         name="email"
+                        required
                         autocomplete="email"
                         maxlength="254"
                         aria-describedby="login-email-error"
                     >
                 </div>
 
-                <div id="login-email-error" class="form_error is-hidden">
-                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png" alt="">
-                    <div class="error_modal_text"></div>
+                <div id="login-email-error" class="modal__error is-hidden">
+                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                    <span data-error-text></span>
                 </div>
 
-                <div class="registration_modal_input_back">
-                    <label class="registration_modal_input_text" for="login-password">
+                <div class="modal__field">
+                    <label for="login-password">
                         Ваш пароль:
                     </label>
 
                     <input
-                        required
                         id="login-password"
-                        class="registration_modal_input"
+                        class="shape-cut-corners"
                         type="password"
                         name="password"
+                        required
                         autocomplete="current-password"
                         maxlength="254"
                         aria-describedby="login-password-error"
                     >
                 </div>
 
-                <div id="login-password-error" class="form_error is-hidden">
-                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png" alt="">
-                    <div class="error_modal_text"></div>
+                <div id="login-password-error" class="modal__error is-hidden">
+                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                    <span data-error-text></span>
                 </div>
 
-                <div class="registration_modal_buttons">
-                    <button class="btn" type="submit">
+                <button class="btn-reset modal__submit-btn-shell btn-shell" type="submit">
+                    <span class="btn modal__submit-btn shape-cut-corners">
                         Войти
-                    </button>
-                </div>
+                    </span>
+                </button>
             </form>
 
-            <form action="api/auth/register" method="POST" id="register-form" hidden novalidate>
-                <div class="registration_modal_input_back">
-                    <label class="registration_modal_input_text" for="registration-name">
+            <form id="register-form" class="modal__body" action="api/auth/register" method="POST" hidden novalidate>
+                <div class="modal__field">
+                    <label for="registration-name">
                         Ваши имя и фамилия:
                     </label>
 
                     <input
-                        required
                         id="registration-name"
-                        class="registration_modal_input"
+                        class="shape-cut-corners"
                         type="text"
                         name="name"
+                        required
                         autocomplete="name"
                         maxlength="100"
                         aria-describedby="registration-name-error"
                     >
                 </div>
 
-                <div id="registration-name-error" class="form_error is-hidden">
-                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png" alt="">
-                    <div class="error_modal_text"></div>
+                <div id="registration-name-error" class="modal__error is-hidden">
+                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                    <span data-error-text></span>
                 </div>
 
-                <div class="registration_modal_input_back">
-                    <label class="registration_modal_input_text" for="registration-email">
+                <div class="modal__field">
+                    <label for="registration-email">
                         Ваш email:
                     </label>
 
                     <input
-                        required
                         id="registration-email"
-                        class="registration_modal_input"
+                        class="shape-cut-corners"
                         type="email"
                         name="email"
+                        required
                         autocomplete="email"
                         maxlength="254"
                         aria-describedby="registration-email-error"
                     >
                 </div>
 
-                <div id="registration-email-error" class="form_error is-hidden">
-                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png" alt="">
-                    <div class="error_modal_text"></div>
+                <div id="registration-email-error" class="modal__error is-hidden">
+                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                    <span data-error-text></span>
                 </div>
 
-                <div class="registration_modal_input_back">
-                    <label class="registration_modal_input_text" for="registration-password">
+                <div class="modal__field">
+                    <label for="registration-password">
                         Ваш пароль:
                     </label>
 
                     <input
-                        required
                         id="registration-password"
-                        class="registration_modal_input"
+                        class="shape-cut-corners"
                         type="password"
                         name="password"
+                        required
                         autocomplete="new-password"
                         minlength="8"
                         maxlength="64"
@@ -138,47 +149,59 @@
                     >
                 </div>
 
-                <div id="registration-password-error" class="form_error is-hidden">
-                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png" alt="">
-                    <div class="error_modal_text"></div>
+                <div id="registration-password-error" class="modal__error is-hidden">
+                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                    <span data-error-text></span>
                 </div>
 
-                <div class="registration_modal_input_back">
-                    <label class="registration_modal_input_text" for="registration-confirm-password">
+                <div class="modal__field">
+                    <label for="registration-confirm-password">
                         Введите пароль еще раз:
                     </label>
 
                     <input
-                        required
                         id="registration-confirm-password"
-                        class="registration_modal_input"
+                        class="shape-cut-corners"
                         type="password"
                         name="confirm_password"
+                        required
                         minlength="8"
                         maxlength="64"
                         aria-describedby="registration-confirm-password-error"
                     >
                 </div>
 
-                <div id="registration-confirm-password-error" class="form_error is-hidden">
-                    <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png" alt="">
-                    <div class="error_modal_text"></div>
+                <div id="registration-confirm-password-error" class="modal__error is-hidden">
+                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                    <span data-error-text></span>
                 </div>
 
-                <div class="registration_modal_buttons">
-                    <button class="btn" type="submit">
+                <button class="btn-reset modal__submit-btn-shell btn-shell" type="submit">
+                    <span class="btn modal__submit-btn shape-cut-corners">
                         Зарегистрироваться
-                    </button>
-                </div>
+                    </span>
+                </button>
             </form>
         </div>
 
-        <div class="modal-footer">
-            <button type="button" class="btn" id="forgot-password-btn">Забыли пароль?</button>
+        <div class="modal__footer">
+            <button id="forgot-password-btn" class="btn-reset modal__submit-btn-shell btn-shell" type="button">
+                <span class="btn shape-cut-corners">
+                    Забыли пароль?
+                </span>
+            </button>
 
-            <button type="button" class="btn" data-auth-switch-to="register">Нет аккаунта? Зарегистрируйтесь</button>
+            <button class="btn-reset modal__submit-btn-shell btn-shell" type="button" data-auth-switch-to="register">
+                <span class="btn shape-cut-corners">
+                    Нет аккаунта? Зарегистрируйтесь
+                </span>
+            </button>
 
-            <button type="button" class="btn" data-auth-switch-to="login" hidden>Уже есть аккаунт? Авторизируйтесь</button>
+            <button class="btn-reset modal__submit-btn-shell btn-shell" type="button" data-auth-switch-to="login" hidden>
+                <span class="btn shape-cut-corners">
+                    Уже есть аккаунт? Авторизируйтесь
+                </span>
+            </button>
         </div>
     </div>
 </div>

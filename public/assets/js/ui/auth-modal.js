@@ -62,6 +62,8 @@ class AuthModal {
 
     // Метод открытия модалки
     open() {
+        if (this.#isOpen) return;
+
         // Определяем активный до появления модалки элемент
         this.#previousActiveEl =
             document.activeElement instanceof HTMLElement
@@ -72,8 +74,10 @@ class AuthModal {
         this.#authModal.classList.add("is-open");
         this.#isOpen = true;
 
-        // Ставим фокус на cancel модалки
-        this.#closeEl.focus();
+        // Ставим фокус на первое поле ввода
+        requestAnimationFrame(() => {
+            this.#loginEmailInput?.focus();
+        });
     }
 
     // Метод закрытия модалки
@@ -556,7 +560,7 @@ class AuthModal {
         if (!inputErrorEl) return;
 
         const inputErrorTextEl =
-            inputErrorEl.querySelector(".error_modal_text");
+            inputErrorEl.querySelector("[data-error-text]");
         if (!inputErrorTextEl) return;
 
         inputErrorTextEl.textContent = errorMessage;
@@ -577,13 +581,11 @@ class AuthModal {
 
     // Скрытие всех ошибок на формах
     #hideErrors() {
-        const authErrors = this.#authModal.querySelectorAll(".form_error");
-        const inputs = this.#authModal.querySelectorAll(
-            ".registration_modal_input",
-        );
+        const authErrors = this.#authModal.querySelectorAll(".modal__error");
+        const inputs = this.#authModal.querySelectorAll("input");
 
         authErrors.forEach((errorEl) => {
-            errorEl.querySelector(".error_modal_text").textContent = "";
+            errorEl.querySelector("[data-error-text]").textContent = "";
             errorEl.classList.add("is-hidden");
         });
 

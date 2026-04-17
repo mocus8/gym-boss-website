@@ -2,7 +2,7 @@
 
 @keyframes spin {
     to {
-        transform: rotate(360deg);
+        transform: translate(-50%, -50%) rotate(360deg);
     }
 }
 
@@ -69,11 +69,12 @@
 /* Состояние загрузки на элементе  */
 .is-loading {
     position: relative;
+    pointer-events: none;
     cursor: wait;
 }
 
 .is-loading > * {
-    visibility: hidden;
+    opacity: 0;
 }
 
 .is-loading::after {
@@ -88,7 +89,7 @@
     border: 2px solid currentColor;
     border-right-color: transparent;
     border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    animation: spin var(--loader-speed);
 }
 
 /* Хелперы выравнивания по flex */
