@@ -22,6 +22,7 @@
 
 /* Страницы, папка css/pages/ */
 @import url("/assets/css/pages/home.css");
+@import url("/assets/css/pages/account.css");
 
 /* Небольшие утилиты */
 @import url("/assets/css/base/utilities.css");

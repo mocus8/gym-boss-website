@@ -1,144 +1,136 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
-    </a>
-</div>
+<div class="container account">
+    <h1 class="page-title">Личный кабинет</h1>
 
-<div class="cart_in_cart_text">
-    Личный кабинет
-</div>
+    <form id="change-name-form" class="account__section" action="api/account/profile" method="POST" novalidate>
+        <div class="form__field">
+            <label for="account-name">
+                Ваше имя
+            </label>
 
-<div class="account_wrapper">
-    <form action="api/account/profile" method="POST" class="account_form" id="change-name-form" novalidate>
-        <div class="registration_modal_input_text">
-            Ваше имя
-        </div>
-
-        <div class="registration_modal_input_back">
             <input
-                required
-                class="registration_modal_input"
+                id="account-name"
+                class="shape-cut-corners"
                 type="text"
                 name="name"
+                required
                 maxlength="100"
                 value="<?= htmlspecialchars($currentUser['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                aria-describedby="account-name-error"
             >
         </div>
 
-        <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
-            <div class="error_modal_text"></div>
+        <div id="account-name-error" class="form__error is-hidden">
+            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <span data-error-text></span>
         </div>
 
-        <div class="registration_modal_buttons">
-            <button class="registration_modal_button" type="submit">
+        <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
+            <span class="btn form__submit-btn shape-cut-corners">
                 Сменить имя
-            </button>
-        </div>
+            </span>
+        </button>
     </form>
 
-    <div class="account_form">
+    <div class="account__section">
         <?php if (!$currentUser['is_verified']) { ?>
-            <div class="registration_modal_input_text">
+            <p class="account__message">
                 Чтобы завершить регистрацию и получить возможность оформлять заказы подтвердите ваш email
-            </div>
+            </p>
         <?php } ?>
 
-        <div class="registration_modal_input_text">
+        <p>
             Ваш email: <?= htmlspecialchars($currentUser['email'], ENT_QUOTES, 'UTF-8') ?>
-        </div>
+        </p>
 
         <?php if (!$currentUser['is_verified']) { ?>
-            <div class="registration_modal_buttons">
-                <button class="registration_modal_button" id="resend-verification-email-btn">
+            <button id="resend-verification-email-btn" class="btn-reset form__submit-btn-shell btn-shell" type="button">
+                <span class="btn form__submit-btn shape-cut-corners">
                     Получить письмо для подтверждения
-                </button>
-            </div>
+                </span>
+            </button>
         <?php } ?>
     </div>
 
-    <form action="api/account/password" method="POST" class="account_form" id="change-pass-form" novalidate>
-        <div class="registration_modal_input_text">
-            Смена пароля
-        </div>
-
-        <div class="registration_modal_input_back">
-            <span class="registration_modal_input_text">
+    <form action="api/account/password" class="account__section" method="POST" id="change-pass-form" novalidate>
+        <div class="form__field">
+            <label for="account-current-password">
                 Ваш текущий пароль:
-            </span>
+            </label>
+
             <input
-                required
-                class="registration_modal_input"
+                id="account-current-password"
+                class="shape-cut-corners"
                 type="password"
                 name="current_password"
+                required
                 autocomplete="current-password"
                 minlength="8"
                 maxlength="64"
+                aria-describedby="account-current-password-error"
             >
         </div>
 
-        <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
-            <div class="error_modal_text"></div>
+        <div id="account-current-password-error" class="form__error is-hidden">
+            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <span data-error-text></span>
         </div>
 
-        <div class="registration_modal_input_back">
-            <span class="registration_modal_input_text">
+        <div class="form__field">
+            <label for="account-new-password">
                 Новый пароль:
-            </span>
+            </label>
+
             <input
-                required
-                class="registration_modal_input"
+                id="account-new-password"
+                class="shape-cut-corners"
                 type="password"
                 name="new_password"
+                required
                 autocomplete="new-password"
                 minlength="8"
                 maxlength="64"
+                aria-describedby="account-new-password-error"
             >
         </div>
 
-        <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
-            <div class="error_modal_text"></div>
+        <div id="account-new-password-error" class="form__error is-hidden">
+            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <span data-error-text></span>
         </div>
 
-        <div class="registration_modal_input_back">
-            <span class="registration_modal_input_text">
+        <div class="form__field">
+            <label for="account-confirm-password">
                 Подтверждение пароля:
-            </span>
+            </label>
+
             <input
-                required
-                class="registration_modal_input"
+                id="account-confirm-password"
+                class="shape-cut-corners"
                 type="password"
                 name="confirm_password"
+                required
                 autocomplete="new-password"
                 minlength="8"
                 maxlength="64"
+                aria-describedby="account-confirm-password-error"
             >
         </div>
 
-        <div class="form_error form_error_hidden">
-            <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
-            <div class="error_modal_text"></div>
+        <div id="account-confirm-password-error" class="form__error is-hidden">
+            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <span data-error-text></span>
         </div>
 
-        <div class="registration_modal_buttons">
-            <button class="registration_modal_button" type="submit">
-                Подтвердить смену пароля
-            </button>
-        </div>
+        <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
+            <span class="btn form__submit-btn shape-cut-corners">
+                Сменить пароль
+            </span>
+        </button>
     </form>
 
-    <div class="account_form">
-        <div class="registration_modal_buttons">
-            <button class="registration_modal_button" id="delete-account-btn">
-                Удалить аккаунт
-            </button>
-        </div>
-    </div>
+    <button id="delete-account-btn" class="btn-reset account-delete-btn-shell btn-shell" type="button">
+        <span class="btn form__submit-btn shape-cut-corners">
+            Удалить аккаунт
+        </span>
+    </button>
 </div>
