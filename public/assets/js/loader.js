@@ -1,7 +1,7 @@
 window.addEventListener("load", function () {
     const loader = document.getElementById("loader");
 
-    document.body.classList.remove("is-loading");
+    document.body.classList.remove("loading");
     document.body.setAttribute("aria-busy", "false");
 
     if (!loader) return;

@@ -9,7 +9,7 @@ body {
     background-color: var(--color-bg);
 }
 
-body.is-loading {
+body.loading {
     overflow: hidden;
 }
 

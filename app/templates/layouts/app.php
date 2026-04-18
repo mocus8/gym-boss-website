@@ -28,7 +28,7 @@ $flashMessage = $flash->get();
 	</head>
 
 	<body
-        class="is-loading"
+        class="loading"
         aria-busy="true"
         data-yandex-maps-key="<?= htmlspecialchars($servicesConfig['yandex_maps']['key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
         data-recaptcha-site-key="<?= htmlspecialchars($servicesConfig['recaptcha']['site_key'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
