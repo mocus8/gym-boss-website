@@ -581,7 +581,7 @@ class AuthModal {
 
     // Скрытие всех ошибок на формах
     #hideErrors() {
-        const authErrors = this.#authModal.querySelectorAll(".modal__error");
+        const authErrors = this.#authModal.querySelectorAll(".form__error");
         const inputs = this.#authModal.querySelectorAll("input");
 
         authErrors.forEach((errorEl) => {

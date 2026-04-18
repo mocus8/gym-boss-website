@@ -52,8 +52,8 @@
                     >
                 </div>
 
-                <div id="login-email-error" class="modal__error is-hidden">
-                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                <div id="login-email-error" class="form__error is-hidden">
+                    <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
                     <span data-error-text></span>
                 </div>
 
@@ -74,8 +74,8 @@
                     >
                 </div>
 
-                <div id="login-password-error" class="modal__error is-hidden">
-                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                <div id="login-password-error" class="form__error is-hidden">
+                    <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
                     <span data-error-text></span>
                 </div>
 
@@ -104,8 +104,8 @@
                     >
                 </div>
 
-                <div id="registration-name-error" class="modal__error is-hidden">
-                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                <div id="registration-name-error" class="form__error is-hidden">
+                    <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
                     <span data-error-text></span>
                 </div>
 
@@ -126,8 +126,8 @@
                     >
                 </div>
 
-                <div id="registration-email-error" class="modal__error is-hidden">
-                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                <div id="registration-email-error" class="form__error is-hidden">
+                    <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
                     <span data-error-text></span>
                 </div>
 
@@ -149,8 +149,8 @@
                     >
                 </div>
 
-                <div id="registration-password-error" class="modal__error is-hidden">
-                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                <div id="registration-password-error" class="form__error is-hidden">
+                    <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
                     <span data-error-text></span>
                 </div>
 
@@ -171,8 +171,8 @@
                     >
                 </div>
 
-                <div id="registration-confirm-password-error" class="modal__error is-hidden">
-                    <img class="modal__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+                <div id="registration-confirm-password-error" class="form__error is-hidden">
+                    <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
                     <span data-error-text></span>
                 </div>
 
