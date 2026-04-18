@@ -1,29 +1,23 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
+<div class="container email-verify">
+    <a class="link-shell" href="/">
+        <span class="btn return-btn shape-cut-corners">
+            На главную
+        </span>
     </a>
-</div>
-<div class="contacts">
-    <div class="contact">
-        <div class="contact_type">
+
+    <div class="email-verify__content shape-cut-corners">
+        <h1 class="email-verify__title">
             <?= htmlspecialchars($pageData['title'], ENT_QUOTES, 'UTF-8') ?>
-        </div>
+        </h1>
 
-        <div class="contact_inf">
-            <?= htmlspecialchars($pageData['message'], ENT_QUOTES, 'UTF-8') ?>  
-        </div>
+        <p> <?= htmlspecialchars($pageData['message'], ENT_QUOTES, 'UTF-8') ?>  </p>
 
-        <div class="contact_inf">
-            <?php if ($isAuthenticated && $pageData['showResend']) { ?>  
-                <button type="button" class="btn" id="resend-button">
+        <?php if ($isAuthenticated && $pageData['show_resend']) { ?>  
+            <button id="resend-button" class="btn-reset email-verify__resend-btn btn-shell" type="button">
+                <span class="btn shape-cut-corners">
                     Получить новое письмо
-                </button>
-            <?php } ?>  
-        </div>
+                </span>
+            </button>
+        <?php } ?>  
     </div>
 </div>

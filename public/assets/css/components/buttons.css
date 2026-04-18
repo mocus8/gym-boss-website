@@ -41,3 +41,15 @@
     font: inherit;
     cursor: pointer;
 }
+
+.return-btn {
+    padding-inline: var(--space-16);
+    padding-block: var(--space-8);
+
+    background-color: var(--color-primary);
+    font-size: var(--font-size-lg);
+}
+
+.return-btn:hover {
+    background-color: var(--color-primary-hover);
+}
