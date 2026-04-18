@@ -38,6 +38,12 @@ textarea:-webkit-autofill:focus {
     color: var(--color-text-muted);
 }
 
+.form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
 .form__error {
     display: flex;
     align-self: flex-start;
@@ -59,4 +65,17 @@ textarea:-webkit-autofill:focus {
     width: 1.25rem;
     height: 1.25rem;
     flex-shrink: 0;
+}
+
+.form__submit-btn-shell {
+    width: fit-content;
+}
+
+.form__submit-btn {
+    background-color: var(--color-primary);
+    font-size: var(--font-size-lg);
+}
+
+.form__submit-btn:hover {
+    background-color: var(--color-primary-hover);
 }

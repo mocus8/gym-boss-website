@@ -91,25 +91,6 @@
     margin-top: var(--space-8);
 }
 
-.modal__field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-}
-
-.modal__submit-btn-shell {
-    width: fit-content;
-}
-
-.modal__submit-btn {
-    background-color: var(--color-primary);
-    font-size: var(--font-size-lg);
-}
-
-.modal__submit-btn:hover {
-    background-color: var(--color-primary-hover);
-}
-
 .modal__footer {
     position: relative;
 

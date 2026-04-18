@@ -35,7 +35,7 @@
 
         <div>
             <form id="login-form" class="modal__body" action="api/auth/login" method="POST" novalidate>
-                <div class="modal__field">
+                <div class="form__field">
                     <label for="login-email">
                         Ваш email:
                     </label>
@@ -57,7 +57,7 @@
                     <span data-error-text></span>
                 </div>
 
-                <div class="modal__field">
+                <div class="form__field">
                     <label for="login-password">
                         Ваш пароль:
                     </label>
@@ -79,15 +79,15 @@
                     <span data-error-text></span>
                 </div>
 
-                <button class="btn-reset modal__submit-btn-shell btn-shell" type="submit">
-                    <span class="btn modal__submit-btn shape-cut-corners">
+                <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
+                    <span class="btn form__submit-btn shape-cut-corners">
                         Войти
                     </span>
                 </button>
             </form>
 
             <form id="register-form" class="modal__body" action="api/auth/register" method="POST" hidden novalidate>
-                <div class="modal__field">
+                <div class="form__field">
                     <label for="registration-name">
                         Ваши имя и фамилия:
                     </label>
@@ -109,7 +109,7 @@
                     <span data-error-text></span>
                 </div>
 
-                <div class="modal__field">
+                <div class="form__field">
                     <label for="registration-email">
                         Ваш email:
                     </label>
@@ -131,7 +131,7 @@
                     <span data-error-text></span>
                 </div>
 
-                <div class="modal__field">
+                <div class="form__field">
                     <label for="registration-password">
                         Ваш пароль:
                     </label>
@@ -154,7 +154,7 @@
                     <span data-error-text></span>
                 </div>
 
-                <div class="modal__field">
+                <div class="form__field">
                     <label for="registration-confirm-password">
                         Введите пароль еще раз:
                     </label>
@@ -176,8 +176,8 @@
                     <span data-error-text></span>
                 </div>
 
-                <button class="btn-reset modal__submit-btn-shell btn-shell" type="submit">
-                    <span class="btn modal__submit-btn shape-cut-corners">
+                <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
+                    <span class="btn form__submit-btn shape-cut-corners">
                         Зарегистрироваться
                     </span>
                 </button>

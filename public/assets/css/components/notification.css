@@ -51,6 +51,12 @@
     border: none;
     background: transparent;
     color: inherit;
+
+    transition: color var(--transition-fast);
+}
+
+.notification__close-btn:hover {
+    color: var(--color-primary-hover);
 }
 
 .notification__content {
