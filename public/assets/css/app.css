@@ -14,11 +14,11 @@
 /* Переиспользуемые компоненты, папка css/components/ */
 @import url("/assets/css/components/shapes.css");
 @import url("/assets/css/components/buttons.css");
-@import url("/assets/css/components/form.css");
+@import url("/assets/css/components/forms.css");
 @import url("/assets/css/components/product-card.css");
 @import url("/assets/css/components/notification.css");
 @import url("/assets/css/components/loader.css");
-@import url("/assets/css/components/modal.css");
+@import url("/assets/css/components/modals.css");
 
 /* Страницы, папка css/pages/ */
 @import url("/assets/css/pages/home.css");
