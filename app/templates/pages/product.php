@@ -1,60 +1,75 @@
-<div class="product_left">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
+<div class="container product">
+    <div class="product__left">
+        <div class="product__images">
+            <div class="product__minor-images shape-cut-corners--diagonal">
+                <?php foreach ($images as $image) { ?>
+                    <button class="btn-reset btn-shell" data-product-image-btn type="button">
+                        <img
+                            class="product__minor-image shape-cut-corners--diagonal"
+                            src="<?= htmlspecialchars($image, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"
+                            alt="<?= htmlspecialchars($productName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"
+                        >
+                    </button>
+                <?php } ?>
             </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
-    </a>
 
-    <div class="product_minor_images">
-    <?php foreach ($images as $image) { ?>
-        <button class="product_minor_images_button">
-            <img class="product_img_2" src="<?= htmlspecialchars($image, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="<?= htmlspecialchars($productName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
-        </button>
-    <?php } ?>
-    </div>
-
-    <img class="product_main_img" src="<?= htmlspecialchars($images[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" alt="<?= htmlspecialchars($productName) ?>">
-
-    <div class="product_description_head">
-        О товаре:
-    </div>
-
-    <div class="product_description_text">
-        <?= $productDescriptionHtml ?>
-    </div>
-</div>
-
-<div class="product_right">
-    <div class="product_inf">
-        <div class="product_name_2">
-            <?= htmlspecialchars($productName) ?>
+            <div class="product__main-image-shell">
+                <img
+                    class="product__main-image shape-cut-corners--all"
+                    src="<?= htmlspecialchars($images[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"
+                    alt="<?= htmlspecialchars($productName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"
+                >
+            </div>
         </div>
 
-        <div class="product_price_2">
-            <?= number_format($product['price'], 2, ',', ' ') ?> ₽
-        </div>
+        <div class="product__description text-narrow shape-cut-corners--diagonal">
+            <h2>О товаре:</h2>
 
-        <div class="product_availability">
-            В наличии
+            <div class="product__description-text"><?= $productDescriptionHtml ?></div>
         </div>
     </div>
 
-    <button class="product_button_add_not_in_cart" type="button" id="button-add" data-product-add-cart data-product-id="<?= (int)$product['id'] ?>">
-        <span>Добавить в корзину</span>
-    </button>
+    <div class="product__right shape-cut-corners--diagonal">
+        <div class="product__info">
+            <h1><?= htmlspecialchars($productName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></h1>
 
-    <div class="product_button_add_in_cart hidden" type="button" id="button-change-qty">
-        <button class="product_sign_button" type="button" data-product-subtract-cart data-product-id="<?= (int)$product['id'] ?>">
-            <img class="product_interaction_sign" src="/assets/images/ui/minus.png">
+            <p><?= number_format($product['price'], 2, ',', ' ') ?> ₽</p>
+
+            <p>В наличии</p>
+        </div>
+
+        <button 
+            id="button-add"
+            class="btn-reset btn-shell"
+            data-product-add-cart
+            data-product-id="<?= (int)$product['id'] ?>"
+            type="button"
+        >
+            <span class="btn product__add-to-cart-btn shape-cut-corners--diagonal">
+                Добавить в корзину
+            </span>
         </button>
 
-        <span id="product-cart-counter"></span>
+        <div id="button-change-qty" class="product__change-qty shape-cut-corners--diagonal" hidden>
+            <button
+                class="btn-reset product__change-qty-btn-shell btn-shell"
+                type="button"
+                data-product-subtract-cart
+                data-product-id="<?= (int)$product['id'] ?>"
+            >
+                <img class="product__change-qty-sign" src="/assets/images/ui/minus.png" alt="Уменьшить количество">
+            </button>
 
-        <button class="product_sign_button" type="button" data-product-add-cart data-product-id="<?= (int)$product['id'] ?>">
-            <img class="product_interaction_sign" src="/assets/images/ui/plus.png"> 
-        </button>
+            <span id="product-cart-counter"></span>
+
+            <button
+                class="btn-reset product__change-qty-btn-shell btn-shell"
+                type="button"
+                data-product-add-cart
+                data-product-id="<?= (int)$product['id'] ?>"
+            >
+                <img class="product__change-qty-sign" src="/assets/images/ui/plus.png" alt="Увеличить количество"> 
+            </button>
+        </div>
     </div>
 </div>

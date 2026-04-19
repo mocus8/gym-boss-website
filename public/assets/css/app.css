@@ -25,6 +25,7 @@
 @import url("/assets/css/pages/account.css");
 @import url("/assets/css/pages/email-verify.css");
 @import url("/assets/css/pages/password-reset.css");
+@import url("/assets/css/pages/product.css");
 
 /* Небольшие утилиты */
 @import url("/assets/css/base/utilities.css");

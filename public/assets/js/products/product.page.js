@@ -43,11 +43,11 @@ function toggleProductButtons(qty) {
     if (!btnAdd || !btnChangeQty) return;
 
     if (qty > 0) {
-        btnAdd.classList.add("hidden");
-        btnChangeQty.classList.remove("hidden");
+        btnAdd.hidden = true;
+        btnChangeQty.hidden = false;
     } else {
-        btnAdd.classList.remove("hidden");
-        btnChangeQty.classList.add("hidden");
+        btnAdd.hidden = false;
+        btnChangeQty.hidden = true;
     }
 }
 
@@ -93,7 +93,7 @@ document.addEventListener("click", async function (e) {
     // Определяем куда пришелся click
     const addBtn = e.target.closest("[data-product-add-cart]");
     const subBtn = e.target.closest("[data-product-subtract-cart]");
-    const minorImgBtn = e.target.closest(".product_minor_images_button");
+    const minorImgBtn = e.target.closest("[data-product-image-btn]");
 
     // Если нажали на "+" или "добавить в корзину"
     if (addBtn) {
@@ -190,7 +190,7 @@ document.addEventListener("click", async function (e) {
     // Если нажали на фото для переключения
     if (minorImgBtn) {
         const minorImg = minorImgBtn.querySelector("img");
-        const mainImg = document.querySelector(".product_main_img");
+        const mainImg = document.querySelector(".product__main-image");
 
         if (!minorImg || !mainImg) return;
 
