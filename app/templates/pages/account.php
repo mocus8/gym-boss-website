@@ -9,7 +9,7 @@
 
             <input
                 id="account-name"
-                class="shape-cut-corners"
+                class="shape-cut-corners--diagonal"
                 type="text"
                 name="name"
                 required
@@ -25,7 +25,7 @@
         </div>
 
         <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
-            <span class="btn form__submit-btn shape-cut-corners">
+            <span class="btn form__submit-btn shape-cut-corners--diagonal">
                 Сменить имя
             </span>
         </button>
@@ -44,7 +44,7 @@
 
         <?php if (!$currentUser['is_verified']) { ?>
             <button id="resend-verification-email-btn" class="btn-reset form__submit-btn-shell btn-shell" type="button">
-                <span class="btn form__submit-btn shape-cut-corners">
+                <span class="btn form__submit-btn shape-cut-corners--diagonal">
                     Получить письмо для подтверждения
                 </span>
             </button>
@@ -59,7 +59,7 @@
 
             <input
                 id="account-current-password"
-                class="shape-cut-corners"
+                class="shape-cut-corners--diagonal"
                 type="password"
                 name="current_password"
                 required
@@ -82,7 +82,7 @@
 
             <input
                 id="account-new-password"
-                class="shape-cut-corners"
+                class="shape-cut-corners--diagonal"
                 type="password"
                 name="new_password"
                 required
@@ -105,7 +105,7 @@
 
             <input
                 id="account-confirm-password"
-                class="shape-cut-corners"
+                class="shape-cut-corners--diagonal"
                 type="password"
                 name="confirm_password"
                 required
@@ -122,14 +122,14 @@
         </div>
 
         <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
-            <span class="btn form__submit-btn shape-cut-corners">
+            <span class="btn form__submit-btn shape-cut-corners--diagonal">
                 Сменить пароль
             </span>
         </button>
     </form>
 
     <button id="delete-account-btn" class="btn-reset account-delete-btn-shell btn-shell" type="button">
-        <span class="btn form__submit-btn shape-cut-corners">
+        <span class="btn form__submit-btn shape-cut-corners--diagonal">
             Удалить аккаунт
         </span>
     </button>

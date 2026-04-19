@@ -112,13 +112,6 @@
     max-width: 40rem;
 }
 
-/* Изображение на всю ширину контейнера */
-.img-full {
-    display: block;
-    width: 100%;
-    height: auto;
-}
-
 /* Растягивание по длинне и ширине */
 .full-size {
     width: 100%;

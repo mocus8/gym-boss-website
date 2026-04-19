@@ -9,7 +9,7 @@
 >
     <div class="modal__overlay" data-modal-overlay aria-hidden="true"></div>
 
-    <div class="modal__content shape-cut-corners">
+    <div class="modal__content shape-cut-corners--diagonal">
         <div class="modal__header">
             <h2 id="confirmation-modal-title" data-modal-title></h2>
 
@@ -26,13 +26,13 @@
 
         <div class="modal__footer">
             <button class="btn-reset btn-shell" type="button" data-modal-close data-modal-cancel>
-                <span class="btn shape-cut-corners">
+                <span class="btn shape-cut-corners--diagonal">
                     Отмена
                 </span>
             </button>
 
             <button class="btn-reset btn-shell" type="button" data-modal-confirm>
-                <span class="btn shape-cut-corners">
+                <span class="btn shape-cut-corners--diagonal">
                     Подтвердить
                 </span>
             </button>

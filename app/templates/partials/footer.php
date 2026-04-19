@@ -1,5 +1,5 @@
 <footer class="container">
-    <div class="site-footer__inner full-size shape-cut-corners">
+    <div class="site-footer__inner full-size shape-cut-corners--diagonal">
         <div class="site-footer__section site-footer-disclaimer">
             Внимание: Этот сайт создан для демонстрации навыков разработки и не осуществляет реальную коммерческую деятельность.
 

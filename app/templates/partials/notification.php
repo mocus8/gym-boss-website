@@ -1,4 +1,4 @@
-<div id="notification" class="notification shape-cut-corners" role="status">
+<div id="notification" class="notification shape-cut-corners--diagonal" role="status">
     <button
         id="notification-close-btn"
         class="notification__close-btn inline-flex-center"

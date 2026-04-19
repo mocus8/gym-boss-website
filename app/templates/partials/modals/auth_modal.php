@@ -8,7 +8,7 @@
 >
     <div class="modal__overlay" data-modal-overlay aria-hidden="true"></div>
 
-    <div class="modal__content shape-cut-corners">
+    <div class="modal__content shape-cut-corners--diagonal">
         <div class="modal__header">
             <h2 id="auth-modal-title" class="visually-hidden">
                 Вход и регистрация
@@ -16,13 +16,13 @@
 
             <div class="modal__tabs">
                 <button class="btn-reset btn-shell" data-auth-tab="login" type="button">
-                    <span class="btn shape-cut-corners">
+                    <span class="btn shape-cut-corners--diagonal">
                         Войти
                     </span>
                 </button>
 
                 <button class="btn-reset btn-shell is-chosen" data-auth-tab="register" type="button">
-                    <span class="btn shape-cut-corners">
+                    <span class="btn shape-cut-corners--diagonal">
                         Зарегистрироваться
                     </span>
                 </button>
@@ -42,7 +42,7 @@
 
                     <input
                         id="login-email"
-                        class="shape-cut-corners"
+                        class="shape-cut-corners--diagonal"
                         type="email"
                         name="email"
                         required
@@ -64,7 +64,7 @@
 
                     <input
                         id="login-password"
-                        class="shape-cut-corners"
+                        class="shape-cut-corners--diagonal"
                         type="password"
                         name="password"
                         required
@@ -80,7 +80,7 @@
                 </div>
 
                 <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
-                    <span class="btn form__submit-btn shape-cut-corners">
+                    <span class="btn form__submit-btn shape-cut-corners--diagonal">
                         Войти
                     </span>
                 </button>
@@ -94,7 +94,7 @@
 
                     <input
                         id="registration-name"
-                        class="shape-cut-corners"
+                        class="shape-cut-corners--diagonal"
                         type="text"
                         name="name"
                         required
@@ -116,7 +116,7 @@
 
                     <input
                         id="registration-email"
-                        class="shape-cut-corners"
+                        class="shape-cut-corners--diagonal"
                         type="email"
                         name="email"
                         required
@@ -138,7 +138,7 @@
 
                     <input
                         id="registration-password"
-                        class="shape-cut-corners"
+                        class="shape-cut-corners--diagonal"
                         type="password"
                         name="password"
                         required
@@ -161,7 +161,7 @@
 
                     <input
                         id="registration-confirm-password"
-                        class="shape-cut-corners"
+                        class="shape-cut-corners--diagonal"
                         type="password"
                         name="confirm_password"
                         required
@@ -177,7 +177,7 @@
                 </div>
 
                 <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
-                    <span class="btn form__submit-btn shape-cut-corners">
+                    <span class="btn form__submit-btn shape-cut-corners--diagonal">
                         Зарегистрироваться
                     </span>
                 </button>
@@ -186,19 +186,19 @@
 
         <div class="modal__footer">
             <button id="forgot-password-btn" class="btn-reset btn-shell" type="button">
-                <span class="btn shape-cut-corners">
+                <span class="btn shape-cut-corners--diagonal">
                     Забыли пароль?
                 </span>
             </button>
 
             <button class="btn-reset btn-shell" type="button" data-auth-switch-to="register">
-                <span class="btn shape-cut-corners">
+                <span class="btn shape-cut-corners--diagonal">
                     Нет аккаунта? Зарегистрируйтесь
                 </span>
             </button>
 
             <button class="btn-reset btn-shell" type="button" data-auth-switch-to="login" hidden>
-                <span class="btn shape-cut-corners">
+                <span class="btn shape-cut-corners--diagonal">
                     Уже есть аккаунт? Авторизируйтесь
                 </span>
             </button>

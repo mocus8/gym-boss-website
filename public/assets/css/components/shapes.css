@@ -1,7 +1,8 @@
-/* Формы */
-.shape-cut-corners {
+.shape-cut {
     --cut-size: 12px;
+}
 
+.shape-cut-corners--diagonal {
     clip-path: polygon(
         0 0,
         calc(100% - var(--cut-size)) 0,
@@ -9,5 +10,18 @@
         100% 100%,
         var(--cut-size) 100%,
         0 calc(100% - var(--cut-size))
+    );
+}
+
+.shape-cut--all {
+    clip-path: polygon(
+        var(--cut-size) 0,
+        calc(100% - var(--cut-size)) 0,
+        100% var(--cut-size),
+        100% calc(100% - var(--cut-size)),
+        calc(100% - var(--cut-size)) 100%,
+        var(--cut-size) 100%,
+        0 calc(100% - var(--cut-size)),
+        0 var(--cut-size)
     );
 }

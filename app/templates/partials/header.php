@@ -2,7 +2,7 @@
     <div class="container">
         <div class="site-header__inner ">
             <a class="link-shell" href="/">
-                <div class="site-header__brand shape-cut-corners">
+                <div class="site-header__brand shape-cut-corners--diagonal">
                     <div class="site-header__brand-text">
                         <span class="site-header__brand-tagline">
                             Интернет-магазин спортивной атрибутики
@@ -22,7 +22,7 @@
                     <ul class="site-header__list list-reset flex-center">
                         <li>
                             <a class="link-shell" href="/">
-                                <span class="btn shape-cut-corners">
+                                <span class="btn shape-cut-corners--diagonal">
                                     <img class="site-header__nav-icon" src="/assets/images/ui/catalog.png" alt="">
                                     
                                     <span>Каталог</span>
@@ -32,7 +32,7 @@
 
                         <li>
                             <a class="link-shell" href="/stores">
-                                <span class="btn shape-cut-corners">
+                                <span class="btn shape-cut-corners--diagonal">
                                     <img class="site-header__nav-icon" src="/assets/images/ui/map.png" alt="">
 
                                     <span>Наши магазины</span>
@@ -42,7 +42,7 @@
 
                         <li>
                             <a class="link-shell" href="/contacts">
-                                <span class="btn shape-cut-corners">
+                                <span class="btn shape-cut-corners--diagonal">
                                     <img class="site-header__nav-icon" src="/assets/images/ui/phone.png" alt="">
 
                                     <span>Контакты</span>
@@ -52,7 +52,7 @@
 
                         <li>
                             <a class="link-shell" href="/about">
-                                <span class="btn shape-cut-corners">
+                                <span class="btn shape-cut-corners--diagonal">
                                     <img class="site-header__nav-icon" src="/assets/images/ui/info.png" alt="">
 
                                     <span>О сайте</span>
@@ -69,7 +69,7 @@
                     action="/api/products/search"
                     method="get"
                 >
-                    <div class="site-header__search-control shape-cut-corners"> 
+                    <div class="site-header__search-control shape-cut-corners--diagonal"> 
                         <img class="site-header__nav-icon" src="/assets/images/ui/glass.png" alt="">
 
                         <input
@@ -88,7 +88,7 @@
                             type="button"
                             aria-label="Очистить поиск"
                         >  
-                            <span class="btn site-header__search-clear-btn shape-cut-corners">✕</span>
+                            <span class="btn site-header__search-clear-btn shape-cut-corners--diagonal">✕</span>
                         </button>
                     </div>
 
@@ -97,14 +97,14 @@
             </div>
 
             <div class="site-header__account-wrapper">
-                <div class="site-header__account shape-cut-corners">
+                <div class="site-header__account shape-cut-corners--diagonal">
                     <span class="site-header__account-title">
                         <img class="site-header__nav-icon" src="/assets/images/ui/person.png" alt="">
                         <span>Аккаунт</span>
                     </span>
 
                     <a class="link-shell" href="/cart">
-                        <span class="btn site-header__account-btn shape-cut-corners">
+                        <span class="btn site-header__account-btn shape-cut-corners--diagonal">
                             <img class="site-header__nav-icon" src="/assets/images/ui/cart.png" alt="">
 
                             <span>
@@ -115,7 +115,7 @@
 
                     <?php if ($currentUser === null) { ?>
                         <button class="btn-reset btn-shell" data-modal-open="auth-modal" type="button">
-                            <span class="btn site-header__account-btn shape-cut-corners">
+                            <span class="btn site-header__account-btn shape-cut-corners--diagonal">
                                 Войти
                             </span>
                         </button>
@@ -128,7 +128,7 @@
                             aria-expanded="false"
                             aria-controls="account-menu"
                         >
-                            <span class="btn site-header__account-btn shape-cut-corners">
+                            <span class="btn site-header__account-btn shape-cut-corners--diagonal">
                                 <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
 
                                 <span class="site-header__account-trigger-arrow" aria-hidden="true"></span>
@@ -139,20 +139,20 @@
 
                 <div
                     id="account-menu"
-                    class="site-header__account-dropdown shape-cut-corners is-hidden"
+                    class="site-header__account-dropdown shape-cut-corners--diagonal is-hidden"
                     aria-labelledby="account-menu-trigger"
                 >
 
                     <a class="link-shell" href="/account">
-                        <span class="btn site-header__account-dropdown-btn shape-cut-corners">Профиль</span>
+                        <span class="btn site-header__account-dropdown-btn shape-cut-corners--diagonal">Профиль</span>
                     </a>
 
                     <a class="link-shell" href="/account/orders">
-                        <span class="btn site-header__account-dropdown-btn shape-cut-corners">Мои заказы</span>
+                        <span class="btn site-header__account-dropdown-btn shape-cut-corners--diagonal">Мои заказы</span>
                     </a>
 
                     <button class="btn-reset btn-shell" type="button" data-modal-open="logout-modal">
-                        <span class="btn site-header__account-dropdown-btn shape-cut-corners">Выйти</span>
+                        <span class="btn site-header__account-dropdown-btn shape-cut-corners--diagonal">Выйти</span>
                     </button>
                 </div>
             </div>

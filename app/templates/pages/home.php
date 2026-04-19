@@ -5,7 +5,7 @@
 
     <?php foreach ($catalog as $categoryData) { ?>
         <section class="catalog-section">
-            <h2 class="catalog-section__title shape-cut-corners">
+            <h2 class="catalog-section__title shape-cut-corners--diagonal">
                 <?= htmlspecialchars($categoryData['category']['name'], ENT_QUOTES, 'UTF-8') ?>
             </h2>
             
@@ -16,9 +16,9 @@
                             class="link-shell full-size"
                             href="/products/<?= htmlspecialchars($productData['slug'], ENT_QUOTES, 'UTF-8') ?>"
                         >
-                            <div class="product-card shape-cut-corners">
+                            <div class="product-card shape-cut-corners--diagonal">
                                 <img
-                                    class="img-full shape-cut-corners"
+                                    class="shape-cut-corners--diagonal"
                                     src="<?= htmlspecialchars($productData['image_path'], ENT_QUOTES, 'UTF-8') ?>"
                                     alt="<?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>"
                                 >

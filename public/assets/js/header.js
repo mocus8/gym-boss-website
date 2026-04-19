@@ -201,12 +201,11 @@ function initHeaderSearch() {
 
         const productCard = document.createElement("div");
         productCard.classList.add("product-card");
-        productCard.classList.add("shape-cut-corners");
+        productCard.classList.add("shape-cut-corners--diagonal");
         linkWrapper.appendChild(productCard);
 
         const productImg = document.createElement("img");
-        productImg.classList.add("img-full");
-        productImg.classList.add("shape-cut-corners");
+        productImg.classList.add("shape-cut-corners--diagonal");
         productImg.src = product.image_path;
         productImg.alt = product.name;
         productCard.appendChild(productImg);
