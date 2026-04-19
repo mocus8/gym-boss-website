@@ -1,10 +1,4 @@
 .email-verify {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-32);
-}
-
-.email-verify__content {
     align-self: center;
     width: 100%;
     max-width: 42rem;

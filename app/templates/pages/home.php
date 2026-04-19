@@ -1,17 +1,17 @@
 <!-- Контент главной страницы -->
 
-<div class="container catalog">
+<div class="container flex-stack-lg">
     <h1 class="page-title">Каталог товаров</h1>
 
     <?php foreach ($catalog as $categoryData) { ?>
-        <section class="catalog__section">
-            <h2 class="catalog__section-title shape-cut-corners">
+        <section class="catalog-section">
+            <h2 class="catalog-section__title shape-cut-corners">
                 <?= htmlspecialchars($categoryData['category']['name'], ENT_QUOTES, 'UTF-8') ?>
             </h2>
             
-            <ul class="list-reset catalog__section-list">
+            <ul class="list-reset catalog-section__list">
                 <?php foreach ($categoryData['products'] as $productData) { ?>
-                    <li class="catalog__section-item">
+                    <li class="catalog-section__item">
                         <a
                             class="link-shell full-size"
                             href="/products/<?= htmlspecialchars($productData['slug'], ENT_QUOTES, 'UTF-8') ?>"

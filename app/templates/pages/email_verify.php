@@ -1,11 +1,13 @@
-<div class="container email-verify">
+<div class="container flex-stack-lg">
     <a class="link-shell" href="/">
         <span class="btn return-btn shape-cut-corners">
-            На главную
+            <img class="return-btn__img" src="/assets/images/ui/arrow_back.png">
+
+            <span>На главную</span>
         </span>
     </a>
 
-    <div class="email-verify__content shape-cut-corners">
+    <div class="email-verify shape-cut-corners">
         <h1 class="email-verify__title">
             <?= htmlspecialchars($pageData['title'], ENT_QUOTES, 'UTF-8') ?>
         </h1>

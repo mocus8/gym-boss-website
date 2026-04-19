@@ -101,6 +101,12 @@
     justify-content: center;
 }
 
+.flex-stack-lg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-32);
+}
+
 /* Ограничение ширины текста */
 .text-narrow {
     max-width: 40rem;

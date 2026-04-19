@@ -4,13 +4,13 @@
     gap: var(--space-32);
 }
 
-.catalog__section {
+.catalog-section {
     display: flex;
     flex-direction: column;
     gap: var(--space-16);
 }
 
-.catalog__section-title {
+.catalog-section__title {
     align-self: flex-start;
     padding: var(--space-8) var(--space-12);
 
@@ -19,13 +19,13 @@
     background-color: var(--color-primary);
 }
 
-.catalog__section-list {
+.catalog-section__list {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-12);
 }
 
-.catalog__section-item {
+.catalog-section__item {
     width: 13rem;
     height: 18.25rem;
     flex: 0 0 auto;
