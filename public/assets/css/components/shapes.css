@@ -11,7 +11,7 @@
     );
 }
 
-.shape-cut--all {
+.shape-cut-corners--all {
     --cut-size: 12px;
 
     clip-path: polygon(

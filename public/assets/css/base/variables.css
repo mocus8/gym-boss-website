@@ -13,8 +13,9 @@
     --font-size-xl: 1.375rem;
     --font-size-2xl: 2rem;
 
-    --line-height-base: 1.5;
     --line-height-tight: 1.2;
+    --line-height-base: 1.5;
+    --line-height-wide: 1.7;
 
     /* Цвета */
     --color-bg: #030303;

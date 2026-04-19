@@ -210,7 +210,7 @@
     color: var(--color-text-muted);
 }
 
-.site-header__account-btn {
+.btn.site-header__account-btn {
     width: 100%;
     gap: var(--space-12);
 
@@ -222,7 +222,7 @@
     background-color: var(--color-primary);
 }
 
-.site-header__account-btn:hover {
+.btn.site-header__account-btn:hover {
     background-color: var(--color-primary-hover);
 }
 
