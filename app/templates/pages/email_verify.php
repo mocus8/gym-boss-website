@@ -7,8 +7,8 @@
         </span>
     </a>
 
-    <div class="form-card shape-cut-corners">
-        <h1 class="form-card__title">
+    <div class="content-card shape-cut-corners">
+        <h1 class="content-card__title">
             <?= htmlspecialchars($pageData['title'], ENT_QUOTES, 'UTF-8') ?>
         </h1>
 

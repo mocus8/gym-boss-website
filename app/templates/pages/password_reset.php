@@ -7,8 +7,8 @@
         </span>
     </a>
 
-    <form id="reset-pass-form" class="form-card shape-cut-corners" action="api/auth/password/reset" method="POST" novalidate>
-        <h1 class="form-card__title">Сброс пароля</h1>
+    <form id="reset-pass-form" class="content-card shape-cut-corners" action="api/auth/password/reset" method="POST" novalidate>
+        <h1 class="content-card__title">Сброс пароля</h1>
 
         <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
@@ -60,8 +60,8 @@
         </button>
     </form>
 
-    <div id="reset-success" class="form-card shape-cut-corners" hidden>
-        <h1 class="form-card__title">Пароль успешно изменен</h1>
+    <div id="reset-success" class="content-card shape-cut-corners" hidden>
+        <h1 class="content-card__title">Пароль успешно изменен</h1>
 
         <button class="btn-reset reset-success-btn btn-shell" type="button" data-modal-open="auth-modal">
             <span class="btn shape-cut-corners">
