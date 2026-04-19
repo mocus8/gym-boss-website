@@ -1,8 +1,6 @@
-.shape-cut {
-    --cut-size: 12px;
-}
-
 .shape-cut-corners--diagonal {
+    --cut-size: 12px;
+
     clip-path: polygon(
         0 0,
         calc(100% - var(--cut-size)) 0,
@@ -14,6 +12,8 @@
 }
 
 .shape-cut--all {
+    --cut-size: 12px;
+
     clip-path: polygon(
         var(--cut-size) 0,
         calc(100% - var(--cut-size)) 0,
