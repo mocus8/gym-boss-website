@@ -1,69 +1,72 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
+<div class="container flex-stack-lg">
+    <a class="link-shell" href="/">
+        <span class="btn return-btn shape-cut-corners">
+            <img class="return-btn__img" src="/assets/images/ui/arrow_back.png">
+
+            <span>На главную</span>
+        </span>
     </a>
-</div>
 
-<form action="api/auth/password/reset" method="POST" class="password_reset_form" id="reset-pass-form" novalidate>
-    <div class="registration_modal_input_text">
-        Сброс пароля
-    </div>
+    <form id="reset-pass-form" class="form-card shape-cut-corners" action="api/auth/password/reset" method="POST" novalidate>
+        <h1 class="form-card__title">Сброс пароля</h1>
 
-    <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="token" value="<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>">
 
-    <div class="registration_modal_input_back">
-        <span class="registration_modal_input_text">
-            Новый пароль:
-        </span>
-        <input
-            required
-            class="registration_modal_input"
-            type="password"
-            name="password"
-            autocomplete="new-password"
-            minlength="8"
-            maxlength="64"
-        >
-    </div>
+        <div class="form__field">
+            <label for="password-reset-new">
+                Новый пароль:
+            </label>
 
-    <div class="registration_modal_input_back">
-        <span class="registration_modal_input_text">
-            Подтверждение пароля:
-        </span>
-        <input
-            required
-            class="registration_modal_input"
-            type="password"
-            name="confirm_password"
-            autocomplete="new-password"
-            minlength="8"
-            maxlength="64"
-        >
-    </div>
+            <input
+                id="password-reset-new"
+                class="shape-cut-corners"
+                type="password"
+                name="password"
+                required
+                autocomplete="new-password"
+                minlength="8"
+                maxlength="64"
+                aria-describedby="password-reset-error"
+            >
+        </div>
 
-    <div class="form_error form_error_hidden">
-        <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
-        <div class="error_modal_text"></div>
-    </div>
+        <div class="form__field">
+            <label for="password-reset-confirm">
+                Подтверждение пароля:
+            </label>
 
-    <div class="registration_modal_buttons">
-        <button class="registration_modal_button" type="submit">
-            Подтвердить смену пароля
+            <input
+                id="password-reset-confirm"
+                class="shape-cut-corners"
+                type="password"
+                name="confirm_password"
+                required
+                autocomplete="new-password"
+                minlength="8"
+                maxlength="64"
+                aria-describedby="password-reset-error"
+            >
+        </div>
+
+        <div id="password-reset-error" class="form__error is-hidden">
+            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <span data-error-text></span>
+        </div>
+
+        <button class="btn-reset form__submit-btn-shell btn-shell" type="submit">
+            <span class="btn form__submit-btn shape-cut-corners">
+                Подтвердить смену пароля
+            </span>
+        </button>
+    </form>
+
+    <div id="reset-success" class="form-card shape-cut-corners" hidden>
+        <h1 class="form-card__title">Пароль успешно изменен</h1>
+
+        <button class="btn-reset reset-success-btn btn-shell" type="button" data-modal-open="auth-modal">
+            <span class="btn shape-cut-corners">
+                Войти в аккаунт
+            </span>
         </button>
     </div>
-</form>
-
-<div class="password_reset_form hidden" id="reset-success-modal">
-    <div class="registration_modal_input_text">
-        Пароль успешно изменен
-    </div>
-
-    <a class="registration_modal_button" data-modal-open="auth-modal">
-        Войти в аккаунт
-    </a>
 </div>
