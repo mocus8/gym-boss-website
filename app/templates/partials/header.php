@@ -92,7 +92,7 @@
                         </button>
                     </div>
 
-                    <div id="search-results-container" class="site-header__search-results-container flex-center is-hidden"></div>
+                    <div id="search-results-container" class="site-header__search-results-container is-hidden"></div>
                 </form>
             </div>
 

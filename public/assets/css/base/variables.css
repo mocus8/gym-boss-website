@@ -72,3 +72,21 @@
     --z-notification: 2000;
     --z-critical: 3000;
 }
+
+@media (max-width: 1050px) {
+    html {
+        font-size: 14px;
+    }
+
+    :root {
+        --font-size-xl: 1.2rem;
+        --font-size-2xl: 1.5rem;
+
+        --space-64: 40px;
+        --space-48: 32px;
+        --space-40: 28px;
+        --space-32: 24px;
+
+        --container-padding: 0.75rem;
+    }
+}
