@@ -25,3 +25,13 @@
         0 var(--cut-size)
     );
 }
+
+@media (max-width: 1050px) {
+    .shape-cut-corners--diagonal {
+        --cut-size: 8px;
+    }
+
+    .shape-cut-corners--all {
+        --cut-size: 8px;
+    }
+}
