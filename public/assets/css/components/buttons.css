@@ -42,19 +42,19 @@
     cursor: pointer;
 }
 
-.return-btn {
-    padding-inline: var(--space-16);
+.primary-btn {
+    padding-inline: var(--space-12);
     padding-block: var(--space-8);
 
     background-color: var(--color-primary);
     font-size: var(--font-size-lg);
 }
 
-.return-btn:hover {
+.primary-btn:hover {
     background-color: var(--color-primary-hover);
 }
 
-.return-btn__img {
+.primary-btn__img {
     width: 1.25rem;
     height: 1.25rem;
     flex-shrink: 0;
