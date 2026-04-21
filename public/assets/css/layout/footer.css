@@ -2,7 +2,7 @@
 
 .site-footer__inner {
     display: flex;
-    align-items: start;
+    align-items: stretch;
     justify-content: space-between;
     gap: var(--space-4);
     padding: var(--space-8) var(--space-12);
@@ -16,12 +16,13 @@
 .site-footer__section {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: var(--space-4);
 }
 
-/* .site-footer-disclaimer {
+.site-footer-disclaimer {
     max-width: 32rem;
-} */
+}
 
 .site-footer__section-row {
     display: flex;

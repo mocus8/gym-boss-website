@@ -3,17 +3,19 @@
         <div class="site-footer__section site-footer-disclaimer">
             Внимание: Этот сайт создан для демонстрации навыков разработки и не осуществляет реальную коммерческую деятельность.
 
-            <span class="site-footer__section-row">
+            <div  class="site-footer__section-row">
                 <a href="/about">О сайте</a>
 
                 <a href="/privacy">Политика конфиденциальности</a>
-            </span>
+            </div>
         </div>
 
         <div class="site-footer__section">
-            <p>По всем вопросам писать на почту:</p>
-
-            <a href='mailto:mocus8@gmail.com'>mocus8@gmail.com</a>
+            <p>
+                По всем вопросам писать на почту:
+                <br>
+                <a href='mailto:mocus8@gmail.com'>mocus8@gmail.com</a>
+            </p>
         </div>
 
         <div class="site-footer__section">
