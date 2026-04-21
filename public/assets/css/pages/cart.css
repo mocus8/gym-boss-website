@@ -139,6 +139,10 @@
     font-size: var(--font-size-lg);
 }
 
+.cart__summary .link-shell {
+    width: fit-content;
+}
+
 @media (max-width: 1050px) {
     .cart {
         display: flex;
