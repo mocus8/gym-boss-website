@@ -16,8 +16,7 @@ function hideMapLoader(loaderId) {
     const loader = document.getElementById(loaderId);
     if (!loader) return;
 
-    // Из-за стилей переход плавный
-    loader.classList.add("checkout_map_loader_hidden");
+    loader.hidden = true;
 }
 
 // Функция для обработки ошибки курьерской карты
@@ -39,9 +38,8 @@ function handleCourierMapError(error) {
         case "MAP_CONTAINER_NOT_FOUND":
         case "COURIER_MAP_REQUIRED_ELEMENTS_NOT_FOUND":
             hideMapLoader("courier-map-loader");
-            document
-                .getElementById("courier-map-error")
-                ?.classList.remove("hidden");
+            document.getElementById("courier-map").hidden = true;
+            document.getElementById("courier-map-error").hidden = false;
             courierMap?.disableSuggestions();
             break;
 
@@ -83,9 +81,8 @@ function handleCourierMapError(error) {
 
         default:
             hideMapLoader("courier-map-loader");
-            document
-                .getElementById("courier-map-error")
-                ?.classList.remove("hidden");
+            document.getElementById("courier-map").hidden = true;
+            document.getElementById("courier-map-error").hidden = false;
             courierMap?.disableSuggestions();
     }
 }
@@ -97,7 +94,8 @@ function handlePickupMapError(error) {
         error,
     );
     hideMapLoader("pickup-map-loader");
-    document.getElementById("pickup-map-error")?.classList.remove("hidden");
+    document.getElementById("pickup-map").hidden = true;
+    document.getElementById("pickup-map-error").hidden = false;
 }
 
 // Функция для переключения видимости блоков с датой курьерской доставки/самовывоза
@@ -114,8 +112,8 @@ function toggleDeliveryDate() {
     const deliveryType = getCurrentDeliveryType();
     const isCourier = deliveryType === "courier";
 
-    courierDateRow.classList.toggle("hidden", !isCourier || !courierPostalCode);
-    pickupDateRow.classList.toggle("hidden", isCourier || !pickupStoreId);
+    courierDateRow.hidden = !isCourier || !courierPostalCode;
+    pickupDateRow.hidden = isCourier || !pickupStoreId;
 }
 
 // Функция для обработки выбранного адреса курьерской доставки
@@ -241,17 +239,17 @@ function setDeliveryMode(mode) {
     // Переключаем состояние кнопок
     // Toggle автоматически добавляет или удаляет класс
     if (selectCourierBtn && selectPickupBtn) {
-        selectCourierBtn.classList.toggle("chosen", isCourier);
-        selectPickupBtn.classList.toggle("chosen", !isCourier);
+        selectCourierBtn.classList.toggle("is-chosen", isCourier);
+        selectPickupBtn.classList.toggle("is-chosen", !isCourier);
     }
 
     // Переключаем видимость элементов
     document
         .querySelectorAll('[data-order-type="courier"]')
-        .forEach((el) => el.classList.toggle("hidden", !isCourier));
+        .forEach((el) => (el.hidden = !isCourier));
     document
         .querySelectorAll('[data-order-type="pickup"]')
-        .forEach((el) => el.classList.toggle("hidden", isCourier));
+        .forEach((el) => (el.hidden = isCourier));
 
     if (checkoutCart) {
         updateCheckoutInfo(checkoutCart);
@@ -270,8 +268,7 @@ function setDeliveryMode(mode) {
 // Функция для создания отдельного блока с товаром
 function createCheckoutItemEl(item) {
     // Создаем блок товара
-    const itemDiv = document.createElement("div");
-    itemDiv.classList.add("item_row");
+    const itemEl = document.createElement("li");
 
     const name = String(item.name);
     const quantity = String(item.quantity);
@@ -280,9 +277,9 @@ function createCheckoutItemEl(item) {
     );
 
     // Заполняем блок товара
-    itemDiv.textContent = `${name} (${quantity} шт.) - ${totalPrice} ₽`;
+    itemEl.textContent = `${name} (${quantity} шт.) - ${totalPrice} ₽`;
 
-    return itemDiv;
+    return itemEl;
 }
 
 // Функция для заполнения инф о всех товарах из корзины
@@ -322,7 +319,7 @@ function getCurrentDeliveryType() {
     const courierBtn = document.getElementById("order-type-courier");
     if (!courierBtn) return "courier"; // значение по умолчанию
 
-    return courierBtn.classList.contains("chosen") ? "courier" : "pickup";
+    return courierBtn.classList.contains("is-chosen") ? "courier" : "pickup";
 }
 
 // Функция для подсчета стоимости доставки

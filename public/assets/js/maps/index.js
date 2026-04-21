@@ -1,4 +1,4 @@
-import { debounce, escapeHtml } from "../utils.js";
+import { setButtonLoading, debounce, escapeHtml } from "../utils.js";
 import { suggestAddress } from "./dadata.api.js";
 /* global ymaps */
 
@@ -140,36 +140,24 @@ export class StoresMap {
                 coords,
                 {
                     balloonContent: `
-                        <div style="min-width: 250px; font-family: 'Jost', Arial; font-size: 16px; color: black;">
-                            <div style="margin-bottom: 15px;">
-                                <strong>
-                                    ${address}
-                                </strong>
+                        <div class="map__inner-baloon">
+                            <p>${address}</p>
+                        
+                            <p>${workHoursHtml}</p>
+                        
+                            <a href='tel:${phone}'>${phone}</a>
 
-                                <br>
-
-                                <div style="margin-top: 10px;">
-                                    ${workHoursHtml}
-                                </div>
-                                <a href='tel:${phone}' class="colour_href">
-                                    <div style="margin-top: 10px;">
-                                        ${phone}
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div style="text-align: center;">
-                                <a href="${yandexMapsUrl}" target="_blank" rel="noopener noreferrer" rel="noopener noreferrer" style="
-                                    display: inline-block;
-                                    background: #4B4B4B;
-                                    color: black;
-                                    border: 0.15vw solid black;
-                                    padding: 3% 5%;
-                                    border-radius: 0.5vw;
-                                ">
+                            <a
+                                id="start-order-btn"
+                                class="link-shell"
+                                href="${yandexMapsUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <span class="btn map__inner-baloon-btn">
                                     Открыть в Картах
-                                </a>
-                            </div>
+                                </span>
+                            </a>
                         </div>
                     `,
                 },
@@ -359,7 +347,7 @@ export class CourierMap {
 
         // Удаляем обработчик клика по документу (закрытие подсказок)
         if (this.#onOutsideMouseDown) {
-            document.removeEventListener("mousedown", this.#onOutsideMouseDown);
+            document.removeEventListener("click", this.#onOutsideMouseDown);
             this.#onOutsideMouseDown = null;
         }
 
@@ -421,36 +409,22 @@ export class CourierMap {
             coords,
             {
                 balloonContent: `
-                <div style="
-                    min-width: 250px;
-                    font-size: 120% !important;
-                    font-family: 'Jost', Arial !important;
-                ">
-                    <strong>
-                        Адрес доставки:
-                    </strong>
+                    <div class="map__inner-baloon">
+                        <p>Адрес доставки:</p>
 
-                    <br>
-
-                    ${escapeHtml(address)}
-
-                    <div style="
-                        margin-top: 5%;
-                        text-align: center;
-                    ">
-                        <button id="select-courier-address" style="
-                            border: 0.15vw solid black;
-                            padding: 3% 5%;
-                            padding-left: 2%;
-                            border-radius: 0.5vw;
-                            cursor: pointer; 
-                            background: #4B4B4B !important;
-                        ">
-                            ✅ Доставить сюда
+                        <p>${address}</p>
+                    
+                        <button 
+                            id="select-courier-address"
+                            class="btn-reset map__inner-baloon-btn-shell btn-shell"
+                            type="button"
+                        >
+                            <span class="btn map__inner-baloon-btn">
+                                Доставить сюда
+                            </span>
                         </button>
                     </div>
-                </div>
-            `,
+                `,
             },
             {
                 iconLayout: "default#image",
@@ -485,7 +459,7 @@ export class CourierMap {
 
                 // Мгновенно обновляем кнопку если адрес выбран
                 if (selectedAlready) {
-                    btn.textContent = "✅ Адрес выбран";
+                    btn.textContent = "✓ Адрес выбран";
                     btn.style.cursor = "default";
                     btn.style.pointerEvents = "none";
                     btn.disabled = true;
@@ -508,7 +482,7 @@ export class CourierMap {
                             postalCode,
                         });
 
-                        btn.textContent = "✅ Адрес выбран";
+                        btn.textContent = "✓ Адрес выбран";
                         btn.style.cursor = "default";
                         btn.style.pointerEvents = "none";
                         btn.disabled = true;
@@ -535,8 +509,7 @@ export class CourierMap {
                 .trim();
 
             if (this.#searchBtn) {
-                this.#searchBtn.disabled = true;
-                this.#searchBtn.textContent = "Поиск...";
+                setButtonLoading(this.#searchBtn, true);
             }
 
             // Прибавляем номер запроса
@@ -592,8 +565,7 @@ export class CourierMap {
             this.#handleError(error);
         } finally {
             if (this.#searchBtn) {
-                this.#searchBtn.disabled = false;
-                this.#searchBtn.textContent = "Найти";
+                setButtonLoading(this.#searchBtn, false);
             }
         }
     }
@@ -615,12 +587,17 @@ export class CourierMap {
     #createSuggestionElement(suggestion) {
         const suggestionValue = String(suggestion.value);
 
-        const suggestionDiv = document.createElement("div");
-        suggestionDiv.classList.add("suggestion");
-        suggestionDiv.dataset.suggestionValue = suggestionValue;
-        suggestionDiv.innerText = suggestionValue;
+        const suggestionItem = document.createElement("li");
+        suggestionItem.classList.add("checkout__address-search-suggestion");
 
-        return suggestionDiv;
+        const suggestionBtn = document.createElement("button");
+        suggestionBtn.classList.add("btn-reset");
+        suggestionBtn.dataset.suggestionValue = suggestionValue;
+        suggestionBtn.type = "button";
+        suggestionBtn.textContent = suggestionValue;
+        suggestionItem.appendChild(suggestionBtn);
+
+        return suggestionItem;
     }
 
     // Функция для рендера и показа подсказок
@@ -721,10 +698,7 @@ export class CourierMap {
         );
 
         // Навешиваем обработчик на контейнер подсказок
-        this.#suggestionsContainer.addEventListener(
-            "mousedown",
-            suggestionOnClick,
-        );
+        this.#suggestionsContainer.addEventListener("click", suggestionOnClick);
 
         // Закрытие подсказок при клике вне контейнера/input-а
         this.#onOutsideMouseDown = (e) => {
@@ -734,7 +708,7 @@ export class CourierMap {
             this.#hideSuggestions();
         };
         // Навешиваем обработчик клика на функцию
-        document.addEventListener("mousedown", this.#onOutsideMouseDown);
+        document.addEventListener("click", this.#onOutsideMouseDown);
 
         // Ставим флаг инициализации DaData
         this.#daDataInitialized = true;
@@ -869,41 +843,22 @@ export class PickupMap {
                 coords,
                 {
                     balloonContent: `
-                        <div style="
-                            min-width: 250px;
-                            font-family: 'Jost', Arial;
-                            font-size: 16px;
-                            color: black;
-                        ">
-                            <div style="margin-bottom: 15px;">
-                                <strong>
-                                    ${address}
-                                </strong>
-                                
-                                <br>
-
-                                <div style="margin-top: 10px;">
-                                    ${workHoursHtml}
-                                </div>
-
-                                <a href='tel:${phone}' class="colour_href">
-                                    <div style="margin-top: 10px;">
-                                        ${phone}
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div style="text-align: center;">
-                                <button data-pickup-index="${index}" style="
-                                    border: 0.15vw solid black;
-                                    padding: 3% 5%;
-                                    border-radius: 0.5vw;
-                                    cursor: pointer;
-                                    background: #4B4B4B !important;
-                                ">
+                        <div class="map__inner-baloon">
+                            <p>${address}</p>
+                        
+                            <p>${workHoursHtml}</p>
+                        
+                            <a href='tel:${phone}'>${phone}</a>
+                        
+                            <button 
+                                data-pickup-index="${index}"
+                                class="btn-reset map__inner-baloon-btn-shell btn-shell"
+                                type="button"
+                            >
+                                <span class="btn map__inner-baloon-btn">
                                     Заберу отсюда
-                                </button>
-                            </div>
+                                </span>
+                            </button>
                         </div>
                     `,
                 },
@@ -938,7 +893,7 @@ export class PickupMap {
 
                     // Мгновенно обновляем кнопку если адрес выбран
                     if (selectedAlready) {
-                        btn.textContent = "✅ Магазин выбран";
+                        btn.textContent = "✓ Магазин выбран";
                         btn.style.cursor = "default";
                         btn.style.pointerEvents = "none";
                         btn.disabled = true;
@@ -976,7 +931,7 @@ export class PickupMap {
                                 });
                             }
 
-                            btn.textContent = "✅ Магазин выбран";
+                            btn.textContent = "✓ Магазин выбран";
                             btn.style.cursor = "default";
                             btn.style.pointerEvents = "none";
                             btn.disabled = true;
