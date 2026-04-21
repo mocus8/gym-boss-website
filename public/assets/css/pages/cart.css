@@ -90,6 +90,7 @@
 }
 
 .cart__item-btn-sign {
+    text-align: center;
     font-size: var(--font-size-2xl);
     line-height: 1;
 }

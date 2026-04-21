@@ -122,7 +122,7 @@ export class StoresMap {
             const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address)}`;
 
             // Валидируем поля перед выводом
-            const workHours = escapeHtml(store.workHours);
+            const workHours = escapeHtml(store.work_hours);
             const address = escapeHtml(store.address);
             const phone = escapeHtml(store.phone);
 
@@ -825,7 +825,7 @@ export class PickupMap {
             const coords = [store.latitude, store.longitude];
 
             // Валидируем поля перед выводом
-            const workHours = escapeHtml(store.workHours);
+            const workHours = escapeHtml(store.work_hours);
             const address = escapeHtml(store.address);
             const phone = escapeHtml(store.phone);
 
