@@ -79,7 +79,7 @@
 .product__right {
     position: sticky;
     top: 9.25rem;
-    z-index: var(--z-sticky);
+    z-index: var(--z-base);
 
     display: flex;
     flex-direction: column;
