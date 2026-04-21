@@ -101,6 +101,12 @@
     justify-content: center;
 }
 
+.flex-stack-base {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
 .flex-stack-lg {
     display: flex;
     flex-direction: column;
