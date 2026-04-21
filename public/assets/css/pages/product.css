@@ -130,14 +130,25 @@
     font-size: var(--font-size-lg);
 }
 
+.product__change-qty button {
+    transition: transform var(--transition-fast);
+}
+
+.product__change-qty button:hover {
+    transform: translateY(-2px);
+}
+
+.product__change-qty button:active {
+    transform: translateY(0);
+}
+
 .product__change-qty-btn-shell:focus-visible {
     outline: 2px solid var(--color-surface-alt);
 }
 
 .product__change-qty-sign {
-    width: 2rem;
-    height: 2rem;
-    flex-shrink: 0;
+    font-size: var(--font-size-2xl);
+    line-height: 1;
 }
 
 @media (max-width: 1050px) {
@@ -190,10 +201,5 @@
     .product__change-qty {
         gap: var(--space-12);
         padding: var(--space-4) var(--space-4);
-    }
-
-    .product__change-qty-sign {
-        width: 2rem;
-        height: 2rem;
     }
 }

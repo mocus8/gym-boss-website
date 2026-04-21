@@ -57,7 +57,7 @@
                 data-product-subtract-cart
                 data-product-id="<?= (int)$product['id'] ?>"
             >
-                <img class="product__change-qty-sign" src="/assets/images/ui/minus.png" alt="Уменьшить количество">
+                <span class="product__change-qty-sign">–</span>
             </button>
 
             <span id="product-cart-counter"></span>
@@ -68,7 +68,7 @@
                 data-product-add-cart
                 data-product-id="<?= (int)$product['id'] ?>"
             >
-                <img class="product__change-qty-sign" src="/assets/images/ui/plus.png" alt="Увеличить количество"> 
+                <span class="product__change-qty-sign">+</span>
             </button>
         </div>
     </div>

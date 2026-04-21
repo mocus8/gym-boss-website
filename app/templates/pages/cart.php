@@ -1,55 +1,51 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
+<div class="container cart">
+    <div class="cart__items">
+        <h1 class="page-title">Товары в корзине:</h1>
+
+        <div id="product-container" class="cart__items-container">
+            <div class="cart__items-loader flex-center" role="status">
+                <img class="cart__items-loader-spinner" src="/assets/images/ui/loader.png" alt="">
+
+                <span>Загрузка...</span>
             </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
-    </a>
-</div>
-
-<div class="cart_in_cart_text">
-    Товары в корзине:
-</div>
-
-<div class="cart_products" id="product-container">
-    <div class="cart_products_loader">
-        Загрузка... <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка">
-    </div>
-</div>
-
-<div class="cart_right">
-    <img class="order_icon" src="/assets/images/ui/cart.png">
-    <div class="order_inf">
-        <div class="order_inf_price_text">
-            Сумма заказа
-        </div>
-
-        <div class="order_inf_amount">
-            Количество товаров: <span id="items-total-qty">загрузка...</span> шт.
-        </div>
-
-        <div class="order_inf_price_1" >
-            Стоимость всех товаров: <span data-items-total-price>загрузка...</span> ₽
-        </div>
-
-        <div class="order_inf_price_2">
-            Итого: <span data-items-total-price>загрузка...</span> ₽
         </div>
     </div>
-    
-    <?php if (!$isAuthenticated) { ?>
-        <a class="order_start hidden" id="start-order-btn" data-modal-open="auth-modal">
-            <div class="order_start_text">
-                Перейти к оформлению
+
+    <div class="cart__summary">
+        <div class="cart__summary-info shape-cut-corners--diagonal">
+            <div class="cart__summary-title">
+                <img class="cart__summary-icon" src="/assets/images/ui/cart.png" alt="">
+
+                <h2 class="cart__summary-row">
+                    Сумма заказа
+                </h2>
             </div>
-        </a>
-    <?php } else { ?>
-        <a class="order_start hidden" id="start-order-btn" href="/checkout">
-            <div class="order_start_text">
-                Перейти к оформлению
-            </div>
-        </a>
-    <?php } ?>
+
+            <p class="cart__summary-row">
+                Количество товаров: <span id="items-total-qty">загрузка...</span> шт.
+            </p>
+
+            <p class="cart__summary-row">
+                Стоимость всех товаров: <span data-items-total-price>загрузка...</span> ₽
+            </p>
+
+            <p class="cart__summary-row">
+                Итого: <span data-items-total-price>загрузка...</span> ₽
+            </p>
+        </div>
+        
+        <?php if (!$isAuthenticated) { ?>
+            <a id="start-order-btn" class="link-shell" data-modal-open="auth-modal" hidden>
+                <span class="btn primary-btn shape-cut-corners--diagonal">
+                    Перейти к оформлению
+                </span>
+            </a>
+        <?php } else { ?>
+            <a id="start-order-btn" class="link-shell" href="/checkout" hidden>
+                <span class="btn primary-btn shape-cut-corners--diagonal">
+                    Перейти к оформлению
+                </span>
+            </a>
+        <?php } ?>
+    </div>
 </div>
