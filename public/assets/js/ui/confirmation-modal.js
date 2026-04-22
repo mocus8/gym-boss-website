@@ -121,8 +121,9 @@ export class ConfirmationModal {
             return;
         }
 
-        // Минимальный “loading” без оверкилла: блокируем кнопки
+        // Блокируем кнопки и ставим лоадер на кнопку действия
         this.confirmBtn.disabled = true;
+        this.confirmBtn.classList.add("is-loading");
         this.cancelBtn.disabled = true;
 
         try {
@@ -133,6 +134,10 @@ export class ConfirmationModal {
             this.confirmBtn.disabled = false;
             this.cancelBtn.disabled = false;
             throw e;
+        } finally {
+            this.confirmBtn.disabled = false;
+            this.confirmBtn.classList.remove("is-loading");
+            this.cancelBtn.disabled = false;
         }
     }
 
