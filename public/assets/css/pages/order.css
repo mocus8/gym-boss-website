@@ -1,0 +1,26 @@
+.order {
+    position: relative;
+}
+
+.order__primary {
+    font-size: var(--font-size-lg);
+}
+
+.order__actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-16);
+}
+
+.order__secondary {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.order__secondary a {
+    color: var(--color-primary-soft);
+}
+
+.order__secondary a:hover {
+    color: var(--color-primary);
+}

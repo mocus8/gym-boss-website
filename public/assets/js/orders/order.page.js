@@ -13,296 +13,11 @@ import {
 import { ConfirmationModal } from "../ui/confirmation-modal.js";
 import { notification } from "../ui/notification.js";
 
-// Функция для скрытия информационных блоков, заполнения и показа блоков ошибки
-function showOrderError(message) {
-    const orderDetailsElements = document.querySelectorAll(
-        "[data-order-details]",
-    );
-    const errorTextEl = document.getElementById("order-error-text");
-    const errorElements = document.querySelectorAll("[data-order-error]");
-    if (
-        !errorTextEl ||
-        orderDetailsElements.length === 0 ||
-        errorElements.length === 0
-    )
-        return;
-
-    orderDetailsElements.forEach((el) => el.classList.add("hidden"));
-    errorTextEl.textContent = String(message);
-    errorElements.forEach((el) => el.classList.remove("hidden"));
-}
-
-// Функция для валидации базовых полей заказа
-function validateOrderData(data) {
-    const order = data?.order;
-    const items = data?.items;
-
-    if (!order || typeof order !== "object") return false;
-    if (!Array.isArray(items) || items.length === 0) return false;
-
-    if (!Number.isInteger(Number(order.id)) || Number(order.id) <= 0) {
-        return false;
-    }
-    if (typeof order.status_code !== "string" || !order.status_code) {
-        return false;
-    }
-    if (typeof order.status_name !== "string" || !order.status_name) {
-        return false;
-    }
-    if (
-        typeof order.delivery_type_code !== "string" ||
-        !order.delivery_type_code
-    ) {
-        return false;
-    }
-    if (
-        typeof order.delivery_type_name !== "string" ||
-        !order.delivery_type_name
-    ) {
-        return false;
-    }
-
-    if (typeof order.created_at !== "string" || !order.created_at) return false;
-
-    if (!Number.isFinite(Number(order.total_price))) return false;
-    if (!Number.isFinite(Number(order.delivery_cost))) return false;
-
-    return true;
-}
-
-// Функция для заполнения базовых полей страницы заказа (если их нет - уходим в ошибку на странице)
-function fillBasicInfo(order) {
-    const statusEl = document.getElementById("order-status");
-    const createdAtEl = document.getElementById("order-created-at");
-    const deliveryTypeEl = document.getElementById("order-delivery-type");
-    const totalPriceEl = document.getElementById("order-total-price");
-
-    if (!statusEl || !createdAtEl || !deliveryTypeEl || !totalPriceEl) {
-        console.error(
-            "[order-page] Не найдены элементы страницы для базовой информации о заказе",
-        );
-        return false;
-    }
-
-    // Деструкторизация полей с базовой инфой о заказе
-    const {
-        status_name: statusName,
-        created_at: createdAt,
-        delivery_type_name: deliveryTypeName,
-        delivery_cost: deliveryCostRaw,
-        total_price: itemsPriceRaw, // стоимость товаров, к ней нужно прибавлять deliveryCost
-    } = order;
-
-    const deliveryCost = Number(deliveryCostRaw);
-    const itemsPrice = Number(itemsPriceRaw);
-
-    statusEl.textContent = String(statusName).toLowerCase();
-    createdAtEl.textContent = formatDate(createdAt);
-    deliveryTypeEl.textContent = String(deliveryTypeName).toLowerCase();
-    totalPriceEl.textContent = formatPrice(
-        Number(itemsPrice) + Number(deliveryCost),
-    );
-
-    return true;
-}
-
-// Функция для создания строчки с товаром
-function createOrderItemEl(item) {
-    // Создаем элемент товара
-    const itemDiv = document.createElement("div");
-    itemDiv.classList.add("item_row");
-
-    const name = String(item.name);
-    const quantity = String(item.quantity);
-    const totalPrice = String(
-        formatPrice(Number(item.quantity) * Number(item.price)),
-    );
-
-    // Заполняем блок товара
-    itemDiv.textContent = `${name} (${quantity} шт.) - ${totalPrice} ₽`;
-
-    return itemDiv;
-}
-
-// Функция для заполнения списка товаров
-function fillOrderItems(items) {
-    const itemsContainer = document.getElementById("order-items-container");
-    if (!itemsContainer) {
-        console.error(
-            "[order-page] Не найден контейнер для товаров order-items-container",
-        );
-        return false;
-    }
-
-    // Очищаем содержимое контейнера
-    itemsContainer.innerHTML = "";
-
-    items.forEach((item) => {
-        // Рендерим через функцию блок товара
-        const itemEl = createOrderItemEl(item);
-
-        // Добавляем товар в контейнер
-        itemsContainer.appendChild(itemEl);
-    });
-
-    return true;
-}
-
-// Функция для заполнения span, либо скрытия обертки с data-optional-row
-function setTextOrHide(el, value) {
-    if (!el) return;
-
-    const row = el.closest("[data-optional-row]") ?? el;
-    const text = value == null ? "" : String(value).trim();
-
-    row.classList.toggle("hidden", text === "");
-    el.textContent = text;
-}
-
-// Функция для заполнения информации о доставке
-function fillDeliveryInfo(order) {
-    const deliveryTypeCode = order.delivery_type_code;
-
-    const courierAddressEl = document.getElementById("order-courier-address");
-    const deliveryPriceEl = document.getElementById("order-delivery-price");
-    const pickupStoreEl = document.getElementById("order-pickup-store");
-
-    if (deliveryTypeCode === "courier") {
-        if (!courierAddressEl || !deliveryPriceEl) {
-            console.error(
-                "[order-page] При courier отсутствуют order-courier-address и/или order-delivery-price",
-            );
-            return false;
-        }
-
-        setTextOrHide(courierAddressEl, order.delivery_address_text);
-        setTextOrHide(deliveryPriceEl, formatPrice(order.delivery_cost));
-    }
-
-    if (deliveryTypeCode === "pickup") {
-        if (!pickupStoreEl) {
-            console.error(
-                "[order-page] При pickup отсутствует order-pickup-store",
-            );
-            return false;
-        }
-
-        setTextOrHide(
-            pickupStoreEl,
-            order.store_id ? `${order.store_address}` : null,
-        );
-    }
-
-    return true;
-}
-
-// Функция для отображения строки только если есть две даты
-function setRangeOrHide(fromEl, toEl, fromRaw, toRaw) {
-    if (!fromEl || !toEl) return;
-
-    const row = fromEl.closest("[data-optional-row]");
-    const from = fromRaw ? formatDate(fromRaw) : "";
-    const to = toRaw ? formatDate(toRaw) : "";
-
-    row?.classList.toggle("hidden", !from || !to);
-    fromEl.textContent = from;
-    toEl.textContent = to;
-}
-
-// Функция для заполнения дат доставки/готовности заказа
-function fillDeliveryDates(order) {
-    const courierFirst = document.getElementById("order-courier-first-date");
-    const courierLast = document.getElementById("order-courier-last-date");
-    setRangeOrHide(
-        courierFirst,
-        courierLast,
-        order.delivery_from,
-        order.delivery_to,
-    );
-
-    const pickupFirst = document.getElementById(
-        "order-ready-for-pickup-first-date",
-    );
-    const pickupLast = document.getElementById(
-        "order-ready-for-pickup-last-date",
-    );
-    setRangeOrHide(
-        pickupFirst,
-        pickupLast,
-        order.delivery_from,
-        order.delivery_to,
-    );
-}
-
-function showOrderSections(order) {
-    const statusCode = order.status_code;
-    const deliveryTypeCode = order.delivery_type_code;
-
-    // Скрываем все блоки у которых  data-delivery-visible-type не совпадает, и показываем где совпадает
-    document.querySelectorAll("[data-delivery-visible-type]").forEach((el) => {
-        const visibleType = el.dataset.deliveryVisibleType;
-        el.classList.toggle("hidden", visibleType !== deliveryTypeCode);
-    });
-
-    // Показываем подходищие по статусу блоки и скрываем неподходящие, также дополнительно проверяем тип доставки
-    document.querySelectorAll("[data-visible-status]").forEach((el) => {
-        const allowed = (el.dataset.visibleStatus || "")
-            .split(",") // разделяет по запятым
-            .map((s) => s.trim()) // обрезает пробелы
-            .filter(Boolean); // выкидывает пустые строки
-        const isAlloweStatus = allowed.includes(statusCode); // true, если в статусах элемента есть подходящий
-
-        const visibleType = el.dataset.deliveryVisibleType;
-        const isAllowedDeliveryType =
-            !visibleType || visibleType === deliveryTypeCode;
-
-        el.classList.toggle(
-            "hidden",
-            !(isAlloweStatus && isAllowedDeliveryType),
-        );
-    });
-}
-
-// Главная функция для рендера инфы о заказе и товарах
-function renderOrderInfo(data) {
-    const order = data.order;
-    const items = data.items;
-
-    // Заполнение базовой информации
-    if (!fillBasicInfo(order)) return false;
-    // Заполнение списка товаров
-    if (!fillOrderItems(items)) return false;
-    // Заполнение информации о доставке
-    if (!fillDeliveryInfo(order)) return false;
-    // Заполнение дат доставки/готовности заказа
-    fillDeliveryDates(order);
-    // Показ опцианальных по статусу блоков страницы
-    showOrderSections(order);
-
-    return true;
-}
-
-// Функция для получения и валидации инфы о заказе
-async function getAndValidateOrder(orderId) {
-    // Получаем инфу о заказе
-    const data = await getOrderById(orderId);
-
-    // Валидируем инфу
-    // Функции возвращают boolean
-    if (!validateOrderData(data)) {
-        showOrderError(
-            "Не удалось получить информацию о заказе. Перейдите в историю заказов или обратитесь в поддержку",
-        );
-        return null;
-    }
-
-    return data;
-}
-
 window.addEventListener("DOMContentLoaded", async () => {
     const orderContainer = document.getElementById("order-container");
+    const orderLoader = document.getElementById("order-loader");
     const orderIdEl = document.getElementById("order-id");
-    if (!orderContainer || !orderIdEl) return;
+    if (!orderContainer || !orderLoader || !orderIdEl) return;
 
     const orderId = Number(orderContainer.dataset.orderId);
     // Проверяем orderId с бэка на валидность, если невалидный - заполняем и показываем блоки ошибки
@@ -363,6 +78,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
         const message = getErrorMessage(e.code, e.status);
         showOrderError(message);
+    } finally {
+        orderLoader.hidden = true;
     }
 
     // Если нет кнопки отмены - тихо выходим (она есть не для всех статусов)
@@ -446,3 +163,285 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
     });
 });
+
+// Функция для скрытия информационных блоков, заполнения и показа блоков ошибки
+function showOrderError(message) {
+    const orderDetailsElements = document.querySelectorAll(
+        "[data-order-details]",
+    );
+    const errorTextEl = document.getElementById("order-error-text");
+    const errorElements = document.querySelectorAll("[data-order-error]");
+    if (
+        !errorTextEl ||
+        orderDetailsElements.length === 0 ||
+        errorElements.length === 0
+    )
+        return;
+
+    orderDetailsElements.forEach((el) => (el.hidden = true));
+    errorTextEl.textContent = String(message);
+    errorElements.forEach((el) => (el.hidden = false));
+}
+
+// Функция для валидации базовых полей заказа
+function validateOrderData(data) {
+    const order = data?.order;
+    const items = data?.items;
+
+    if (!order || typeof order !== "object") return false;
+    if (!Array.isArray(items) || items.length === 0) return false;
+
+    if (!Number.isInteger(Number(order.id)) || Number(order.id) <= 0) {
+        return false;
+    }
+    if (typeof order.status_code !== "string" || !order.status_code) {
+        return false;
+    }
+    if (typeof order.status_name !== "string" || !order.status_name) {
+        return false;
+    }
+    if (
+        typeof order.delivery_type_code !== "string" ||
+        !order.delivery_type_code
+    ) {
+        return false;
+    }
+    if (
+        typeof order.delivery_type_name !== "string" ||
+        !order.delivery_type_name
+    ) {
+        return false;
+    }
+
+    if (typeof order.created_at !== "string" || !order.created_at) return false;
+
+    if (!Number.isFinite(Number(order.total_price))) return false;
+    if (!Number.isFinite(Number(order.delivery_cost))) return false;
+
+    return true;
+}
+
+// Функция для заполнения базовых полей страницы заказа (если их нет - уходим в ошибку на странице)
+function fillBasicInfo(order) {
+    const statusEl = document.getElementById("order-status");
+    const createdAtEl = document.getElementById("order-created-at");
+    const deliveryTypeEl = document.getElementById("order-delivery-type");
+    const totalPriceEl = document.getElementById("order-total-price");
+
+    if (!statusEl || !createdAtEl || !deliveryTypeEl || !totalPriceEl) {
+        console.error(
+            "[order-page] Не найдены элементы страницы для базовой информации о заказе",
+        );
+        return false;
+    }
+
+    // Деструкторизация полей с базовой инфой о заказе
+    const {
+        status_name: statusName,
+        created_at: createdAt,
+        delivery_type_name: deliveryTypeName,
+        delivery_cost: deliveryCostRaw,
+        total_price: itemsPriceRaw, // стоимость товаров, к ней нужно прибавлять deliveryCost
+    } = order;
+
+    const deliveryCost = Number(deliveryCostRaw);
+    const itemsPrice = Number(itemsPriceRaw);
+
+    statusEl.textContent = String(statusName).toLowerCase();
+    createdAtEl.textContent = formatDate(createdAt);
+    deliveryTypeEl.textContent = String(deliveryTypeName).toLowerCase();
+    totalPriceEl.textContent = formatPrice(
+        Number(itemsPrice) + Number(deliveryCost),
+    );
+
+    return true;
+}
+
+// Функция для создания строчки с товаром
+function createOrderItemEl(item) {
+    // Создаем элемент товара
+    const itemEl = document.createElement("li");
+
+    const name = String(item.name);
+    const quantity = String(item.quantity);
+    const totalPrice = String(
+        formatPrice(Number(item.quantity) * Number(item.price)),
+    );
+
+    // Заполняем блок товара
+    itemEl.textContent = `${name} (${quantity} шт.) - ${totalPrice} ₽`;
+
+    return itemEl;
+}
+
+// Функция для заполнения списка товаров
+function fillOrderItems(items) {
+    const itemsContainer = document.getElementById("order-items-container");
+    if (!itemsContainer) {
+        console.error(
+            "[order-page] Не найден контейнер для товаров order-items-container",
+        );
+        return false;
+    }
+
+    // Очищаем содержимое контейнера
+    itemsContainer.innerHTML = "";
+
+    items.forEach((item) => {
+        // Рендерим через функцию блок товара
+        const itemEl = createOrderItemEl(item);
+
+        // Добавляем товар в контейнер
+        itemsContainer.appendChild(itemEl);
+    });
+
+    return true;
+}
+
+// Функция для заполнения span, либо скрытия обертки с data-optional-row
+function setTextOrHide(el, value) {
+    if (!el) return;
+
+    const row = el.closest("[data-optional-row]") ?? el;
+    const text = value == null ? "" : String(value).trim();
+
+    row.hidden = text === "";
+    el.textContent = text;
+}
+
+// Функция для заполнения информации о доставке
+function fillDeliveryInfo(order) {
+    const deliveryTypeCode = order.delivery_type_code;
+
+    const courierAddressEl = document.getElementById("order-courier-address");
+    const deliveryPriceEl = document.getElementById("order-delivery-price");
+    const pickupStoreEl = document.getElementById("order-pickup-store");
+
+    if (deliveryTypeCode === "courier") {
+        if (!courierAddressEl || !deliveryPriceEl) {
+            console.error(
+                "[order-page] При courier отсутствуют order-courier-address и/или order-delivery-price",
+            );
+            return false;
+        }
+
+        setTextOrHide(courierAddressEl, order.delivery_address_text);
+        setTextOrHide(deliveryPriceEl, formatPrice(order.delivery_cost));
+    }
+
+    if (deliveryTypeCode === "pickup") {
+        if (!pickupStoreEl) {
+            console.error(
+                "[order-page] При pickup отсутствует order-pickup-store",
+            );
+            return false;
+        }
+
+        setTextOrHide(
+            pickupStoreEl,
+            order.store_id ? `${order.store_address}` : null,
+        );
+    }
+
+    return true;
+}
+
+// Функция для отображения строки только если есть две даты
+function setRangeOrHide(fromEl, toEl, fromRaw, toRaw) {
+    if (!fromEl || !toEl) return;
+
+    const row = fromEl.closest("[data-optional-row]");
+    const from = fromRaw ? formatDate(fromRaw) : "";
+    const to = toRaw ? formatDate(toRaw) : "";
+
+    if (row) row.hidden = !from || !to;
+    fromEl.textContent = from;
+    toEl.textContent = to;
+}
+
+// Функция для заполнения дат доставки/готовности заказа
+function fillDeliveryDates(order) {
+    const courierFirst = document.getElementById("order-courier-first-date");
+    const courierLast = document.getElementById("order-courier-last-date");
+    setRangeOrHide(
+        courierFirst,
+        courierLast,
+        order.delivery_from,
+        order.delivery_to,
+    );
+
+    const pickupFirst = document.getElementById(
+        "order-ready-for-pickup-first-date",
+    );
+    const pickupLast = document.getElementById(
+        "order-ready-for-pickup-last-date",
+    );
+    setRangeOrHide(
+        pickupFirst,
+        pickupLast,
+        order.delivery_from,
+        order.delivery_to,
+    );
+}
+
+function showOrderSections(order) {
+    const statusCode = order.status_code;
+    const deliveryTypeCode = order.delivery_type_code;
+
+    // Скрываем все блоки у которых  data-delivery-visible-type не совпадает, и показываем где совпадает
+    document.querySelectorAll("[data-delivery-visible-type]").forEach((el) => {
+        const visibleType = el.dataset.deliveryVisibleType;
+        el.hidden = visibleType !== deliveryTypeCode;
+    });
+
+    // Показываем подходищие по статусу блоки и скрываем неподходящие, также дополнительно проверяем тип доставки
+    document.querySelectorAll("[data-visible-status]").forEach((el) => {
+        const allowed = (el.dataset.visibleStatus || "")
+            .split(",") // разделяет по запятым
+            .map((s) => s.trim()) // обрезает пробелы
+            .filter(Boolean); // выкидывает пустые строки
+        const isAlloweStatus = allowed.includes(statusCode); // true, если в статусах элемента есть подходящий
+
+        const visibleType = el.dataset.deliveryVisibleType;
+        const isAllowedDeliveryType =
+            !visibleType || visibleType === deliveryTypeCode;
+
+        el.hidden = !(isAlloweStatus && isAllowedDeliveryType);
+    });
+}
+
+// Главная функция для рендера инфы о заказе и товарах
+function renderOrderInfo(data) {
+    const order = data.order;
+    const items = data.items;
+
+    // Заполнение базовой информации
+    if (!fillBasicInfo(order)) return false;
+    // Заполнение списка товаров
+    if (!fillOrderItems(items)) return false;
+    // Заполнение информации о доставке
+    if (!fillDeliveryInfo(order)) return false;
+    // Заполнение дат доставки/готовности заказа
+    fillDeliveryDates(order);
+    // Показ опцианальных по статусу блоков страницы
+    showOrderSections(order);
+
+    return true;
+}
+
+// Функция для получения и валидации инфы о заказе
+async function getAndValidateOrder(orderId) {
+    // Получаем инфу о заказе
+    const data = await getOrderById(orderId);
+
+    // Валидируем инфу
+    // Функции возвращают boolean
+    if (!validateOrderData(data)) {
+        showOrderError(
+            "Не удалось получить информацию о заказе. Перейдите в историю заказов или обратитесь в поддержку",
+        );
+        return null;
+    }
+
+    return data;
+}
