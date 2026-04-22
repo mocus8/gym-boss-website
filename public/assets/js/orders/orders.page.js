@@ -4,35 +4,28 @@ import { notification } from "../ui/notification.js";
 
 // Функция для рендера элемента заказа
 function createOrderElement(order) {
-    // Корневой блок
     const orderDiv = document.createElement("div");
-    orderDiv.classList.add("order");
+    orderDiv.classList.add("orders__item");
 
     // Номер заказа и дата оформления
-    const numberDate = document.createElement("div");
-    numberDate.classList.add("order_number");
-    const numberDateText = `Заказ №${order.id} (оформлен ${formatDate(order.created_at)})`;
-    numberDate.textContent = numberDateText;
+    const numberDate = document.createElement("p");
+    numberDate.textContent = `Заказ №${order.id} (оформлен ${formatDate(order.created_at)})`;
     orderDiv.appendChild(numberDate);
 
     // Стоимость заказа
-    const price = document.createElement("div");
-    price.classList.add("order_data");
+    const price = document.createElement("p");
     const orderTotalPrice =
         Number(order.total_price) + Number(order.delivery_cost);
-    const priceText = `Стоимость: ${formatPrice(orderTotalPrice)} ₽`;
-    price.textContent = priceText;
+    price.textContent = `Стоимость: ${formatPrice(orderTotalPrice)} ₽`;
     orderDiv.appendChild(price);
 
     // Способ получения
-    const deliveryType = document.createElement("div");
-    deliveryType.classList.add("order_data");
+    const deliveryType = document.createElement("p");
     deliveryType.textContent = `Способ получения: ${String(order.delivery_type_name).toLowerCase()}`;
     orderDiv.appendChild(deliveryType);
 
     // Адрес доставки/получения
-    const address = document.createElement("div");
-    address.classList.add("order_data_address");
+    const address = document.createElement("p");
     const deliveryTypeCode = order.delivery_type_code;
     if (deliveryTypeCode === "courier") {
         address.textContent = `Адрес доставки: ${String(order.delivery_address_text)}`;
@@ -42,24 +35,36 @@ function createOrderElement(order) {
     orderDiv.appendChild(address);
 
     // Статус заказа
-    const status = document.createElement("div");
-    status.classList.add("order_data");
+    const status = document.createElement("p");
     status.textContent = `Статус заказа: ${String(order.status_name).toLowerCase()}`;
     orderDiv.appendChild(status);
 
     // Кнопка-ссылка для перехода к заказу
-    const link = document.createElement("a");
-    link.href = `/orders/${Number(order.id)}`;
-    link.classList.add("order_action_button");
-    link.textContent = "Перейти к заказу";
-    orderDiv.appendChild(link);
+    const linkShell = document.createElement("a");
+    linkShell.href = `/orders/${Number(order.id)}`;
+    linkShell.classList.add("link-shell");
 
-    // Возвращаем полученный элемент заказа
+    const linkBtn = document.createElement("span");
+    linkBtn.classList.add("btn", "primary-btn", "shape-cut-corners--diagonal");
+    linkBtn.textContent = "Перейти к заказу";
+    linkShell.appendChild(linkBtn);
+
+    orderDiv.appendChild(linkShell);
+
     return orderDiv;
 }
 
+function showOrdersMessage(ordersContainer, message) {
+    const messageEl = document.createElement("p");
+    messageEl.classList.add("orders__message");
+    messageEl.textContent = message;
+
+    ordersContainer.innerHTML = "";
+    ordersContainer.appendChild(messageEl);
+}
+
 // Функция для рендера списка заказов внутри контейнера
-async function renderOrdersPage(ordersContainer) {
+async function renderOrdersPage(ordersContainer, ordersLoader) {
     // Находим и заполняем список, либо показываем пустой
     try {
         const data = await getUserOrders();
@@ -67,8 +72,7 @@ async function renderOrdersPage(ordersContainer) {
 
         if (orders.length === 0) {
             // Рендерим пустой список
-            ordersContainer.innerHTML =
-                '<div class="cart_empty">У вас еще нет заказов</div>';
+            showOrdersMessage(ordersContainer, "У вас еще нет заказов");
         } else {
             // Очищаем содержимое контейнера
             ordersContainer.innerHTML = "";
@@ -90,21 +94,28 @@ async function renderOrdersPage(ordersContainer) {
         });
 
         // Кладем ошибку в верстку
-        ordersContainer.innerHTML =
-            '<div class="cart_empty">Не удалось загрузить список заказов</div>';
+        showOrdersMessage(
+            ordersContainer,
+            "Не удалось загрузить список заказов",
+        );
 
         // Показ уведомления с ошибкой
         const message = getErrorMessage(e.code, e.status);
         notification.open(message);
+    } finally {
+        ordersLoader.hidden = true;
     }
 }
 
-// Находим контейнер для заказов
+// Находим контейнер для заказов и лоадер
 const ordersContainer = document.getElementById("orders-container");
+const ordersLoader = document.getElementById("orders-loader");
 
-// Если нашелся контейнер - рендерим заказы
-if (!ordersContainer) {
-    console.error("[orders-page] Не найден orders-container");
+// Если нашелся контейнер и лоадер - рендерим заказы
+if (!ordersContainer || !ordersLoader) {
+    console.error(
+        "[orders-page] Не найдены orders-container или orders-loader",
+    );
 } else {
-    renderOrdersPage(ordersContainer);
+    renderOrdersPage(ordersContainer, ordersLoader);
 }
