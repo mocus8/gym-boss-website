@@ -149,7 +149,7 @@ export class StoresMap {
 
                             <a
                                 id="start-order-btn"
-                                class="link-shell"
+                                class="link-shell map__inner-baloon-btn-shell"
                                 href="${yandexMapsUrl}"
                                 target="_blank"
                                 rel="noopener noreferrer"

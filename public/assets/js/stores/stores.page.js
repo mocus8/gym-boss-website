@@ -6,100 +6,57 @@ import { getStores } from "../stores/stores.api.js";
 
 // Функция для получения элемента магазина для списка магазинов
 function createStoreEl(store) {
-    // Меняем HTML блока через работу с DOM узлами
-
-    // Корневой блок магазина
-    const storeDiv = document.createElement("div");
-    storeDiv.className = "store";
+    const li = document.createElement("li");
+    li.classList.add("stores__item");
+    li.classList.add("shape-cut-corners--diagonal");
 
     // Название магазина
-    const nameDiv = document.createElement("div");
-    nameDiv.className = "store_name";
-    const nameStrong = document.createElement("strong");
-    nameStrong.textContent = store.name;
-    nameDiv.appendChild(nameStrong);
-    storeDiv.appendChild(nameDiv);
+    const title = document.createElement("p");
+    title.classList.add("stores__item-title");
+    title.textContent = store.name;
+    li.appendChild(title);
 
-    // Адрес магазина
-    const addressDiv = document.createElement("div");
-    addressDiv.className = "store_address";
-    const addressTitle = document.createElement("span");
-    addressTitle.innerHTML = "Адрес:<br>";
-    const addressContent = document.createElement("span");
-    addressContent.innerText = store.address;
-    addressDiv.appendChild(addressTitle);
-    addressDiv.appendChild(addressContent);
-    storeDiv.appendChild(addressDiv);
+    // Адрес
+    const addressTitle = document.createElement("p");
+    addressTitle.textContent = "Адрес:";
+    li.appendChild(addressTitle);
+
+    const address = document.createElement("p");
+    address.textContent = store.address;
+    li.appendChild(address);
 
     // Время работы
-    const timeDiv = document.createElement("div");
-    timeDiv.className = "store_time";
-    const timeTitle = document.createElement("span");
-    timeTitle.innerHTML = "Время работы:<br>";
-    const timeContent = document.createElement("span");
-    timeContent.innerText = store.work_hours.replace(/\n/g, "\n");
-    timeDiv.appendChild(timeTitle);
-    timeDiv.appendChild(timeContent);
-    storeDiv.appendChild(timeDiv);
+    const hoursTitle = document.createElement("p");
+    hoursTitle.textContent = "Время работы:";
+    li.appendChild(hoursTitle);
+
+    const hours = document.createElement("p");
+    hours.textContent = store.work_hours;
+    li.appendChild(hours);
 
     // Телефон
-    const phoneDiv = document.createElement("div");
-    phoneDiv.className = "store_time";
-    const phoneTitle = document.createElement("span");
-    phoneTitle.innerHTML = "Телефон:<br>";
-    const phoneLink = document.createElement("a");
-    phoneLink.href = `tel:${store.phone}`;
-    phoneLink.className = "colour_href";
-    const phoneInnerDiv = document.createElement("div");
-    phoneInnerDiv.style.marginTop = "10px";
-    phoneInnerDiv.textContent = store.phone;
-    phoneLink.appendChild(phoneInnerDiv);
-    phoneDiv.appendChild(phoneTitle);
-    phoneDiv.appendChild(phoneLink);
-    storeDiv.appendChild(phoneDiv);
+    const phone = document.createElement("a");
+    phone.href = `tel:${store.phone}`;
+    phone.textContent = `Телефон: ${store.phone}`;
+    li.appendChild(phone);
 
-    // Кнопка "На карте"
-    const mapLink = document.createElement("a");
-    // Получаем ссылку на магазин на картах (на адресс)
-    const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address.replace(/<br>/g, ", "))}`;
-    mapLink.href = yandexMapsUrl;
-    mapLink.target = "_blank";
-    const mapButton = document.createElement("div");
-    mapButton.className = "store_button";
-    mapButton.textContent = "На карте";
-    mapLink.appendChild(mapButton);
-    storeDiv.appendChild(mapLink);
+    // Ссылка на карте
+    const yandexMapsUrl = `https://yandex.ru/maps/?text=${encodeURIComponent(store.address)}`;
 
-    // // Меняем HTML блока через .innerHTML
+    const linkShell = document.createElement("a");
+    linkShell.classList.add("link-shell");
+    linkShell.href = yandexMapsUrl;
+    linkShell.target = "_blank";
+    linkShell.rel = "noopener noreferrer";
 
-    // const storeDiv = `
-    //     <div class="store">
-    //         <div class="store_name">
-    //         <strong>${store.name}</strong>
-    //         </div>
-    //         <div class="store_address">
-    //             Адрес:<br>
-    //             ${store.address}
-    //         </div>
-    //         <div class="store_time">
-    //             Время работы:<br>
-    //             ${store.work_hours.replace(/\n/g, "<br>")}
-    //         </div>
-    //         <div class="store_time">
-    //             Телефон:<br>
-    //             <a href='tel: ${store.phone}' class="colour_href">
-    //                 <div style="margin-top: 10px;">${store.phone}</div>
-    //             </a>
-    //         </div>
-    //         <a href="${yandexMapsUrl}" target="_blank" rel="noopener noreferrer">
-    //             <div class="store_button">
-    //                 На карте
-    //             </div>
-    //         </a>
-    //     </div>
-    // `;
+    const linkBtn = document.createElement("span");
+    linkBtn.classList.add("btn", "shape-cut-corners--diagonal");
+    linkBtn.textContent = "На карте";
+    linkShell.appendChild(linkBtn);
 
-    return storeDiv;
+    li.appendChild(linkShell);
+
+    return li;
 }
 
 // Функция для рендера списка магазинов
@@ -124,14 +81,19 @@ function renderStoresList(stores) {
 function hideMapLoader() {
     const loader = document.getElementById("stores-map-loader");
     if (!loader) return;
-    loader.classList.add("stores_map_loader_hidden"); // из-за стилей переход плавный
+
+    loader.hidden = true;
 }
 
 // Функция для обработки ошибки карты магазинов
 function handleStoresMapError(e) {
+    const storesMapErrorEl = document.getElementById("stores-map-error");
+    if (!storesMapErrorEl) return;
+
     console.error("[stores-page] Ошибка инициализации карты магазинов", e);
+
     hideMapLoader();
-    document.getElementById("stores-map-error")?.classList.remove("hidden");
+    storesMapErrorEl.hidden = false;
 }
 
 // Функция для инициализации и отображения карты магазинов
@@ -161,13 +123,20 @@ async function initStoresMap(stores) {
 // Показ ошибки списка магазинов
 function showStoresListError() {
     const container = document.getElementById("stores-container");
-    if (container) {
-        container.innerHTML =
-            '<div class="cart_empty">Список магазинов временно недоступен</div>';
-    }
+    if (!container) return;
+
+    const messageEl = document.createElement("p");
+    messageEl.classList.add("stores__container-message");
+    messageEl.textContent = "Список магазинов временно недоступен :(";
+
+    container.innerHTML = "";
+    container.appendChild(messageEl);
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+    const storesLoader = document.getElementById("stores-loader");
+    if (!storesLoader) return;
+
     try {
         const stores = await getStores();
 
@@ -187,5 +156,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         handleStoresMapError(e);
         const message = getErrorMessage(e.code, e.status);
         notification.open(message);
+    } finally {
+        storesLoader.hidden = true;
     }
 });

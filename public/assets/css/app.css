@@ -31,6 +31,7 @@
 @import url("/assets/css/pages/checkout.css");
 @import url("/assets/css/pages/orders.css");
 @import url("/assets/css/pages/order.css");
+@import url("/assets/css/pages/stores.css");
 
 /* Небольшие утилиты */
 @import url("/assets/css/base/utilities.css");
