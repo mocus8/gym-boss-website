@@ -4,25 +4,25 @@ import { notification } from "../ui/notification.js";
 
 // Функция для рендера элемента заказа
 function createOrderElement(order) {
-    const orderDiv = document.createElement("div");
-    orderDiv.classList.add("orders__item");
+    const orderItem = document.createElement("li");
+    orderItem.classList.add("orders__item");
 
     // Номер заказа и дата оформления
     const numberDate = document.createElement("p");
     numberDate.textContent = `Заказ №${order.id} (оформлен ${formatDate(order.created_at)})`;
-    orderDiv.appendChild(numberDate);
+    orderItem.appendChild(numberDate);
 
     // Стоимость заказа
     const price = document.createElement("p");
     const orderTotalPrice =
         Number(order.total_price) + Number(order.delivery_cost);
     price.textContent = `Стоимость: ${formatPrice(orderTotalPrice)} ₽`;
-    orderDiv.appendChild(price);
+    orderItem.appendChild(price);
 
     // Способ получения
     const deliveryType = document.createElement("p");
     deliveryType.textContent = `Способ получения: ${String(order.delivery_type_name).toLowerCase()}`;
-    orderDiv.appendChild(deliveryType);
+    orderItem.appendChild(deliveryType);
 
     // Адрес доставки/получения
     const address = document.createElement("p");
@@ -32,12 +32,12 @@ function createOrderElement(order) {
     } else if (deliveryTypeCode === "pickup") {
         address.textContent = `Пункт выдачи: ${String(order.store_address)}`;
     }
-    orderDiv.appendChild(address);
+    orderItem.appendChild(address);
 
     // Статус заказа
     const status = document.createElement("p");
     status.textContent = `Статус заказа: ${String(order.status_name).toLowerCase()}`;
-    orderDiv.appendChild(status);
+    orderItem.appendChild(status);
 
     // Кнопка-ссылка для перехода к заказу
     const linkShell = document.createElement("a");
@@ -49,9 +49,9 @@ function createOrderElement(order) {
     linkBtn.textContent = "Перейти к заказу";
     linkShell.appendChild(linkBtn);
 
-    orderDiv.appendChild(linkShell);
+    orderItem.appendChild(linkShell);
 
-    return orderDiv;
+    return orderItem;
 }
 
 function showOrdersMessage(ordersContainer, message) {

@@ -8,6 +8,6 @@
             <span>Заказы загружаются...</span>
         </div>
 
-        <div id="orders-container" class="orders__container"></div>
+        <ul id="orders-container" class="list-reset orders__container"></ul>
     </div>
 </div> 
