@@ -52,10 +52,10 @@
     background-color: var(--color-primary-hover);
 }
 
-.primary-btn__img {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex-shrink: 0;
+.primary-btn__sign {
+    text-align: center;
+    font-size: var(--font-size-2xl);
+    line-height: 1;
 }
 
 @media (max-width: 1050px) {
@@ -67,10 +67,5 @@
     .primary-btn {
         padding-inline: var(--space-8);
         padding-block: var(--space-4);
-    }
-
-    .primary-btn__img {
-        width: 1rem;
-        height: 1rem;
     }
 }

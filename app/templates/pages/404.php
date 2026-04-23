@@ -1,7 +1,7 @@
 <div class="container flex-stack-lg">
     <a class="link-shell" href="/">
         <span class="btn primary-btn shape-cut-corners--diagonal">
-            <img class="primary-btn__img" src="/assets/images/ui/arrow_back.png">
+            <span class="primary-btn__sign">←</span>
 
             <span>На главную</span>
         </span>
