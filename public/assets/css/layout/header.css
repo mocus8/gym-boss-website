@@ -9,7 +9,7 @@
 
 .site-header__inner {
     display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr) 16rem;
+    grid-template-columns: 18rem minmax(0, 1fr) 14rem;
     gap: var(--space-8);
     align-items: stretch;
 }
@@ -54,10 +54,12 @@
 }
 
 .site-header__brand-image {
-    width: 4.5rem;
-    height: 4.5rem;
-    flex-shrink: 0;
+    margin-left: auto;
     align-self: flex-end;
+
+    width: 6.5rem;
+    height: 6.5rem;
+    flex-shrink: 0;
 
     transition: transform var(--transition-base);
 }
@@ -287,8 +289,8 @@
     }
 
     .site-header__brand-image {
-        width: 3rem;
-        height: 3rem;
+        width: 5rem;
+        height: 5rem;
     }
 
     .site-header__brand-name {
