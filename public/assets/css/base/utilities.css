@@ -114,6 +114,15 @@
     gap: var(--space-32);
 }
 
+.flex-stack-row {
+    width: 100%;
+
+    padding: var(--space-8) var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-alt);
+}
+
 /* Ограничение ширины текста */
 .text-narrow {
     max-width: 40rem;
