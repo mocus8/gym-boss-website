@@ -1,0 +1,81 @@
+/* Формы */
+
+input,
+textarea,
+select {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-8) var(--space-12);
+    background-color: var(--color-surface-alt);
+    color: var(--color-text);
+    transition:
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    border-color: var(--color-primary-hover);
+    outline: none;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-text);
+    caret-color: var(--color-text);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface-alt) inset;
+    box-shadow: 0 0 0 1000px var(--color-surface-alt) inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+::placeholder {
+    color: var(--color-text-muted);
+}
+
+.form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.form__error {
+    display: flex;
+    align-self: flex-start;
+    justify-content: center;
+    gap: var(--space-4);
+
+    padding: var(--space-4) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-primary);
+    font-size: var(--font-size-sm);
+
+    transition:
+        opacity var(--transition-fast),
+        visibility var(--transition-fast);
+}
+
+.form__error-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+.form__submit-btn-shell {
+    width: fit-content;
+}
+
+.form__submit-btn {
+    background-color: var(--color-primary);
+    font-size: var(--font-size-lg);
+}
+
+.form__submit-btn:hover {
+    background-color: var(--color-primary-hover);
+}

@@ -1,0 +1,93 @@
+/* Стили для дизайн-токенов: цвета, шрифты, размеры текста, отступы, радиусы, тени, z-index, transition. */
+
+:root {
+    /* Шрифты */
+    --font-primary: "Jost", system-ui, sans-serif;
+    --font-display: "Jaro", system-ui, sans-serif;
+
+    /* Типографика */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.375rem;
+    --font-size-2xl: 2rem;
+
+    --line-height-tight: 1.2;
+    --line-height-base: 1.5;
+    --line-height-wide: 1.7;
+
+    /* Цвета */
+    --color-bg: #030303;
+    --color-surface: #0b0a0b;
+    --color-surface-soft: #0b0a0bcc;
+    --color-surface-alt: #221013;
+
+    --color-text: #f6f1f1;
+    --color-text-muted: #b8abab;
+
+    --color-primary: #6b101c;
+    --color-primary-soft: #6b101ccc;
+    --color-primary-hover: #8a1624;
+
+    --color-border: #6b1b29;
+
+    /* Расстояния  */
+    --space-4: 4px;
+    --space-8: 8px;
+    --space-12: 12px;
+    --space-16: 16px;
+    --space-20: 20px;
+    --space-24: 24px;
+    --space-28: 28px;
+    --space-32: 32px;
+    --space-40: 40px;
+    --space-48: 48px;
+    --space-64: 64px;
+
+    /* Радиусы */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+
+    /* Тени */
+    --shadow-sm: 0 10px 18px rgba(80, 12, 21, 0.34);
+    --shadow-md: 0 18px 32px rgba(80, 12, 21, 0.46);
+    --shadow-lg: 0 28px 54px rgba(80, 12, 21, 0.6);
+
+    /* Область макета */
+    --container-width: 75rem;
+    --container-padding: 1rem;
+
+    /* Скорости переходов и анимаций */
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
+    --loader-speed: 1.5s linear infinite;
+
+    /* Z-index */
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-skip-link: 300;
+    --z-modal: 1000;
+    --z-notification: 2000;
+    --z-critical: 3000;
+}
+
+@media (max-width: 1050px) {
+    html {
+        font-size: 14px;
+    }
+
+    :root {
+        --font-size-xl: 1.2rem;
+        --font-size-2xl: 1.5rem;
+
+        --space-64: 40px;
+        --space-48: 32px;
+        --space-40: 28px;
+        --space-32: 24px;
+
+        --container-padding: 0.75rem;
+    }
+}

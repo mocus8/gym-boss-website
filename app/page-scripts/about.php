@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-$title  = 'Реализация проекта - Gym Boss';
+$title  = 'О сайте - Gym Boss';
 $canonical = $baseUrl . '/about';
 
 // Через буфер записываем в переменную контент страницы

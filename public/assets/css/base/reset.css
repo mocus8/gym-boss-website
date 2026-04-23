@@ -1,0 +1,97 @@
+/* Сброс или нормализация стандартных стилей */
+
+/* Предсказуемая модель размеров, ширина блока включает padding и border */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Убираем стандартные внешние отступы */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+figure,
+blockquote,
+dl,
+dd {
+    margin: 0;
+}
+
+/* Меняем стандартные внутренние отступы у списков */
+ul,
+ol {
+    padding: 0;
+    padding-left: 1.25em;
+}
+
+/* Базовая высота body */
+body {
+    min-height: 100vh;
+}
+
+/* Медиа-элементы не ломают layout */
+img,
+picture,
+svg,
+video,
+canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Формы наследуют шрифт проекта */
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+/* Шрифт для мобильных устройств не растягивается, плавный скролл по якорям */
+html {
+    -moz-text-size-adjust: none;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+    scroll-behavior: smooth;
+}
+
+/* Переносим длинные слова */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    overflow-wrap: break-word;
+}
+
+/* Склеиваем ячейки таблиц и убираем дефолтные зазоры */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* Для настройки prefers-reduced-motion: reduce убираем все анимации и плавность */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

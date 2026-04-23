@@ -1,110 +1,161 @@
-<header class="header">
-    <a href="/" class="icon_href">
-        <div class="internet_shop">
-            Интернет-магазин спортивной атрибутики
-        </div>
+<header class="site-header">
+    <div class="container">
+        <div class="site-header__inner ">
+            <a class="link-shell" href="/">
+                <div class="site-header__brand shape-cut-corners--diagonal">
+                    <div class="site-header__brand-text">
+                        <span class="site-header__brand-tagline">
+                            Интернет-магазин спортивной атрибутики
+                        </span>
 
-        <div class="gym_boss">
-            “Gym Boss”
-        </div>
-
-        <img class="billy" src="/assets/images/ui/billy.svg" alt="Мужик, качёк, крутой парень, Билли Харрингтон">
-<!--                                                                        Добавлять этот атрибут для CEO-->
-    </a>
-
-    <div class="header_buttons">
-        <a href="/">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/catalog.png">
-                
-                <div class="header_button_text">
-                    Каталог
-                </div>
-            </div>
-        </a>
-
-        <a href="/stores">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/map.png">
-
-                <div class="header_button_text">
-                    Наши магазины
-                </div>
-            </div>
-        </a>
-
-        <a href="/contacts">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/phone.png">
-
-                <div class="header_button_text">
-                    Контакты
-                </div>
-            </div>
-        </a>
-
-        <a href="/about">
-            <div class="header_button">
-                <img class="header_button_icon" src="/assets/images/ui/info.png">
-
-                <div class="header_button_text">
-                    О сайте
-                </div>
-            </div>
-        </a>
-     </div>
-
-    <div class="header_search" id="header-search">
-        <div class="header_search_click">
-            <img class="header_search_icon" src="/assets/images/ui/glass.png">
-
-            <label for="header-search-input" class="header_search_text">
-                Поиск товаров:
-            </label>
-
-            <input type="search" id="header-search-input" name="q" placeholder="гриф для штанги ..." class="header_search_input" autocomplete="off" maxlength="150">
-            
-            <button class="header_search_cancel_button hidden" id="header-search-cancel-button">✕</button>
-
-            <div class="query_products_container hidden" id="search-results-container"></div>
-        </div>
-    </div>
-
-    <div class="header_account">
-        <div class="header_account_up">
-            <img class="header_account_icon" src="/assets/images/ui/person.png">
-
-            <a href="/cart">
-                <div class="header_button account">
-                    <img class="header_button_icon" src="/assets/images/ui/cart.png">
-
-                    <div class="header_button_text">
-                        Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)
+                        <span class="site-header__brand-name">
+                            “Gym Boss”
+                        </span>
                     </div>
+
+                    <img class="site-header__brand-image" src="/assets/images/ui/billy.svg" alt="">
                 </div>
             </a>
-        </div>
 
-        <?php if ($currentUser === null) { ?>
-            <button class="header_account_button_guest"  data-modal-open="auth-modal">
-                Войти
-            </button>
-        <?php } else { ?>
-            <div class="header_account_data">
-                <button class="header_account_trigger" type="button">
-                    <div class="header_account_inf">
-                        <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
+            <div class="site-header__center">
+                <nav>
+                    <ul class="site-header__list list-reset flex-center">
+                        <li>
+                            <a class="link-shell" href="/">
+                                <span class="btn shape-cut-corners--diagonal">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/catalog.png" alt="">
+                                    
+                                    <span>Каталог</span>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="link-shell" href="/stores">
+                                <span class="btn shape-cut-corners--diagonal">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/map.png" alt="">
+
+                                    <span>Наши магазины</span>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="link-shell" href="/contacts">
+                                <span class="btn shape-cut-corners--diagonal">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/phone.png" alt="">
+
+                                    <span>Контакты</span>
+                                </span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="link-shell" href="/about">
+                                <span class="btn shape-cut-corners--diagonal">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/info.png" alt="">
+
+                                    <span>О сайте</span>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <form
+                    id="header-search"
+                    class="site-header__search"
+                    role="search"
+                    action="/api/products/search"
+                    method="get"
+                >
+                    <div class="site-header__search-control shape-cut-corners--diagonal"> 
+                        <img class="site-header__nav-icon" src="/assets/images/ui/glass.png" alt="">
+
+                        <input
+                            id="header-search-input"
+                            class="site-header__search-input"
+                            type="search"
+                            name="q"
+                            maxlength="150"
+                            placeholder="Поиск товаров, например: гриф для штанги"
+                            autocomplete="off"
+                        >
+                        
+                        <button
+                            id="header-search-cancel-button"
+                            class="btn-reset site-header__search-clear-btn-shell btn-shell is-hidden"
+                            type="button"
+                            aria-label="Очистить поиск"
+                        >  
+                            <span class="btn site-header__search-clear-btn shape-cut-corners--diagonal">✕</span>
+                        </button>
                     </div>
-                </button>
 
-                <div class="header_account_dropdown">
-                    <a href="/account">Профиль</a>
+                    <div id="search-results-container" class="site-header__search-results-container is-hidden"></div>
+                </form>
+            </div>
 
-                    <a href="/account/orders">Мои заказы</a>
+            <div class="site-header__account-wrapper">
+                <div class="site-header__account shape-cut-corners--diagonal">
+                    <span class="site-header__account-title">
+                        <img class="site-header__nav-icon" src="/assets/images/ui/person.png" alt="">
+                        <span>Аккаунт</span>
+                    </span>
 
-                    <button data-modal-open="logout-modal">Выйти</button>
+                    <a class="link-shell" href="/cart">
+                        <span class="btn site-header__account-btn shape-cut-corners--diagonal">
+                            <img class="site-header__nav-icon" src="/assets/images/ui/cart.png" alt="">
+
+                            <span>
+                                Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)
+                            </span>
+                        </span>
+                    </a>
+
+                    <?php if ($currentUser === null) { ?>
+                        <button class="btn-reset btn-shell" data-modal-open="auth-modal" type="button">
+                            <span class="btn site-header__account-btn shape-cut-corners--diagonal">
+                                Войти
+                            </span>
+                        </button>
+                    <?php } else { ?>
+                        <button
+                            id="account-menu-trigger"
+                            class="btn-reset site-header__account-trigger btn-shell"
+                            type="button"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-controls="account-menu"
+                        >
+                            <span class="btn site-header__account-btn shape-cut-corners--diagonal">
+                                <?= htmlspecialchars($currentUser['name'], ENT_QUOTES, 'UTF-8') ?>
+
+                                <span class="site-header__account-trigger-arrow" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    <?php } ?>
+                </div>
+
+                <div
+                    id="account-menu"
+                    class="site-header__account-dropdown shape-cut-corners--diagonal is-hidden"
+                    aria-labelledby="account-menu-trigger"
+                >
+
+                    <a class="link-shell" href="/account">
+                        <span class="btn site-header__account-dropdown-btn shape-cut-corners--diagonal">Профиль</span>
+                    </a>
+
+                    <a class="link-shell" href="/account/orders">
+                        <span class="btn site-header__account-dropdown-btn shape-cut-corners--diagonal">Мои заказы</span>
+                    </a>
+
+                    <button class="btn-reset btn-shell" type="button" data-modal-open="logout-modal">
+                        <span class="btn site-header__account-dropdown-btn shape-cut-corners--diagonal">Выйти</span>
+                    </button>
                 </div>
             </div>
-        <?php } ?>
+        </div>
     </div>
 </header>

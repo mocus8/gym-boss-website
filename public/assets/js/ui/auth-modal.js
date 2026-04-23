@@ -62,6 +62,8 @@ class AuthModal {
 
     // Метод открытия модалки
     open() {
+        if (this.#isOpen) return;
+
         // Определяем активный до появления модалки элемент
         this.#previousActiveEl =
             document.activeElement instanceof HTMLElement
@@ -69,18 +71,20 @@ class AuthModal {
                 : null;
 
         // Показываем модалку и ставим open флаг
-        this.#authModal.classList.remove("hidden");
+        this.#authModal.classList.add("is-open");
         this.#isOpen = true;
 
-        // Ставим фокус на cancel модалки
-        this.#closeEl.focus();
+        // Ставим фокус на первое поле ввода
+        requestAnimationFrame(() => {
+            this.#loginEmailInput?.focus();
+        });
     }
 
     // Метод закрытия модалки
     close() {
         if (!this.#isOpen) return;
 
-        this.#authModal.classList.add("hidden");
+        this.#authModal.classList.remove("is-open");
         this.#isOpen = false;
 
         // Возвращаем фокус на тот элемент, на котором он был до окрытия модалки
@@ -250,7 +254,6 @@ class AuthModal {
         // Находим интерактивные в данный млмент элементы модалки
         return Array.from(this.#authModal.querySelectorAll(selectors)) // подходит под массив selectors
             .filter((node) => node instanceof HTMLElement) // является html элементом
-            .filter((node) => !node.classList.contains("hidden")) // не имеет hidden класса
             .filter((node) => node.offsetParent !== null); // не display:none
     }
 
@@ -259,8 +262,8 @@ class AuthModal {
         const isLogin = mode === "login";
 
         // Переключаем выделенные вкладки
-        this.#loginTab.classList.toggle("chosen", isLogin);
-        this.#registerTab.classList.toggle("chosen", !isLogin);
+        this.#loginTab.classList.toggle("is-chosen", isLogin);
+        this.#registerTab.classList.toggle("is-chosen", !isLogin);
 
         // Очищаем ошибки и значения в формах
         this.#loginForm.reset();
@@ -268,13 +271,13 @@ class AuthModal {
         this.#hideErrors();
 
         // Переключаем видимость форм
-        this.#loginForm.classList.toggle("hidden", !isLogin);
-        this.#registerForm.classList.toggle("hidden", isLogin);
+        this.#loginForm.hidden = !isLogin;
+        this.#registerForm.hidden = isLogin;
 
         // Переключаем видимость опций в футере модалки
-        this.#forgotPassBtn.classList.toggle("hidden", !isLogin);
-        this.#footerSwitchToLoginBtn.classList.toggle("hidden", isLogin);
-        this.#footerSwitchToRegisterBtn.classList.toggle("hidden", !isLogin);
+        this.#forgotPassBtn.hidden = !isLogin;
+        this.#footerSwitchToLoginBtn.hidden = isLogin;
+        this.#footerSwitchToRegisterBtn.hidden = !isLogin;
     }
 
     // Подтверждение формы входа
@@ -548,29 +551,29 @@ class AuthModal {
         }
     }
 
-    // Показ ошибки под конкретным input-ом
+    // Показ ошибки для конкретного input-а
     #showInputError(inputEl, errorMessage) {
-        const inputElWrapper = inputEl.closest(
-            ".registration_modal_input_back",
-        );
-        if (!inputElWrapper) return;
+        const errorId = inputEl.getAttribute("aria-describedby");
+        if (!errorId) return;
 
-        const inputErrorEl = inputElWrapper.nextElementSibling;
+        const inputErrorEl = this.#authModal.querySelector(`#${errorId}`);
         if (!inputErrorEl) return;
 
         const inputErrorTextEl =
-            inputErrorEl.querySelector(".error_modal_text");
+            inputErrorEl.querySelector("[data-error-text]");
         if (!inputErrorTextEl) return;
 
         inputErrorTextEl.textContent = errorMessage;
-        inputErrorEl.classList.remove("form_error_hidden");
+        inputErrorEl.classList.remove("is-hidden");
+        inputEl.setAttribute("aria-invalid", "true");
 
         // Навешиваем обработчик для закрытия ошибки при исправлении в input-е
         inputEl.addEventListener(
             "input",
             () => {
-                inputErrorEl.classList.add("form_error_hidden");
+                inputErrorEl.classList.add("is-hidden");
                 inputErrorTextEl.textContent = "";
+                inputEl.removeAttribute("aria-invalid");
             },
             { once: true },
         );
@@ -578,11 +581,16 @@ class AuthModal {
 
     // Скрытие всех ошибок на формах
     #hideErrors() {
-        const authErrors = this.#authModal.querySelectorAll(".form_error");
+        const authErrors = this.#authModal.querySelectorAll(".form__error");
+        const inputs = this.#authModal.querySelectorAll("input");
 
         authErrors.forEach((errorEl) => {
-            errorEl.querySelector(".error_modal_text").textContent = "";
-            errorEl.classList.add("form_error_hidden");
+            errorEl.querySelector("[data-error-text]").textContent = "";
+            errorEl.classList.add("is-hidden");
+        });
+
+        inputs.forEach((input) => {
+            input.removeAttribute("aria-invalid");
         });
     }
 }

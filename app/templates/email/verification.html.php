@@ -6,22 +6,23 @@
 		<title>Подтвердите адрес электронной почты</title>
 	</head>
 
-	<body>
+	<body style="background-color: #030303;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
                 <td align="center" style="padding: 40px 16px;">
                     <table width="560" cellpadding="0" cellspacing="0" border="0" style="
-                        background-color: #bd1b1b;
-                        border-radius:8px;
-                        overflow:hidden;
+                        background-color: #221013;
+                        border: 1px solid #6b1b29;
+                        border-radius:4px;
                     ">
                         <tr>
-                            <td style="padding: 40px;">
+                            <td style="padding: 40px; color: #f6f1f1;">
                                 <p style="
                                     margin:0;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 22px;
                                     font-weight: 700;
+                                    line-height: 1.2;
                                 ">
                                     Подтвердите адрес электронной почты для GymBoss
                                 </p>
@@ -29,19 +30,21 @@
                         </tr>
 
                         <tr>
-                            <td style="padding:24px 40px;">
+                            <td style="padding:24px 40px; color: #f6f1f1;">
                                 <p style="
                                     margin:0 0 16px;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 16px;
+                                    line-height: 1.5;
                                 ">
                                     Здравствуйте, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>.
                                 </p>
 
                                 <p style="
                                     margin:0 0 16px;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 16px;
+                                    line-height: 1.5;
                                 ">
                                     Вы зарегистрировались на GymBoss. Осталось подтвердить ваш email-адрес.
                                 </p>
@@ -49,16 +52,16 @@
                                 <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">
                                     <tr>
                                         <td style="
-                                            background-color: #4b4b4b;
-                                            border: 1px solid black;
+                                            background-color: #8a1624;
+                                            border: 1px solid #6b1b29;
                                             border-radius: 8px;
                                         ">
                                             <a href="<?= htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8') ?>" style="
                                                 display:inline-block;
-                                                color: black;
+                                                color: #f6f1f1;
                                                 text-decoration:none;
                                                 padding: 14px 28px;
-                                                font-family: Arial, sans-serif;
+                                                font-family: 'Jost', Arial, sans-serif;
                                                 font-size: 16px;
                                             ">
                                                 Подтвердить email
@@ -69,12 +72,14 @@
 
                                 <p style="
                                     margin:0 0 16px;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 14px;
+                                    color: #b8abab;
+                                    line-height: 1.5;
                                 ">
                                     Если кнопка не работает, перейдите по ссылке:
                                     <a href="<?= htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8') ?>" style="
-                                        color: #250083;
+                                        color: #8a1624;
                                         text-decoration: none;
                                     ">
                                         <?= htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8') ?>
@@ -83,16 +88,20 @@
 
                                 <p style="
                                     margin:0 0 16px;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 14px;
+                                    color: #b8abab;
+                                    line-height: 1.5;
                                 ">
-                                    Ссылка действительна в течении 15 минут, новое письмо можно запросить в личном кабинете на сайте.
+                                    Ссылка действительна в течение 15 минут, новое письмо можно запросить в личном кабинете на сайте.
                                 </p>
 
                                 <p style="
                                     margin:0 0 16px;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 14px;
+                                    color: #b8abab;
+                                    line-height: 1.5;
                                 ">
                                     Если вы не регистрировались на GymBoss — просто проигнорируйте это письмо.
                                 </p>
@@ -100,11 +109,20 @@
                         </tr>
 
                         <tr>
-                            <td style="padding: 24px 40px;">
-                            <p style="
+                            <td style="
+                                padding: 24px 40px;
+                                font-family: 'Jost', Arial, sans-serif;
+                                font-size: 14px;
+                                color: #b8abab;
+                                line-height: 1.5;
+                            ">
+
+                                <p style="
                                     margin:0 0 16px;
-                                    font-family: Arial, sans-serif;
+                                    font-family: 'Jost', Arial, sans-serif;
                                     font-size: 14px;
+                                    color: #b8abab;
+                                    line-height: 1.5;
                                 ">
                                     С уважением,<br>Разработчик GymBoss
                                 </p>

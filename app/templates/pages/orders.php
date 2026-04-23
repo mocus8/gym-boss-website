@@ -1,21 +1,13 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
+<div class="container orders shape-cut-corners--diagonal">
+    <h1 class="page-title">Ваши заказы:</h1>
 
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
+    <div class="orders__container-wrapper">
+        <div id="orders-loader" class="content-loader-overlay flex-center shape-cut-corners--diagonal" role="status">
+            <img class="content-loader-spinner" src="/assets/images/ui/loader.png" alt="">
+
+            <span>Заказы загружаются...</span>
         </div>
-    </a>
-</div>
 
-<div class="cart_in_cart_text">
-    Ваши заказы:
-</div>
-
-<div class="orders_container" id="orders-container">
-    <div class="cart_empty">
-        Загрузка...
+        <ul id="orders-container" class="list-reset orders__container"></ul>
     </div>
-</div>
+</div> 

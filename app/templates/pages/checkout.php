@@ -1,146 +1,152 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
-    </a>
-</div>
+<div class="container flex-stack-base">
+    <div class="checkout__delivery-tabs">
+        <p>Получение:</p>
 
-<div class="cart_in_cart_text">
-    Получение:
-</div>
+        <button 
+            id="order-type-courier"
+            class="btn-reset btn-shell"
+            type="button"
+        >
+            <span class="btn checkout__delivery-tab shape-cut-corners--diagonal">
+                Доставка
+            </span>
+        </button>
 
-<div class="order_types">
-    <div class="order_type" id="order-type-courier">
-        Доставка
+        <button 
+            id="order-type-pickup"
+            class="btn-reset btn-shell"
+            type="button"
+        >
+            <span class="btn checkout__delivery-tab shape-cut-corners--diagonal">
+                Самовывоз
+            </span>
+        </button>
     </div>
 
-    <div class="order_type" id="order-type-pickup">
-        Самовывоз
-    </div>
-</div>
-
-<!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога, времени доставки/самовывоза -->
-<div class="order_container" id="checkout-container"
-    data-courier-free-threshold="<?= (int)$deliveryConfig['free_delivery_threshold'] ?>"
-    data-courier-price="<?= (int)$deliveryConfig['courier_delivery_price'] ?>"
-    data-courier-delivery-from-hours="<?= (int)$deliveryConfig['courier_delivery_from_hours'] ?>"
-    data-courier-delivery-to-hours="<?= (int)$deliveryConfig['courier_delivery_to_hours'] ?>"
-    data-pickup-ready-from-hours="<?= (int)$deliveryConfig['pickup_ready_from_hours'] ?>"
-    data-pickup-ready-to-hours="<?= (int)$deliveryConfig['pickup_ready_to_hours'] ?>"
->
-    <div class="order_delivery_type" data-order-type="courier">
-        <div class="order_left">
-            <div class="map_search_form">
-                <input type="text"
+    <!-- Прокидываем с php конфига бэка во фронт переменные стоимости доставки и порога, времени доставки/самовывоза -->
+    <div
+        id="checkout-container"
+        class="checkout__container"
+        data-courier-free-threshold="<?= (int)$deliveryConfig['free_delivery_threshold'] ?>"
+        data-courier-price="<?= (int)$deliveryConfig['courier_delivery_price'] ?>"
+        data-courier-delivery-from-hours="<?= (int)$deliveryConfig['courier_delivery_from_hours'] ?>"
+        data-courier-delivery-to-hours="<?= (int)$deliveryConfig['courier_delivery_to_hours'] ?>"
+        data-pickup-ready-from-hours="<?= (int)$deliveryConfig['pickup_ready_from_hours'] ?>"
+        data-pickup-ready-to-hours="<?= (int)$deliveryConfig['pickup_ready_to_hours'] ?>"
+    >
+        <div class="checkout__delivery-type" data-order-type="courier">
+            <div class="checkout__address-search">
+                <input
                     id="address-search-input"
+                    class="shape-cut-corners--diagonal" 
+                    placeholder="Введите адрес доставки"
+                    type="text"
                     autocomplete="off"
                     autocorrect="off"
                     autocapitalize="off"
                     spellcheck="false"
-                    class="map_search_input" 
-                    placeholder="Введите адрес доставки"
                 >
 
-                <button type="button" id="address-search-btn" class="map_search_btn">
-                    Найти
+                <button 
+                    id="address-search-btn"
+                    class="btn-reset btn-shell"
+                    type="button"
+                >
+                    <span class="btn shape-cut-corners--diagonal">
+                        Найти
+                    </span>
                 </button>
 
-                <div class="suggestions_container" id="suggestions-container" hidden></div>
+                <ul id="suggestions-container" class="list-reset checkout__address-suggestions-container" hidden></ul>
             </div>
 
-            <div class="map_container">
-                <div class="checkout_map_loader" id="courier-map-loader"> 
-                    <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка карты">
+            <div class="map__container shape-cut-corners--diagonal">
+                <div id="courier-map-loader" class="map__overlay flex-center" role="status"> 
+                    <img class="map__loader-spinner" src="/assets/images/ui/loader.png" alt="">
+
+                    <span class="visually-hidden">Карта загружается</span>
                 </div>
 
-                <div class="checkout_map" id="courier-map"></div>
+                <div id="courier-map" class="map__inner"></div>
 
-                <div class="checkout_map_error hidden" id="courier-map-error">
-                    Карта временно недоступна :(
-                    <br>
-                    Попробуйте обновить страницу
-                </div>
-            </div>
-        </div>
-    </div>
+                <div id="courier-map-error" class="map__overlay flex-center" hidden>
+                    <p>Карта временно недоступна :(</p>
 
-    <div class="order_delivery_type hidden" data-order-type="pickup">
-        <div class="order_left">
-            <div class="pickup_text">
-                Выберите магазин для самовывоза:
-            </div>
-
-            <div class="map_container">
-                <div class="checkout_map_loader" id="pickup-map-loader">
-                    <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка карты">
-                </div>
-
-                <div class="checkout_map" id="pickup-map"></div>
-
-                <div class="checkout_map_error hidden" id="pickup-map-error">
-                    Карта временно недоступна :(
-                    <br>
-                    Попробуйте обновить страницу
+                    <p>Попробуйте обновить страницу</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="order_right">
-        <div class="order_info">
-            <div class="order_right_order">
-                Ваш заказ
-            </div>
+        <div class="checkout__delivery-type" data-order-type="pickup" hidden>
+            <p>Выберите магазин для самовывоза:</p>
 
-            <div id="checkout-items-container"></div>
+            <div class="map__container shape-cut-corners--diagonal">
+                <div id="pickup-map-loader" class="map__overlay flex-center" role="status"> 
+                    <img class="map__loader-spinner" src="/assets/images/ui/loader.png" alt="">
 
-            <div class="order_right_row">
-                Количество товаров: <span id="checkout-items-count">загрузка...</span>
-            </div>
+                    <span class="visually-hidden">Карта загружается</span>
+                </div>
 
-            <div class="order_right_row">
-                Стоимость всех товаров: <span id="checkout-items-price">загрузка...</span> ₽
-            </div>
-            
-            <div class="order_right_row hidden" data-order-type="courier">
-                Стоимость доставки: <span id="checkout-delivery-price">загрузка...</span> ₽ <span id="checkout-delivery-note"></span>
-            </div>
+                <div id="pickup-map" class="map__inner"></div>
 
-            <div class="order_right_row">
-                Итого: <span id="checkout-total-price">загрузка...</span> ₽
-            </div>
+                <div id="pickup-map-error" class="map__overlay flex-center" hidden>
+                    <p>Карта временно недоступна :(</p>
 
-            <div class="order_right_row hidden" data-order-type="courier">
-                Адрес доставки: <span id="courier-address" data-postal-code="">не указан</span>
-            </div>
-
-            <div class="order_right_row hidden" data-order-type="pickup">
-                Адрес магазина для самовывоза: <span id="pickup-address" data-store-id="">не указан</span>
-            </div>
-
-            <div class="order_right_row hidden" id="courier-date-row">
-                Примерная дата доставки: <span id="courier-date-text">загрузка...</span>
-            </div>
-
-            <div class="order_right_row hidden" id="pickup-date-row">
-                Примерная дата готовности заказа: <span id="pickup-date-text">загрузка...</span>
+                    <p>Попробуйте обновить страницу</p>
+                </div>
             </div>
         </div>
 
-        <button class="order_right_pay_button" id="create-order-btn">
-            <span>Оформить заказ</span>
-        </button>
+        <div class="checkout__summary">
+            <div class="checkout__summary-info shape-cut-corners--diagonal">
+                <p class="checkout__summary-title">
+                    Ваш заказ
+                </p>
 
-        <div class="payment_errors">
-            <div class="order_rigth_notification">
-                <img class="error_modal_icon" src="/assets/images/ui/error_modal_icon.png">
-                Сайт работает в тестовом режиме, не используейте реальные карты. <br>
-                Карты для теста: 5555555555554444 (успех), 5555555555554535 (ошибка)
+                <ul id="checkout-items-container" class="checkout__items-list"></ul>
+
+                <p>
+                    Количество товаров: <span id="checkout-items-count">загрузка...</span>
+                </p>
+
+                <p>
+                    Стоимость всех товаров: <span id="checkout-items-price">загрузка...</span> ₽
+                </p>
+
+                <p data-order-type="courier" hidden>
+                    Стоимость доставки: <span id="checkout-delivery-price">загрузка...</span> ₽ <span id="checkout-delivery-note"></span>
+                </p>
+
+                <p>
+                    Итого: <span id="checkout-total-price">загрузка...</span> ₽
+                </p>
+
+                <p data-order-type="courier" hidden>
+                    Адрес доставки: <span id="courier-address" data-postal-code="">не указан</span>
+                </p>
+
+                <p data-order-type="pickup" hidden>
+                    Адрес магазина для самовывоза: <span id="pickup-address" data-store-id="">не указан</span>
+                </p>
+
+                <p id="courier-date-row" hidden>
+                    Примерная дата доставки: <span id="courier-date-text">загрузка...</span>
+                </p>
+
+                <p id="pickup-date-row" hidden>
+                    Примерная дата готовности заказа: <span id="pickup-date-text">загрузка...</span>
+                </p>
             </div>
+
+            <button 
+                id="create-order-btn"
+                class="btn-reset checkout__create-order-btn btn-shell"
+                type="button"
+            >
+                <span class="btn primary-btn shape-cut-corners--diagonal">
+                    Оформить заказ
+                </span>
+            </button>
         </div>
     </div>
 </div>

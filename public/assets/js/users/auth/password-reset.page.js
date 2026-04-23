@@ -11,8 +11,8 @@ import { notification } from "../../ui/notification.js";
 function initPasswordResetPage(resetPassForm, resetSuccessEl) {
     const passInput = resetPassForm.elements["password"];
     const confirmPassInput = resetPassForm.elements["confirm_password"];
-    const passErrorEl = resetPassForm.querySelector(".form_error");
-    const passErrorText = passErrorEl.querySelector(".error_modal_text");
+    const passErrorEl = resetPassForm.querySelector("#password-reset-error");
+    const passErrorText = passErrorEl.querySelector("[data-error-text]");
     const submitButton = resetPassForm.querySelector('button[type="submit"]');
 
     if (!passInput || !confirmPassInput || !passErrorEl || !submitButton) {
@@ -21,14 +21,20 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
 
     // Функция для показа ошибки пароля
     function showPassError(text) {
+        passInput.setAttribute("aria-invalid", "true");
+        confirmPassInput.setAttribute("aria-invalid", "true");
+
         passErrorText.textContent = text;
-        passErrorEl.classList.remove("form_error_hidden");
+        passErrorEl.classList.remove("is-hidden");
     }
 
     // Функция скрытия ошибки пароля
     function hidePassError() {
+        passInput.setAttribute("aria-invalid", "false");
+        confirmPassInput.setAttribute("aria-invalid", "false");
+
         passErrorText.textContent = "";
-        passErrorEl.classList.add("form_error_hidden");
+        passErrorEl.classList.add("is-hidden");
     }
 
     resetPassForm.addEventListener("submit", async (event) => {
@@ -55,7 +61,7 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
 
         // Проверяем пароли
         if (!password || !confirmPassword) {
-            showPassError("Введите новый пароль");
+            showPassError("Заполните оба поля пароля");
             return;
         }
 
@@ -78,8 +84,8 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
             await resetPassword(token, password, confirmPassword);
 
             // Показываем успех
-            resetPassForm.classList.add("hidden");
-            resetSuccessEl.classList.remove("hidden");
+            resetPassForm.hidden = true;
+            resetSuccessEl.hidden = false;
         } catch (e) {
             console.error("[password-reset-page] Не удалось сменить пароль", {
                 message: e.message,
@@ -103,12 +109,12 @@ function initPasswordResetPage(resetPassForm, resetSuccessEl) {
 
 // Определяем основные элементы
 const resetPassForm = document.getElementById("reset-pass-form");
-const resetSuccessEl = document.getElementById("reset-success-modal");
+const resetSuccessEl = document.getElementById("reset-success");
 
 // Если основные элементы нашлись - навешиваем обработчики
 if (!resetPassForm || !resetSuccessEl) {
     console.error(
-        "[password-reset-page] Не найдены reset-pass-form или reset-success-modal",
+        "[password-reset-page] Не найдены reset-pass-form или reset-success",
     );
 } else {
     initPasswordResetPage(resetPassForm, resetSuccessEl);

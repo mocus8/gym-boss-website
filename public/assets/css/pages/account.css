@@ -1,0 +1,24 @@
+.account {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-32);
+}
+
+.account__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    padding: var(--space-8) var(--space-8);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.account__message {
+    font-style: italic;
+}
+
+.account-delete-btn-shell {
+    margin-right: auto;
+}

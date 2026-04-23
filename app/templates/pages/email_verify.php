@@ -1,29 +1,25 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
-        </div>
+<div class="container flex-stack-lg">
+    <a class="link-shell" href="/">
+        <span class="btn primary-btn shape-cut-corners--diagonal">
+            <img class="primary-btn__img" src="/assets/images/ui/arrow_back.png">
+
+            <span>На главную</span>
+        </span>
     </a>
-</div>
-<div class="contacts">
-    <div class="contact">
-        <div class="contact_type">
+
+    <div class="content-card shape-cut-corners--diagonal">
+        <h1 class="content-card__title">
             <?= htmlspecialchars($pageData['title'], ENT_QUOTES, 'UTF-8') ?>
-        </div>
+        </h1>
 
-        <div class="contact_inf">
-            <?= htmlspecialchars($pageData['message'], ENT_QUOTES, 'UTF-8') ?>  
-        </div>
+        <p> <?= htmlspecialchars($pageData['message'], ENT_QUOTES, 'UTF-8') ?>  </p>
 
-        <div class="contact_inf">
-            <?php if ($isAuthenticated && $pageData['showResend']) { ?>  
-                <button type="button" class="btn" id="resend-button">
+        <?php if ($isAuthenticated && $pageData['show_resend']) { ?>  
+            <button id="resend-button" class="btn-reset resend-btn btn-shell" type="button">
+                <span class="btn shape-cut-corners--diagonal">
                     Получить новое письмо
-                </button>
-            <?php } ?>  
-        </div>
+                </span>
+            </button>
+        <?php } ?>  
     </div>
 </div>

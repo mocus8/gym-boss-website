@@ -1,0 +1,118 @@
+/* Модалки */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding-top: var(--space-64);
+    padding-inline: var(--space-8);
+    padding-bottom: var(--space-8);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition: opacity var(--transition-fast);
+}
+
+.modal.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.modal__overlay {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-surface-soft);
+}
+
+.modal__content {
+    width: 100%;
+    max-width: 30rem;
+    max-height: calc(100dvh - var(--space-64) - var(--space-8));
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    padding: var(--space-8) var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.modal__header {
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+    gap: var(--space-8);
+}
+
+.modal__tabs {
+    display: flex;
+    gap: var(--space-4);
+
+    font-size: var(--font-size-lg);
+}
+
+.modal__tabs .is-chosen > .btn {
+    background-color: var(--color-primary);
+    transform: translateY(-3px);
+}
+
+.modal__close-btn {
+    position: absolute;
+    top: 50%;
+    right: var(--space-8);
+    transform: translateY(-50%);
+
+    transition: color var(--transition-fast);
+}
+
+.modal__close-btn:hover {
+    color: var(--color-primary);
+}
+
+.modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.modal__body > :last-child {
+    margin-top: var(--space-8);
+}
+
+.modal__footer {
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+    gap: var(--space-8);
+}
+
+#confirmation-modal .modal__content {
+    gap: var(--space-32);
+    padding: var(--space-12);
+}
+
+#confirmation-modal .modal__body {
+    gap: var(--space-8);
+}
+
+#confirmation-modal .modal__footer {
+    gap: var(--space-16);
+}
+
+.modal__warning {
+    font-size: var(--font-size-lg);
+    color: var(--color-primary-hover);
+}

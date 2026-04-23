@@ -12,11 +12,15 @@ export class ConfirmationModal {
         this.messageEl = el.querySelector("[data-modal-message]");
         this.warningEl = el.querySelector("[data-modal-warning]");
         this.cancelBtn = el.querySelector("[data-modal-cancel]");
+        this.cancelBtnText = this.cancelBtn.querySelector("span");
         this.confirmBtn = el.querySelector("[data-modal-confirm]");
+        this.confirmBtnText = this.confirmBtn.querySelector("span");
 
         if (
             !this.confirmBtn ||
+            !this.confirmBtnText ||
             !this.cancelBtn ||
+            !this.cancelBtnText ||
             !this.titleEl ||
             !this.messageEl
         ) {
@@ -71,16 +75,16 @@ export class ConfirmationModal {
         const warningText = String(warning ?? "").trim();
         if (this.warningEl) {
             this.warningEl.textContent = warningText;
-            this.warningEl.classList.toggle("hidden", warningText === "");
+            this.warningEl.hidden = warningText === "";
         }
 
-        this.confirmBtn.textContent = String(confirmText);
-        this.cancelBtn.textContent = String(cancelText);
+        this.confirmBtnText.textContent = String(confirmText);
+        this.cancelBtnText.textContent = String(cancelText);
 
         this._onConfirm = typeof onConfirm === "function" ? onConfirm : null;
 
         // Показываем модалку и ставим open флаг
-        this.el.classList.remove("hidden");
+        this.el.classList.add("is-open");
         this._isOpen = true;
 
         // Ставим фокус на cancel модалки
@@ -94,7 +98,7 @@ export class ConfirmationModal {
     close() {
         if (!this._isOpen) return;
 
-        this.el.classList.add("hidden");
+        this.el.classList.remove("is-open");
         this._isOpen = false;
         this._onConfirm = null;
 
@@ -117,8 +121,9 @@ export class ConfirmationModal {
             return;
         }
 
-        // Минимальный “loading” без оверкилла: блокируем кнопки
+        // Блокируем кнопки и ставим лоадер на кнопку действия
         this.confirmBtn.disabled = true;
+        this.confirmBtn.classList.add("is-loading");
         this.cancelBtn.disabled = true;
 
         try {
@@ -129,6 +134,10 @@ export class ConfirmationModal {
             this.confirmBtn.disabled = false;
             this.cancelBtn.disabled = false;
             throw e;
+        } finally {
+            this.confirmBtn.disabled = false;
+            this.confirmBtn.classList.remove("is-loading");
+            this.cancelBtn.disabled = false;
         }
     }
 
@@ -148,7 +157,7 @@ export class ConfirmationModal {
         // Находим интерактивные в данный млмент элементы модалки
         return Array.from(this.el.querySelectorAll(selectors)) // подходит под массив selectors
             .filter((node) => node instanceof HTMLElement) // является html элементом
-            .filter((node) => !node.classList.contains("hidden")) // не имеет hidden класса
+            .filter((node) => !node.classList.contains("is-hidden")) // не имеет is-hidden класса
             .filter((node) => node.offsetParent !== null); // не display:none
     }
 

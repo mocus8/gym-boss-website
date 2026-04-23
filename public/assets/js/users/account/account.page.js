@@ -55,7 +55,7 @@ function initAccountPage() {
         hideErrors(changeNameForm);
 
         if (!nameInput.checkValidity()) {
-            showInputError(nameInput, "Имя содержит недопустимые символы");
+            showInputError(nameInput, "Недопустимое имя");
             return;
         }
 
@@ -266,37 +266,37 @@ function initAccountPage() {
 
     // Функция для скрытия всех ошибок для конкретной формы
     function hideErrors(formEl) {
-        const authErrors = formEl.querySelectorAll(".form_error");
+        const formErrors = formEl.querySelectorAll(".form__error");
 
-        authErrors.forEach((errorEl) => {
-            errorEl.querySelector(".error_modal_text").textContent = "";
-            errorEl.classList.add("form_error_hidden");
+        formErrors.forEach((errorEl) => {
+            errorEl.classList.add("is-hidden");
+            errorEl.querySelector("[data-error-text]").textContent = "";
         });
     }
 
     // Функция для показа ошибки под конкретным input-ом
     function showInputError(inputEl, errorMessage) {
-        const inputElWrapper = inputEl.closest(
-            ".registration_modal_input_back",
-        );
-        if (!inputElWrapper) return;
+        const errorId = inputEl.getAttribute("aria-describedby");
+        if (!errorId) return;
 
-        const inputErrorEl = inputElWrapper.nextElementSibling;
+        const inputErrorEl = document.getElementById(errorId);
         if (!inputErrorEl) return;
 
         const inputErrorTextEl =
-            inputErrorEl.querySelector(".error_modal_text");
+            inputErrorEl.querySelector("[data-error-text]");
         if (!inputErrorTextEl) return;
 
         inputErrorTextEl.textContent = errorMessage;
-        inputErrorEl.classList.remove("form_error_hidden");
+        inputErrorEl.classList.remove("is-hidden");
+        inputEl.setAttribute("aria-invalid", "true");
 
         // Навешиваем обработчик для закрытия ошибки при исправлении в input-е
         inputEl.addEventListener(
             "input",
             () => {
-                inputErrorEl.classList.add("form_error_hidden");
+                inputErrorEl.classList.add("is-hidden");
                 inputErrorTextEl.textContent = "";
+                inputEl.removeAttribute("aria-invalid", "true");
             },
             { once: true },
         );

@@ -1,0 +1,63 @@
+/* Карточки товаров/просто контентные */
+.product-card {
+    width: 100%;
+    height: 100%;
+    padding: var(--space-8) var(--space-8);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-alt);
+
+    transition:
+        background-color var(--transition-fast),
+        transform var(--transition-base);
+}
+
+.product-card:hover {
+    background-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.product-card:active {
+    transform: translateY(0);
+}
+
+.product-card__price {
+    margin-top: auto;
+    width: fit-content;
+    padding: 2px var(--space-4);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-primary-soft);
+
+    transition: background-color var(--transition-fast);
+}
+
+.product-card:hover .product-card__price {
+    background-color: var(--color-primary-hover);
+}
+
+.content-card {
+    align-self: center;
+    width: 100%;
+    max-width: 42rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+
+    padding: var(--space-16) var(--space-24);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.content-card__title {
+    align-self: center;
+    text-align: center;
+}

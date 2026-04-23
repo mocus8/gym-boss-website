@@ -1,30 +1,38 @@
 <!-- Контент главной страницы -->
 
-<div class="catalog">
-<?php foreach ($catalog as $categoryData) { ?>
-    <div class="category_row">
-        <div class="category_name">
-            <?= htmlspecialchars($categoryData['category']['name'], ENT_QUOTES, 'UTF-8') ?>
-        </div>
-        <div class="products_main">
-            <?php foreach ($categoryData['products'] as $productData) { ?>
-                <a href="/products/<?= htmlspecialchars($productData['slug'], ENT_QUOTES, 'UTF-8') ?>">
-                    <div class="product">
-                        <div class="product_click">
-                            <img class="product_img_1"
-                                 src="<?= htmlspecialchars($productData['image_path'], ENT_QUOTES, 'UTF-8') ?>"
-                                 alt="<?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>">
-                            <div class="product_name_1">
-                                <?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>
+<div class="container flex-stack-lg">
+    <h1 class="page-title">Каталог товаров</h1>
+
+    <?php foreach ($catalog as $categoryData) { ?>
+        <section class="catalog-section">
+            <h2 class="catalog-section__title shape-cut-corners--diagonal">
+                <?= htmlspecialchars($categoryData['category']['name'], ENT_QUOTES, 'UTF-8') ?>
+            </h2>
+            
+            <ul class="list-reset catalog-section__list">
+                <?php foreach ($categoryData['products'] as $productData) { ?>
+                    <li class="catalog-section__item">
+                        <a
+                            class="link-shell full-size"
+                            href="/products/<?= htmlspecialchars($productData['slug'], ENT_QUOTES, 'UTF-8') ?>"
+                        >
+                            <div class="product-card shape-cut-corners--diagonal">
+                                <img
+                                    class="shape-cut-corners--diagonal"
+                                    src="<?= htmlspecialchars($productData['image_path'], ENT_QUOTES, 'UTF-8') ?>"
+                                    alt="<?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>"
+                                >
+
+                                <h3><?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                
+                                <p class="product-card__price">
+                                    <?= htmlspecialchars(formatPrice((float)$productData['price']), ENT_QUOTES, 'UTF-8') ?> ₽
+                                </p>
                             </div>
-                            <div class="product_price_1">
-                                <?= htmlspecialchars(formatPrice((float)$productData['price']), ENT_QUOTES, 'UTF-8') ?> ₽
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            <?php } ?>
-        </div>
-    </div>
-<?php } ?>
+                        </a>
+                    </li>
+                <?php } ?>
+            </ul>
+        </section>
+    <?php } ?>
 </div>

@@ -7,6 +7,56 @@ import { logout } from "./users/auth/auth.api.js";
 import { ConfirmationModal } from "./ui/confirmation-modal.js";
 import { notification } from "./ui/notification.js";
 
+// Инициализация дропдауна аккаунта
+function initAccountDropdown() {
+    const accountBlock = document.querySelector(
+        ".site-header__account-wrapper",
+    );
+    const accountMenuTrigger = document.getElementById("account-menu-trigger");
+    const accountMenu = document.getElementById("account-menu");
+    if (!accountBlock || !accountMenuTrigger || !accountMenu) return;
+
+    // Обработчик клика на триггер
+    accountMenuTrigger.addEventListener("click", () => {
+        const isOpened =
+            accountMenuTrigger.getAttribute("aria-expanded") === "true";
+
+        // Переключаем состояние меню и aria атрибута
+        accountMenu.classList.toggle("is-hidden", isOpened);
+        accountMenuTrigger.setAttribute("aria-expanded", String(!isOpened));
+    });
+
+    // Обработчик закрытия по клику escape
+    document.addEventListener("keydown", (e) => {
+        const isOpened =
+            accountMenuTrigger.getAttribute("aria-expanded") === "true";
+
+        if (!isOpened || e.key !== "Escape") return;
+
+        hideMenu();
+
+        // Возвращаем фокус на триггер
+        accountMenuTrigger.focus();
+    });
+
+    // Обработчик закрытия при клике на фон
+    document.addEventListener("click", (e) => {
+        const isOpened =
+            accountMenuTrigger.getAttribute("aria-expanded") === "true";
+
+        if (accountBlock.contains(e.target) || !isOpened) return;
+
+        hideMenu();
+    });
+
+    // Функция для скрытия меню
+    function hideMenu() {
+        // Скрываем меню и добавляем aria атрибут о том что меню закрыто
+        accountMenu.classList.add("is-hidden");
+        accountMenuTrigger.setAttribute("aria-expanded", "false");
+    }
+}
+
 // Инициализация поиска
 function initHeaderSearch() {
     const searchBlock = document.getElementById("header-search");
@@ -31,6 +81,11 @@ function initHeaderSearch() {
         return;
     }
 
+    // Отменяем стандартную отправку формы
+    searchBlock.addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
+
     // Обработчик ввода в input-е
     // Если что то есть - даем результаты, если пусто - скрываем их
     searchInput.addEventListener("input", function () {
@@ -47,20 +102,20 @@ function initHeaderSearch() {
         searchResultsContainer.innerHTML = "";
 
         // Создаем элемент сообщения для результатов
-        const searchMessageEl = document.createElement("div");
-        searchMessageEl.classList.add("search_empty");
-        searchMessageEl.textContent = "Поиск...";
+        const searchStatusEl = document.createElement("p");
+        searchStatusEl.classList.add("site-header__search-status");
+        searchStatusEl.textContent = "Поиск...";
 
         // Вставляем его в контейнер с результатами
-        searchResultsContainer.appendChild(searchMessageEl);
+        searchResultsContainer.appendChild(searchStatusEl);
 
         // Показываем контейнер с результатами и кнопку закрытия поисковика
-        searchCancelBtn.classList.remove("hidden");
-        searchResultsContainer.classList.remove("hidden");
+        searchCancelBtn.classList.remove("is-hidden");
+        searchResultsContainer.classList.remove("is-hidden");
 
         // Вызываем функцию поиска и рендера результатов
         // Функция с debounce оберткой для ограничения запросов на уровне фронта
-        debouncedSearchAndRenderProducts(query, searchMessageEl);
+        debouncedSearchAndRenderProducts(query, searchStatusEl);
     });
 
     // Обработчик клика на input
@@ -68,7 +123,7 @@ function initHeaderSearch() {
     searchInput.addEventListener("click", function () {
         if (this.value.trim() === "") return;
 
-        searchResultsContainer.classList.remove("hidden");
+        searchResultsContainer.classList.remove("is-hidden");
     });
 
     // Обработчик клика на крестик
@@ -79,35 +134,41 @@ function initHeaderSearch() {
         // Если клик был внутри поисковика - выходим
         if (searchBlock.contains(e.target)) return;
 
-        searchResultsContainer.classList.add("hidden");
+        searchResultsContainer.classList.add("is-hidden");
     });
 
     // Функция для очистки всего блока поиска
     function clearSearchBlock() {
         debouncedSearchAndRenderProducts.cancel(); // отменяем отложенный вызов если он есть
         searchInput.value = "";
-        searchCancelBtn.classList.add("hidden");
-        searchResultsContainer.classList.add("hidden");
+        searchCancelBtn.classList.add("is-hidden");
+        searchResultsContainer.classList.add("is-hidden");
         searchResultsContainer.innerHTML = "";
     }
 
     // Функция поиска и рендера результатов с debounced оберткой (переменная, которая хранит функцию)
     const debouncedSearchAndRenderProducts = debounce(
-        async (query, searchMessageEl) => {
+        async (query, searchStatusEl) => {
             try {
                 const foundProducts = await searchProducts(query);
 
                 if (foundProducts.length === 0) {
-                    searchMessageEl.textContent = "Ничего не найдено";
+                    searchStatusEl.textContent = "Ничего не найдено";
                     return;
                 }
 
-                // Очищаем содержимое контейнера с результатами и заполняем его товарами
+                // Очищаем содержимое контейнера с результатами
                 searchResultsContainer.innerHTML = "";
 
+                // Создаем список-обертку для результатов
+                const resultList = document.createElement("ul");
+                resultList.classList.add("list-reset");
+                resultList.classList.add("site-header__search-results-list");
+                searchResultsContainer.appendChild(resultList);
+
                 foundProducts.forEach((product) => {
-                    const productCard = createProductCard(product);
-                    searchResultsContainer.appendChild(productCard);
+                    const resultItem = createResultItem(product);
+                    resultList.appendChild(resultItem);
                 });
             } catch (e) {
                 // Логирование в консоль с полным контекстом
@@ -121,42 +182,44 @@ function initHeaderSearch() {
 
                 // Отображение ошибки в поле поисковика
                 const message = getErrorMessage(e.code, e.status);
-                searchMessageEl.textContent = message;
+                searchStatusEl.textContent = message;
             }
         },
         300,
     );
 
-    // Функция для создания карточки товара
-    function createProductCard(product) {
-        // Создаем ссылку-обертку вокруг карточки
+    // Функция для создания элементов списка результата поиска
+    function createResultItem(product) {
+        const itemWrapper = document.createElement("li");
+        itemWrapper.classList.add("site-header__search-results-item");
+
         const linkWrapper = document.createElement("a");
-        linkWrapper.href = `/products/${product.slug}`;
+        linkWrapper.classList.add("link-shell");
+        linkWrapper.classList.add("full-size");
+        linkWrapper.href = `/products/${encodeURIComponent(product.slug)}`;
+        itemWrapper.appendChild(linkWrapper);
 
-        const productWrapper = document.createElement("div");
-        productWrapper.classList.add("product");
-        linkWrapper.appendChild(productWrapper);
-
-        const productClickEl = document.createElement("div");
-        productClickEl.classList.add("product_click");
-        productWrapper.appendChild(productClickEl);
+        const productCard = document.createElement("div");
+        productCard.classList.add("product-card");
+        productCard.classList.add("shape-cut-corners--diagonal");
+        linkWrapper.appendChild(productCard);
 
         const productImg = document.createElement("img");
-        productImg.classList.add("product_img_1");
+        productImg.classList.add("shape-cut-corners--diagonal");
         productImg.src = product.image_path;
-        productClickEl.appendChild(productImg);
+        productImg.alt = product.name;
+        productCard.appendChild(productImg);
 
-        const productNameEl = document.createElement("div");
-        productNameEl.classList.add("product_name_1");
-        productNameEl.textContent = product.name;
-        productClickEl.appendChild(productNameEl);
+        const productName = document.createElement("h3");
+        productName.textContent = product.name;
+        productCard.appendChild(productName);
 
-        const productPriceEl = document.createElement("div");
-        productPriceEl.classList.add("product_price_1");
-        productPriceEl.textContent = `${product.price} ₽`;
-        productClickEl.appendChild(productPriceEl);
+        const productPrice = document.createElement("p");
+        productPrice.classList.add("product-card__price");
+        productPrice.textContent = `${product.price} ₽`;
+        productCard.appendChild(productPrice);
 
-        return linkWrapper;
+        return itemWrapper;
     }
 }
 
@@ -207,6 +270,7 @@ if (document.readyState === "loading") {
     document.addEventListener(
         "DOMContentLoaded",
         () => {
+            initAccountDropdown();
             initHeaderSearch();
             initLogoutBtn();
         },
@@ -215,6 +279,7 @@ if (document.readyState === "loading") {
         },
     );
 } else {
+    initAccountDropdown();
     initHeaderSearch();
     initLogoutBtn();
 }

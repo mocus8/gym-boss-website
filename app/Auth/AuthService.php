@@ -388,6 +388,17 @@ class AuthService {
         $this->db->begin_transaction();
 
         try {
+            // Получаем старый пароль пользователя
+            $oldHashedPassword = $this->userRepository->findPasswordByEmail($email);
+            if (!$oldHashedPassword) {
+                throw new \RuntimeException('User password not found');
+            }
+
+            // Проверяем что новый пароль отличается от старого (сравнивает введеный с хешем из бд)
+            if (password_verify($password, $oldHashedPassword)) {
+                throw new AppException('SAME_PASSWORD', 'New and old passwords are the same');
+            }   
+            
             // Хэшируем пароль и проверям что удалось
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             if ($hashedPassword === false) {

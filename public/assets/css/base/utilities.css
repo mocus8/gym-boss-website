@@ -1,0 +1,135 @@
+/* Маленькие служебные классы */
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Убираем стандартный маркер у списков */
+.list-reset {
+    list-style: none;
+    padding-left: 0;
+}
+
+/* Фокус-обертка для ссылок-кнопок со сложной формой */
+.link-shell {
+    display: inline-block;
+    border-radius: var(--radius-md);
+    color: inherit;
+    text-decoration: none;
+}
+
+.link-shell:visited,
+.link-shell:hover,
+.link-shell:active {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Фокус-обертка для кнопок со сложной формой */
+.btn-shell {
+    display: inline-block;
+    border-radius: var(--radius-md);
+}
+
+/* Визуально скрытый, но доступный для скринридеров контент */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Невидимый элемент, но занимает место в layout */
+.is-hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity var(--transition-fast),
+        visibility var(--transition-fast);
+}
+
+/* Состояние загрузки на элементе  */
+.is-loading {
+    position: relative;
+    pointer-events: none;
+    cursor: wait;
+}
+
+.is-loading > * {
+    opacity: 0;
+}
+
+.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    transform: translate(-50%, -50%);
+
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin var(--loader-speed);
+}
+
+/* Хелперы выравнивания по flex */
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.inline-flex-center {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-stack-base {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+}
+
+.flex-stack-lg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-32);
+}
+
+.flex-stack-row {
+    width: 100%;
+
+    padding: var(--space-8) var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-alt);
+}
+
+/* Ограничение ширины текста */
+.text-narrow {
+    max-width: 40rem;
+}
+
+/* Растягивание по длинне и ширине */
+.full-size {
+    width: 100%;
+    height: 100%;
+}

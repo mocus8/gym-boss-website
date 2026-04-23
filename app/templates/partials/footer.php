@@ -1,25 +1,69 @@
-<footer class="footer">
-    <div class="footer_inf">
-        <div class="footer_disklamer">
-            <div class="footer_disklamer_text">
-                Внимание: Этот сайт создан для демонстрации навыков разработки и не осуществляет реальную коммерческую деятельность.
+<footer class="container">
+    <div class="site-footer__inner full-size shape-cut-corners--diagonal">
+        <div class="site-footer__section site-footer-disclaimer">
+            Внимание: Этот сайт создан для демонстрации навыков разработки и не осуществляет реальную коммерческую деятельность.
+
+            <div  class="site-footer__section-row">
+                <a href="/about">О сайте</a>
+
+                <a href="/privacy">Политика конфиденциальности</a>
             </div>
-            <div class="footer_disklamer_href">
-                <a href="/privacy" class="colour_href">Политика конфиденциальности</a>
-            </div>
         </div>
-        <div class="footer_mail">
-            По всем вопросам писать на почту: <a href='mailto: mocus8@gmail' class="colour_href">mocus8@gmail.com</a>
+
+        <div class="site-footer__section">
+            <p>
+                По всем вопросам писать на почту:
+                <br>
+                <a href='mailto:mocus8@gmail.com'>mocus8@gmail.com</a>
+            </p>
         </div>
-        <div class="footer_social">
-            Наши соцсети:
-            <a href="https://vk.com/zabijaka1488" target="_blank"><img class="footer_social_img" src="/assets/images/ui/vk.png"></a>
-            <a href="https://t.me/sldkvil" target="_blank"><img class="footer_social_img" src="/assets/images/ui/tg.png"></a>
+
+        <div class="site-footer__section">
+            <p>Наши соцсети:</p>
+
+            <ul class="list-reset site-footer__section-row">
+                <li>
+                    <a
+                        href="https://vk.com/mocus8"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <img class="site-footer__icon" src="/assets/images/ui/vk.png" alt="Мы ВКонтакте">
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        href="https://t.me/mocus8"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <img class="site-footer__icon" src="/assets/images/ui/tg.png" alt="Наш Telegram">
+                    </a>
+                </li>
+            </ul>
         </div>
-        <div class="footer_pay">
-            <img class="footer_pay_img" src="/assets/images/ui/visa.png">
-            <img class="footer_pay_img" src="/assets/images/ui/mir.png">
-            <img class="footer_pay_img" src="/assets/images/ui/master_card.png">
+
+        <div class="site-footer__section">
+            <p>Способы оплаты:</p>
+
+            <ul class="list-reset site-footer__section-row">
+                <li>
+                    <img class="site-footer__icon" src="/assets/images/ui/mir.png" alt="МИР">
+                </li>
+
+                <li>
+                    <img class="site-footer__icon" src="/assets/images/ui/visa.png" alt="Visa">
+                </li>
+
+                <li>
+                    <img class="site-footer__icon" src="/assets/images/ui/master_card.png" alt="Mastercard">
+                </li>
+
+                <li>
+                    <img class="site-footer__icon" src="/assets/images/ui/yoomoney.png" alt="ЮMoney">
+                </li>
+            </ul>
         </div>
     </div>
 </footer>

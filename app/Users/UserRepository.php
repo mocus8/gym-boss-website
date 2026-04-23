@@ -310,6 +310,44 @@ class UserRepository {
         return $row;
     }
 
+    // Метод для нахождения пароля пользователя по его email
+    public function findPasswordByEmail(string $email): ?string {
+        $sql = "
+            SELECT password
+            FROM users
+            WHERE email = ?
+            LIMIT 1        
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("s", $email);
+
+        if (!$stmt->execute()) {
+
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $row = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return $row['password'] ?? null;
+    }
+
     // Метод для нахождения email и пароля пользователя по id
     public function findCredentialsById(int $userId): ?array {
         $sql = "

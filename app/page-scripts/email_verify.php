@@ -44,31 +44,31 @@ $pageData = match ($status) {
     'success' => [
         'title' => 'Почта подтверждена',
         'message' => 'Ваш email успешно подтверждён.',
-        'showResend' => false
+        'show_resend' => false
     ],
 
     'already_verified' => [
         'title' => 'Почта уже подтверждена',
         'message' => 'Ваш email уже был подтверждён ранее.',
-        'showResend' => false
+        'show_resend' => false
     ],
 
     'token_invalid' => [
         'title' => 'Недействительная ссылка',
         'message' => 'Ссылка для подтверждения недействительна, обратитесь в поддержку.',
-        'showResend' => false
+        'show_resend' => false
     ],
 
     'token_expired' => [
         'title' => 'Ссылка устарела',
         'message' => 'Срок действия ссылки истёк, получите новое письмо для подтверждения.',
-        'showResend' => true
+        'show_resend' => true
     ],
 
     'server_error' => [
         'title' => 'Ошибка сервера',
         'message' => 'Что-то пошло не так, обновите страницу или обратитесь в поддержку',
-        'showResend' => false
+        'show_resend' => false
     ],
 };
 
@@ -77,6 +77,7 @@ $isAuthenticated = $currentUser !== null;
 
 $title  = "Подтверждение почты - Gym Boss";
 $robots = 'noindex, nofollow';
+$pageModuleScripts = ['/assets/js/users/auth/email-verify.page.js'];
 
 // Через буфер записываем в переменную контент страницы
 ob_start();

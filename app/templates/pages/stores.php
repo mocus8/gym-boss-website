@@ -1,36 +1,29 @@
-<div class="button_return_position">
-    <a href="/">
-        <div class="button_return">
-            <div class="button_return_text">
-                На главную
-            </div>
-            <img class="button_return_img" src="/assets/images/ui/arrow_back.png">
+<div class="container stores">
+    <div class="stores__container-wrapper">
+        <h1 class="page-title">Наши магазины:</h1>
+
+        <div id="stores-loader" class="content-loader-overlay flex-center shape-cut-corners--diagonal" role="status">
+            <img class="content-loader-spinner" src="/assets/images/ui/loader.png" alt="">
+
+            <span>Список магазинов загружается...</span>
         </div>
-    </a>
-</div>
 
-<div class="cart_in_cart_text">
-    Наши магазины:
-</div>
-
-<div class="stores_container" id="stores-container">
-    <div class="cart_empty">
-        Загрузка магазинов...
-    </div>
-</div>
-
-<div class="stores_right">
-    <div class="stores_map_loader" id="stores-map-loader">
-        <img class="loader" src="/assets/images/ui/loader.png" alt="Загрузка карты">
+        <ul class="list-reset stores__container" id="stores-container"></ul>
     </div>
 
-    <div class="yandex_map_back"></div>
+    <div class="map__container stores__map shape-cut-corners--diagonal">
+        <div id="stores-map-loader" class="map__overlay flex-center" role="status"> 
+            <img class="map__loader-spinner" src="/assets/images/ui/loader.png" alt="">
 
-    <div id="stores-map"></div>
-    
-    <div class="error_stores_map hidden" id="stores-map-error">
-        Карта временно недоступна :(
-        <br>
-        Попробуйте обновить страницу
+            <span class="visually-hidden">Карта загружается</span>
+        </div>
+
+        <div id="stores-map" class="map__inner"></div>
+
+        <div id="stores-map-error" class="map__overlay flex-center" hidden>
+            <p>Карта временно недоступна :(</p>
+
+            <p>Попробуйте обновить страницу</p>
+        </div>
     </div>
 </div>
