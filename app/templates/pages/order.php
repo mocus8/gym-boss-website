@@ -1,6 +1,6 @@
 <div id="order-container" class="container order content-card shape-cut-corners--diagonal" data-order-id="<?= (int)$orderId ?>">
     <div id="order-loader" class="content-loader-overlay flex-center shape-cut-corners--diagonal" role="status">
-        <img class="content-loader-spinner" src="/assets/images/ui/loader.png" alt="">
+        <img class="content-loader-spinner" src="/assets/images/ui/spinner.png" alt="">
 
         <span>Заказ загружается...</span>
     </div>

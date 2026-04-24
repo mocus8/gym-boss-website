@@ -49,7 +49,7 @@
         </div>
 
         <div id="password-reset-error" class="form__error is-hidden">
-            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <img class="form__error-icon" src="/assets/images/ui/error.svg" alt="">
             <span data-error-text></span>
         </div>
 

@@ -3,7 +3,7 @@
 
     <div class="orders__container-wrapper">
         <div id="orders-loader" class="content-loader-overlay flex-center shape-cut-corners--diagonal" role="status">
-            <img class="content-loader-spinner" src="/assets/images/ui/loader.png" alt="">
+            <img class="content-loader-spinner" src="/assets/images/ui/spinner.png" alt="">
 
             <span>Заказы загружаются...</span>
         </div>
