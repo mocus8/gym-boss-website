@@ -47,7 +47,9 @@
     padding: var(--space-4) var(--space-8);
 
     border-radius: var(--radius-sm);
+    background: none;
     background-color: var(--color-primary-soft);
+
     font-size: var(--font-size-base);
     color: black;
 }

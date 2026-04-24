@@ -101,20 +101,6 @@
     font-size: var(--font-size-lg);
 }
 
-.btn.product__add-to-cart-btn {
-    gap: var(--space-12);
-    padding: var(--space-8) var(--space-12);
-
-    border: 1px solid var(--color-border);
-    background-color: var(--color-primary);
-
-    font-size: var(--font-size-lg);
-}
-
-.btn.product__add-to-cart-btn:hover {
-    background-color: var(--color-primary-hover);
-}
-
 .product__change-qty {
     display: flex;
     align-items: center;

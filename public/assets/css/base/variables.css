@@ -23,12 +23,15 @@
     --color-surface-soft: #0b0a0bcc;
     --color-surface-alt: #221013;
 
+    --color-gradient: linear-gradient(45deg, #6b101ccc, #221013);
+
     --color-text: #f6f1f1;
     --color-text-muted: #b8abab;
 
     --color-primary: #6b101c;
     --color-primary-soft: #6b101ccc;
     --color-primary-hover: #8a1624;
+    --color-primary-bright: #d4243a;
 
     --color-border: #6b1b29;
 

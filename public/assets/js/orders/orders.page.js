@@ -45,7 +45,7 @@ function createOrderElement(order) {
     linkShell.classList.add("link-shell");
 
     const linkBtn = document.createElement("span");
-    linkBtn.classList.add("btn", "primary-btn", "shape-cut-corners--diagonal");
+    linkBtn.classList.add("btn", "shape-cut-corners--diagonal");
     linkBtn.textContent = "Перейти к заказу";
     linkShell.appendChild(linkBtn);
 

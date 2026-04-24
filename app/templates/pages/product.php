@@ -45,7 +45,7 @@
             data-product-id="<?= (int)$product['id'] ?>"
             type="button"
         >
-            <span class="btn product__add-to-cart-btn shape-cut-corners--diagonal">
+            <span class="btn primary-btn shape-cut-corners--diagonal">
                 Добавить в корзину
             </span>
         </button>
