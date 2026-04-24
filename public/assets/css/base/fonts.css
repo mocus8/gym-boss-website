@@ -9,6 +9,15 @@
     font-display: swap;
 }
 
+/* Jost обычный, 700 */
+@font-face {
+    font-family: "Jost";
+    src: url("/assets/fonts/Jost-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Jost курсивный, 400 */
 @font-face {
     font-family: "Jost";
