@@ -4,12 +4,12 @@
             <a class="link-shell" href="/">
                 <div class="site-header__brand shape-cut-corners--diagonal">
                     <div class="site-header__brand-text">
-                        <span class="site-header__brand-tagline">
-                            Интернет-магазин спортивной атрибутики
-                        </span>
-
                         <span class="site-header__brand-name">
                             “Gym Boss”
+                        </span>
+
+                        <span class="site-header__brand-tagline">
+                            Интернет-магазин спортивной атрибутики
                         </span>
                     </div>
 
