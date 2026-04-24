@@ -28,7 +28,7 @@
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <img class="site-footer__icon" src="/assets/images/ui/vk.png" alt="Мы ВКонтакте">
+                        <img class="site-footer__icon" src="/assets/images/ui/vkontakte.svg" alt="Мы ВКонтакте">
                     </a>
                 </li>
 
@@ -38,7 +38,7 @@
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <img class="site-footer__icon" src="/assets/images/ui/tg.png" alt="Наш Telegram">
+                        <img class="site-footer__icon" src="/assets/images/ui/telegram.svg" alt="Наш Telegram">
                     </a>
                 </li>
             </ul>
@@ -49,19 +49,19 @@
 
             <ul class="list-reset site-footer__section-row">
                 <li>
-                    <img class="site-footer__icon" src="/assets/images/ui/mir.png" alt="МИР">
+                    <img class="site-footer__icon" src="/assets/images/ui/mir.svg" alt="МИР">
                 </li>
 
                 <li>
-                    <img class="site-footer__icon" src="/assets/images/ui/visa.png" alt="Visa">
+                    <img class="site-footer__icon" src="/assets/images/ui/visa.svg" alt="Visa">
                 </li>
 
                 <li>
-                    <img class="site-footer__icon" src="/assets/images/ui/master_card.png" alt="Mastercard">
+                    <img class="site-footer__icon" src="/assets/images/ui/mastercard.svg" alt="Mastercard">
                 </li>
 
                 <li>
-                    <img class="site-footer__icon" src="/assets/images/ui/yoomoney.png" alt="ЮMoney">
+                    <img class="site-footer__icon" src="/assets/images/ui/yoomoney.svg" alt="ЮMoney">
                 </li>
             </ul>
         </div>

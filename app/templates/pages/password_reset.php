@@ -1,7 +1,7 @@
 <div class="container flex-stack-lg">
     <a class="link-shell" href="/">
         <span class="btn primary-btn shape-cut-corners--diagonal">
-            <img class="primary-btn__img" src="/assets/images/ui/arrow_back.png">
+            <span class="primary-btn__sign">←</span>
 
             <span>На главную</span>
         </span>
@@ -49,7 +49,7 @@
         </div>
 
         <div id="password-reset-error" class="form__error is-hidden">
-            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <img class="form__error-icon" src="/assets/images/ui/error.svg" alt="">
             <span data-error-text></span>
         </div>
 

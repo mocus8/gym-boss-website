@@ -316,7 +316,7 @@ function createCartProductElement(item) {
 
     const removeImg = document.createElement("img");
     removeImg.classList.add("cart__item-remove-icon");
-    removeImg.src = "/assets/images/ui/trash.png";
+    removeImg.src = "/assets/images/ui/trash.svg";
     removeImg.alt = "Удалить из корзины";
     removeBtn.appendChild(removeImg);
     interactionBlock.appendChild(removeBtn);

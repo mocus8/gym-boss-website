@@ -20,7 +20,7 @@
         </div>
 
         <div id="account-name-error" class="form__error is-hidden">
-            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <img class="form__error-icon" src="/assets/images/ui/error.svg" alt="">
             <span data-error-text></span>
         </div>
 
@@ -71,7 +71,7 @@
         </div>
 
         <div id="account-current-password-error" class="form__error is-hidden">
-            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <img class="form__error-icon" src="/assets/images/ui/error.svg" alt="">
             <span data-error-text></span>
         </div>
 
@@ -94,7 +94,7 @@
         </div>
 
         <div id="account-new-password-error" class="form__error is-hidden">
-            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <img class="form__error-icon" src="/assets/images/ui/error.svg" alt="">
             <span data-error-text></span>
         </div>
 
@@ -117,7 +117,7 @@
         </div>
 
         <div id="account-confirm-password-error" class="form__error is-hidden">
-            <img class="form__error-icon" src="/assets/images/ui/error_modal_icon.png" alt="">
+            <img class="form__error-icon" src="/assets/images/ui/error.svg" alt="">
             <span data-error-text></span>
         </div>
 

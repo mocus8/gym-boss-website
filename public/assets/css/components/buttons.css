@@ -9,8 +9,8 @@
 
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
+    background: var(--color-gradient);
 
-    background-color: var(--color-surface-alt);
     color: var(--color-text);
     transition:
         background-color var(--transition-fast),
@@ -18,7 +18,7 @@
 }
 
 .btn:hover {
-    background-color: var(--color-primary);
+    background-color: var(--color-primary-bright);
     transform: translateY(-1px);
 }
 
@@ -44,6 +44,7 @@
     padding-inline: var(--space-12);
     padding-block: var(--space-8);
 
+    background: none;
     background-color: var(--color-primary);
     font-size: var(--font-size-lg);
 }
@@ -52,10 +53,10 @@
     background-color: var(--color-primary-hover);
 }
 
-.primary-btn__img {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex-shrink: 0;
+.primary-btn__sign {
+    text-align: center;
+    font-size: var(--font-size-2xl);
+    line-height: 1;
 }
 
 @media (max-width: 1050px) {
@@ -67,10 +68,5 @@
     .primary-btn {
         padding-inline: var(--space-8);
         padding-block: var(--space-4);
-    }
-
-    .primary-btn__img {
-        width: 1rem;
-        height: 1rem;
     }
 }

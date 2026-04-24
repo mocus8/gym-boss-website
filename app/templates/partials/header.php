@@ -4,16 +4,16 @@
             <a class="link-shell" href="/">
                 <div class="site-header__brand shape-cut-corners--diagonal">
                     <div class="site-header__brand-text">
-                        <span class="site-header__brand-tagline">
-                            Интернет-магазин спортивной атрибутики
-                        </span>
-
                         <span class="site-header__brand-name">
                             “Gym Boss”
                         </span>
+
+                        <span class="site-header__brand-tagline">
+                            Интернет-магазин спортивной атрибутики
+                        </span>
                     </div>
 
-                    <img class="site-header__brand-image" src="/assets/images/ui/billy.svg" alt="">
+                    <img class="site-header__brand-image" src="/assets/images/ui/billy.png" alt="">
                 </div>
             </a>
 
@@ -23,7 +23,7 @@
                         <li>
                             <a class="link-shell" href="/">
                                 <span class="btn shape-cut-corners--diagonal">
-                                    <img class="site-header__nav-icon" src="/assets/images/ui/catalog.png" alt="">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/catalog.svg" alt="">
                                     
                                     <span>Каталог</span>
                                 </span>
@@ -33,7 +33,7 @@
                         <li>
                             <a class="link-shell" href="/stores">
                                 <span class="btn shape-cut-corners--diagonal">
-                                    <img class="site-header__nav-icon" src="/assets/images/ui/map.png" alt="">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/location.svg" alt="">
 
                                     <span>Наши магазины</span>
                                 </span>
@@ -43,7 +43,7 @@
                         <li>
                             <a class="link-shell" href="/contacts">
                                 <span class="btn shape-cut-corners--diagonal">
-                                    <img class="site-header__nav-icon" src="/assets/images/ui/phone.png" alt="">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/phone.svg" alt="">
 
                                     <span>Контакты</span>
                                 </span>
@@ -53,7 +53,7 @@
                         <li>
                             <a class="link-shell" href="/about">
                                 <span class="btn shape-cut-corners--diagonal">
-                                    <img class="site-header__nav-icon" src="/assets/images/ui/info.png" alt="">
+                                    <img class="site-header__nav-icon" src="/assets/images/ui/info.svg" alt="">
 
                                     <span>О сайте</span>
                                 </span>
@@ -70,7 +70,7 @@
                     method="get"
                 >
                     <div class="site-header__search-control shape-cut-corners--diagonal"> 
-                        <img class="site-header__nav-icon" src="/assets/images/ui/glass.png" alt="">
+                        <img class="site-header__nav-icon" src="/assets/images/ui/search.svg" alt="">
 
                         <input
                             id="header-search-input"
@@ -99,13 +99,13 @@
             <div class="site-header__account-wrapper">
                 <div class="site-header__account shape-cut-corners--diagonal">
                     <span class="site-header__account-title">
-                        <img class="site-header__nav-icon" src="/assets/images/ui/person.png" alt="">
+                        <img class="site-header__nav-icon" src="/assets/images/ui/account.svg" alt="">
                         <span>Аккаунт</span>
                     </span>
 
                     <a class="link-shell" href="/cart">
                         <span class="btn site-header__account-btn shape-cut-corners--diagonal">
-                            <img class="site-header__nav-icon" src="/assets/images/ui/cart.png" alt="">
+                            <img class="site-header__nav-icon" src="/assets/images/ui/cart.svg" alt="">
 
                             <span>
                                 Корзина (<span id="header-cart-counter"><?= (int)$cartCount ?></span>)

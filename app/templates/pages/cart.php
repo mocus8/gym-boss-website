@@ -4,7 +4,7 @@
 
         <div id="product-container" class="cart__items-container">
             <div class="cart__items-loader flex-center" role="status">
-                <img class="cart__items-loader-spinner" src="/assets/images/ui/loader.png" alt="">
+                <img class="cart__items-loader-spinner" src="/assets/images/ui/spinner.png" alt="">
 
                 <span>Загрузка...</span>
             </div>
@@ -14,7 +14,7 @@
     <div class="cart__summary">
         <div class="cart__summary-info shape-cut-corners--diagonal">
             <div class="cart__summary-title">
-                <img class="cart__summary-icon" src="/assets/images/ui/cart.png" alt="">
+                <img class="cart__summary-icon" src="/assets/images/ui/cart.svg" alt="">
 
                 <h2 class="cart__summary-row">
                     Сумма заказа

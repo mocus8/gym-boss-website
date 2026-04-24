@@ -82,7 +82,7 @@
     <ul class="flex-stack-row shape-cut-corners--diagonal">
         <li>Строгая валидация входных данных на backend.</li>
         <li>Хэширование паролей.</li>
-        <li>Защита от XSS и CSRF, экранирование вывода.</li>
+        <li>Защита от XSS, экранирование вывода.</li>
         <li>Content Security Policy (CSP).</li>
         <li>Безопасные cookie.</li>
         <li>Rate limiting на уровне Nginx.</li>

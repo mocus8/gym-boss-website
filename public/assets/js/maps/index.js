@@ -164,7 +164,7 @@ export class StoresMap {
                 {
                     iconLayout: "default#image",
                     iconImageHref: "/assets/images/ui/custom-map-pin.png",
-                    iconImageSize: [60, 55],
+                    iconImageSize: [50, 50],
                     iconImageOffset: [-20, -40],
 
                     balloonCloseButton: true,
@@ -429,7 +429,7 @@ export class CourierMap {
             {
                 iconLayout: "default#image",
                 iconImageHref: "/assets/images/ui/custom-map-pin.png",
-                iconImageSize: [60, 55],
+                iconImageSize: [50, 50],
                 iconImageOffset: [-20, -40],
 
                 balloonCloseButton: true,
@@ -865,7 +865,7 @@ export class PickupMap {
                 {
                     iconLayout: "default#image",
                     iconImageHref: "/assets/images/ui/custom-map-pin.png",
-                    iconImageSize: [60, 55],
+                    iconImageSize: [50, 50],
                     iconImageOffset: [-20, -40],
 
                     balloonCloseButton: true,
