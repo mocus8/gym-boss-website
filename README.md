@@ -51,6 +51,7 @@
 
 ### Структура проекта
 
+```
 gym-boss-website/
 ├── public/
 │ ├── index.php # front controller - единая точка входа
@@ -85,6 +86,7 @@ gym-boss-website/
 ├── docker-compose.yml
 ├── nginx.conf
 └── composer.json
+```
 
 ### Поток запроса
 
