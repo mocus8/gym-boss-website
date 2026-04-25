@@ -184,7 +184,7 @@
 
 .site-header__search-results-item {
     width: 11rem;
-    height: 17rem;
+    height: 16.5rem;
     flex: 0 0 auto;
 }
 
@@ -325,6 +325,7 @@
 
     .site-header__search-results-item {
         width: 9rem;
+        height: 14.5rem;
     }
 
     .site-header__account-title {

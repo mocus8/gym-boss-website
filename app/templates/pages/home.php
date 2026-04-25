@@ -23,7 +23,9 @@
                                     alt="<?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>"
                                 >
 
-                                <h3><?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?></h3>
+                                <h3 class="product-card__title">
+                                    <?= htmlspecialchars($productData['name'], ENT_QUOTES, 'UTF-8') ?>
+                                </h3>
                                 
                                 <p class="product-card__price">
                                     <?= htmlspecialchars(formatPrice((float)$productData['price']), ENT_QUOTES, 'UTF-8') ?> ₽
