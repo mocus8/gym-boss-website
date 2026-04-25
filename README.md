@@ -22,6 +22,20 @@
 Бизнес-логика разделена по доменам (Cart, Orders, Payments, Auth), каждый домен
 содержит собственные сервисы и репозитории.
 
+## Скриншоты
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="48%" alt="Главная страница">
+  &nbsp;
+  <img src="docs/screenshots/cart.png" width="48%" alt="Корзина">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/checkout.png" width="48%" alt="Оформление заказа">
+  &nbsp;
+  <img src="docs/screenshots/order.png" width="48%" alt="Заказ">
+</p>
+
 **Основные паттерны и решения:**
 
 - **Front controller + Router** - все запросы проходят через `public/index.php`
@@ -153,9 +167,9 @@ gym-boss-website/
 
 **В планах:**
 
-- Заполнение товарами, добаввление демо-скриншотов
-- Дополнительная настройка логаутов
 - Публичная демо-версия на VPS
+- Аудит и улучшение уровня a11y через lighthose в devtools
+- Дополнительная настройка логаутов
 
 ## Чему научился на проекте
 
