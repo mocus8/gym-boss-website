@@ -26,6 +26,14 @@
     transform: translateY(0);
 }
 
+.product-card__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
 .product-card__price {
     margin-top: auto;
     width: fit-content;

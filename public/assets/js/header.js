@@ -211,6 +211,7 @@ function initHeaderSearch() {
         productCard.appendChild(productImg);
 
         const productName = document.createElement("h3");
+        productName.classList.add("product-card__title");
         productName.textContent = product.name;
         productCard.appendChild(productName);
 
