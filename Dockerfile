@@ -20,6 +20,7 @@ RUN apk update \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY ./docker/php-fpm.d/99-gymboss.conf /usr/local/etc/php-fpm.d/99-gymboss.conf
+COPY ./docker/php/conf.d/ /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/html
 
@@ -27,6 +28,13 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 COPY . .
+
+RUN mkdir -p /var/www/html/storage/logs /var/www/html/storage/cache \
+    && mkdir -p /tmp/php-sessions \
+    && chown -R www-data:www-data /var/www/html \
+    && chown -R www-data:www-data /tmp/php-sessions \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod 700 /tmp/php-sessions
 
 EXPOSE 9000
 CMD ["php-fpm"]

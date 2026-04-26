@@ -98,8 +98,7 @@ sitemap-index.xml
 .nyc_output
 
 # =================================
-# CI / CD + Deploy
+# CI / CD
 # =================================
 .github/workflows/cache/
 .circleci/
-deploy/

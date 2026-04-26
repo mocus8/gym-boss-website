@@ -7,20 +7,26 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
 ![Nginx](https://img.shields.io/badge/Nginx-configured-009639?logo=nginx&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+[![Live](https://img.shields.io/badge/Live-gymboss.mocus8.ru-6b101c)](https://gymboss.mocus8.ru/)
 
 ## Стек
 
 **Backend:** PHP 8 (ООП), собственный MVC-фреймворк, роутер, front controller, DI, PSR-4, Composer
 **Frontend:** vanilla JS (ES6+, модули), HTML5, CSS (адаптив)
 **База данных:** MySQL 8 (схема, индексы, оптимизация запросов)
-**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose, GitHub Actions (CI)
+**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI), HTTPS через Let's Encrypt (certbot, HTTP/2), рабочее демо на VPS
 **Внешние сервисы:** ЮKassa, Яндекс.Карты, DaData, Resend, Google reCAPTCHA v3
+**VPS с демо:** Linux (Ubuntu 24.04), подключение к серверу через SSH и ключ
 
 ## Архитектура
 
 Приложение - MPA на базе MVC с единой точкой входа через front controller.
 Бизнес-логика разделена по доменам (Cart, Orders, Payments, Auth), каждый домен
 содержит собственные сервисы и репозитории.
+
+## Ссылка на демо проекта
+
+Интернет-магазин GymBoss: https://gymboss.mocus8.ru/
 
 ## Скриншоты
 
@@ -46,8 +52,13 @@
   (`CancelOrderUseCase`, `FulfillOrderUseCase`)
 - **Слой интеграций** - каждый внешний сервис (ЮKassa, DaData, Resend, reCAPTCHA)
   изолирован в отдельный Gateway/Client с собственными DTO
-- **Пошаговые SQL-миграции** в папке `db/` - 70+ пронумерованных файлов,
-  отражающих эволюцию схемы
+- **Переключение между окружениями** - разные конфигурационные файлы докера и nginx-а для локальной разработки и работы на VPS,
+  все переменные окружения вынесены в .env файл
+
+### База данных
+
+- Установка базы данных происходит через единый sql-dump файл: `db/initial_schema.sql`
+- В папке `db/archive/` находится 70+ пронумерованных файлов, отражающих эволюцию схемы
 
 ### Структура проекта
 
@@ -59,6 +70,9 @@ gym-boss-website/
 ├── bootstrap/
 │ └── app.php # инициализация приложения
 ├── config/ # конфигурации (app, services, delivery)
+├── deploy/
+│   ├── bootstrap.sh # скрипт для деплоя на VPS
+│   └── README.md # инструкция по деплою на production
 ├── app/
 │ ├── Api/ # REST-контроллеры (Auth, Cart, Order, Product, ...)
 │ ├── Auth/ # сервисы и репозитории авторизации
@@ -74,23 +88,28 @@ gym-boss-website/
 │ │ ├── Dadata/ # - подсказки адресов
 │ │ ├── Resend/ # - email
 │ │ └── GoogleRecaptcha/ # - защита форм
-│ ├── Db/ # обёртка над PDO
+│ ├── Db/ # обёртка над обращениями к бд
 │ ├── Support/ # helpers, Logger, Flash, AppException
 │ ├── page-scripts/ # контроллеры страниц (MVC-controllers)
 │ └── templates/ # шаблоны (layouts, pages, partials, email)
-├── db/ # SQL-миграции
+├── db/
+│   ├── initial_schema.sql # актуальная схема БД для установки
+│   └── archive/ # 70+ пронумерованных миграций, отражающих эволюцию схемы
 ├── docker/ # конфигурация Nginx / PHP-FPM
 ├── storage/ # логи и кэш
 ├── .github/workflows/ # CI (GitHub Actions)
-├── Dockerfile
-├── docker-compose.yml
-├── nginx.conf
+├── Dockerfile # основной PHP-образ
+├── Dockerfile.nginx # отдельный Nginx-образ
+├── docker-compose.yml # конфигурация для локальной разработки
+├── docker-compose.prod.yml  # конфигурация для продакшена и деплоя
+├── nginx.conf # nginx-конфиг для локальной разработки
+├── nginx.prod.conf # nginx-конфиг для production (HTTPS, HTTP/2, HSTS, CSP, rate limiting)
 └── composer.json
 ```
 
 ### Поток запроса
 
-1. Nginx принимает запрос и проксирует на PHP-FPM → `public/index.php`
+1. Nginx принимает запрос, если статика - отдает сам, иначе проксирует на PHP-FPM → `public/index.php`
 2. Bootstrap инициализирует автозагрузку (Composer PSR-4), конфигурацию, DI
 3. Роутер сопоставляет URL → контроллер → метод
 4. Контроллер вызывает сервис → репозиторий (БД) или интеграцию (внешний API)
@@ -124,11 +143,16 @@ gym-boss-website/
 - Хэширование паролей (`password_hash`)
 - Защита от XSS (экранирование при выводе).
 - Content Security Policy в HTTP-заголовках
-- HttpOnly, Secure, SameSite cookie
+- HttpOnly, Secure, SameSite cookie, Cookie Secure
 - Rate limiting на уровне Nginx с отдельными зонами для чувствительных эндпоинтов (логин, регистрация)
 - reCAPTCHA v3 на критичных действиях
 - Транзакции и try/catch на всех операциях с БД, структурированное логирование с контекстом
 - Корректные HTTP-статусы в ответах
+- HTTPS через Lets Encrypt, HTTP to HTTPS редирект, HTTP2
+- OPcache, session.cookie_secure, изоляция секретов через .dockerignore
+- Настроенный UFW на VPS, доступны минимально необходимые порты
+- На VPS-машине настроенное разграничение прав доступа
+- Изоляция MySQL от внешней сети (биндинг на 127.0.0.1)
 
 ### SEO и сервисные страницы
 
@@ -151,6 +175,12 @@ gym-boss-website/
 
 После этого сайт будет локально доступен по указанному в `.env` адресу.
 
+## Деплой на production
+
+Для развёртывания на VPS — см. [deploy/README.md](deploy/README.md).
+Воспроизведение на новом сервере занимает 5 минут с помощью `deploy/bootstrap.sh`,
+всех переменных окружения вынесенных в .env файлов и раздельных conf файлов для прода и разработки
+
 ## CI
 
 При каждом push и pull request GitHub Actions запускает базовые проверки кода
@@ -166,11 +196,13 @@ gym-boss-website/
 - Интеграции с ЮKassa, Яндекс.Картами, DaData, Resend, reCAPTCHA
 - Развёртывание в Docker, конфигурация Nginx с CSP и rate limiting
 - CI через GitHub Actions
+- Деплой на VPS: HTTPS, Nginx production-конфиг, Docker production-конфиг, автоматизация через bootstrap.sh
 
 **В планах:**
 
-- Публичная демо-версия на VPS
-- Аудит и улучшение уровня a11y через lighthose в devtools
+- Настройка автообновления SSL-сертификата и cron-задач
+- Аудит и улучшение уровня a11y через Lighthose в devtools
+- Настройка CD
 - Дополнительная настройка логаутов
 - Оптимизация статики
 
@@ -183,5 +215,9 @@ gym-boss-website/
 - Интеграция со сторонними REST API, обработка ошибок сетевых запросов
 - Работа с Docker и Docker Compose, построение локального окружения
 - Настройка CI через GitHub Actions, ведение репозитория по GitHub Flow
+- Деплой на VPS: настройка сервера, SSH, управление пользователями и правами (Linux CLI)
+- HTTPS через Let's Encrypt: certbot (webroot challenge), HTTP->HTTPS редирект, HTTP/2
+- Настройка UFW, изоляция MySQL, разграничение прав на Linux-Ubuntu сервере
+- Раздельные конфиги Docker Compose и Nginx для dev/prod, изоляция секретов через .dockerignore
 
 _Учебный pet-project, разрабатывается одним человеком._

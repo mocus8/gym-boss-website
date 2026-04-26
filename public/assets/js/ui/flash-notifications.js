@@ -1,4 +1,4 @@
-import { notification } from "./notification.JS";
+import { notification } from "./notification.js";
 
 // Показываем уведомление, если есть сообщение
 document.addEventListener("DOMContentLoaded", () => {
