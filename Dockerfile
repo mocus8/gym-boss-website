@@ -30,10 +30,10 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 COPY . .
 
 RUN mkdir -p /var/www/html/storage/logs /var/www/html/storage/cache \
-    && chown -R www-data:www-data /var/www/html/storage \
-    && chown -R www-data:www-data /var/www/html
-
-USER www-data
+    && mkdir -p /tmp/php-sessions \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod 700 /tmp/php-sessions
 
 EXPOSE 9000
 CMD ["php-fpm"]
