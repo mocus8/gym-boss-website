@@ -29,5 +29,11 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 COPY . .
 
+RUN mkdir -p /var/www/html/storage/logs /var/www/html/storage/cache \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chown -R www-data:www-data /var/www/html
+
+USER www-data
+
 EXPOSE 9000
 CMD ["php-fpm"]
