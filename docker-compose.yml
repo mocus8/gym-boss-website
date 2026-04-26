@@ -24,6 +24,8 @@ services:
             - ./docker/php/conf.d:/usr/local/etc/php/conf.d
             - php_sessions:/tmp/php-sessions
         environment:
+            - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE}
+            - OPCACHE_VALIDATE_TIMESTAMPS=${OPCACHE_VALIDATE_TIMESTAMPS}
             - ENCRYPTION_KEY=${ENCRYPTION_KEY}
         depends_on:
             mysql:
@@ -70,9 +72,7 @@ services:
 
 volumes:
     mysql_data:
-    nginx_logs:
     php_sessions:
-    php_logs:
 
 # Определение сети для взаимодействия 3 контейнеров (nginx, php, mysql)
 networks:

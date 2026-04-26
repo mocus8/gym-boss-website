@@ -20,6 +20,7 @@ RUN apk update \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY ./docker/php-fpm.d/99-gymboss.conf /usr/local/etc/php-fpm.d/99-gymboss.conf
+COPY ./docker/php/conf.d/ /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/html
 
