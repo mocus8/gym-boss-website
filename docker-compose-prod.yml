@@ -5,7 +5,7 @@ services:
             - "80:80" # http, для для редиректа на https
             - "443:443" # https
         volumes:
-            - ./nginx.conf:/etc/nginx/nginx.conf:ro # Конфиг Nginx
+            - ./nginx.conf:/etc/nginx/nginx.prod.conf:ro # Конфиг Nginx
             - /etc/letsencrypt:/etc/letsencrypt:ro # letsencrypt для SSL сертификатов
             - certbot_webroot:/var/www/certbot # certbot для подтверждения домена для Let's Encrypt
         depends_on:
