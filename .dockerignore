@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Переменные окружения
+.env*
+
+# Docker-файлы (для образа не нужны)
+Dockerfile
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# PHP-зависимости (ставятся внутри Dockerfile)
+vendor
+
+# Frontend-зависимости (нужны только локально и в репозитории)
+package.json
+package-lock.json
+eslint.config.mjs
+node_modules
+
+# Логи и кэш
+storage/logs/*
+storage/cache/*
+*.log
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+
+# Документация и метаданные репозитория
+*.md
+docs
+
+# CI/CD и GitHub
+.github
