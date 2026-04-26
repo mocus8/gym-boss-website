@@ -1,51 +1,51 @@
-# Deployment Guide
+# Гайд для деплоя
 
-## Production setup
+## Настройка машины
 
-### Prerequisites
+### Требования
 
-- VPS with Ubuntu 24.04
-- Docker + Docker Compose installed
-- Domain pointing to VPS IP
-- SSL certificate via Let's Encrypt
+- VPS с Ubuntu 24.04
+- Docker + Docker Compose
+- Постоянный VPS IP и связанный домен
+- SSL-сертификат через Let's Encrypt
 
-### First deployment
+### Первый деплой
 
-1. Clone the repo:
+1. Клонировать репозиторий:
 
 ```bash
    git clone https://github.com/mocus8/gym-boss-website.git
    cd gym-boss-website
 ```
 
-2. Create `.env` from template:
+2. Создать `.env` из шаблона:
 
 ```bash
    cp .env.example .env
-   nano .env  # fill production values
+   nano .env  # заполнить значениями
 ```
 
-3. Get SSL certificate (first time only):
+3. Выполнить bootstrap.sh:
+
+```bash
+   chmod +x bootstrap.sh && ./bootstrap.sh
+```
+
+4. Получить SSL-сертификат:
 
 ```bash
    sudo certbot certonly --webroot -w /var/www/certbot -d gymboss.mocus8.ru
 ```
 
-4. Start services:
+5. Запустить сервисы:
 
 ```bash
    docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### Update deployment
+### Обновить:
 
 ```bash
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
-
-### Useful commands
-
-- View logs: `docker compose -f docker-compose.prod.yml logs -f`
-- Restart service: `docker compose -f docker-compose.prod.yml restart php`
-- Backup database: `docker compose -f docker-compose.prod.yml exec mysql mysqldump -u root -p gymboss_db > backup.sql`
