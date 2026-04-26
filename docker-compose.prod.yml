@@ -1,6 +1,8 @@
 services:
     nginx:
-        image: nginx:alpine
+        build:
+            context: .
+            dockerfile: Dockerfile.nginx
         ports:
             - "80:80" # http, для для редиректа на https
             - "443:443" # https
