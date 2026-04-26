@@ -32,6 +32,7 @@ COPY . .
 RUN mkdir -p /var/www/html/storage/logs /var/www/html/storage/cache \
     && mkdir -p /tmp/php-sessions \
     && chown -R www-data:www-data /var/www/html \
+    && chown -R www-data:www-data /tmp/php-sessions \
     && chmod -R 775 /var/www/html/storage \
     && chmod 700 /tmp/php-sessions
 
