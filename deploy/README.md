@@ -1,15 +1,49 @@
-# Гайд для деплоя
+# Гайд по деплою на production
 
-## Настройка машины
+## Требования
 
-### Требования
+- VPS с Ubuntu 24.04 LTS
+- Минимум 2 GB RAM, 20 GB SSD
+- Открытые порты: 22 (SSH), 80 (HTTP), 443 (HTTPS)
+- Зарегистрированный домен с A-записью на IP сервера
 
-- VPS с Ubuntu 24.04
-- Docker + Docker Compose
-- Постоянный VPS IP и связанный домен
-- SSL-сертификат через Let's Encrypt
+## Подготовка сервера
 
-### Первый деплой
+### Базовая безопасность
+
+1. Отключить root-логин по SSH:
+
+```bash
+   sudo nano /etc/ssh/sshd_config
+   # Установить: PermitRootLogin no, PasswordAuthentication no
+   sudo systemctl restart sshd
+```
+
+2. Создать непривилегированного пользователя:
+
+```bash
+   sudo adduser deploy
+   sudo usermod -aG sudo deploy
+```
+
+3. Настроить UFW:
+
+```bash
+   sudo ufw allow 22/tcp
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   sudo ufw enable
+```
+
+### Установка Docker
+
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+# Перезайти, чтобы права применились
+```
+
+## Первый деплой
 
 1. Клонировать репозиторий:
 
@@ -22,30 +56,64 @@
 
 ```bash
    cp .env.example .env
-   nano .env  # заполнить значениями
+   nano .env
 ```
 
-3. Выполнить bootstrap.sh:
+Сгенерировать секретные значения:
 
 ```bash
-   chmod +x bootstrap.sh && ./bootstrap.sh
+   openssl rand -hex 24  # для MYSQL_ROOT_PASSWORD, DB_PASS, ENCRYPTION_KEY
 ```
 
-4. Получить SSL-сертификат:
+3. Выполнить bootstrap-скрипт (настройка прав, директорий):
 
 ```bash
-   sudo certbot certonly --webroot -w /var/www/certbot -d gymboss.mocus8.ru
+   chmod +x deploy/bootstrap.sh
+   ./deploy/bootstrap.sh
 ```
 
-5. Запустить сервисы:
+4. Получить SSL-сертификат (bootstrap-режим Nginx):
+
+    Создать временный конфиг `nginx.bootstrap.conf` с обработкой ACME challenge,
+    запустить минимальный nginx, выполнить:
+
+```bash
+   sudo certbot certonly --webroot \
+     -w /var/lib/docker/volumes/gym-boss-website_certbot_webroot/_data \
+     -d yourdomen.com \
+     --email your@email.com \
+     --agree-tos
+```
+
+5. Запустить production-сервисы:
 
 ```bash
    docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### Обновить:
+## Обновление кода
 
 ```bash
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+Что пересобирается:
+
+- При изменении PHP-кода — образ `php`
+- При изменении файлов в `public/` — образ `nginx`
+- При изменении `nginx.prod.conf` — достаточно `restart nginx`
+
+## Структура production-окружения
+
+- **3 Docker-контейнера**: nginx, php-fpm, mysql
+- **3 named volumes**: mysql_data (БД), php_sessions (сессии), certbot_webroot (SSL challenge)
+- **bind-mount**: `./storage` (логи, кэш приложения)
+- **Сеть**: `gymboss` (изолированная Docker-network)
+- **MySQL**: bind на 127.0.0.1:3306 (недоступен из интернета, только через Docker network или SSH-туннель)
+
+## Дальнейшие задачи
+
+- Настроить cron для автообновления SSL (`certbot renew`)
+- Настроить cron для бэкапа БД
+- Настроить cron-задачи приложения (sitemap, очистка просроченных заказов)
