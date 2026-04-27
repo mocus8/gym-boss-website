@@ -11,10 +11,10 @@
 
 ## Стек
 
-**Backend:** PHP 8 (ООП), собственный MVC-фреймворк, роутер, front controller, DI, PSR-4, Composer
+**Backend:** PHP 8.2 (ООП), собственный MVC-фреймворк, роутер, front controller, DI, PSR-4, Composer
 **Frontend:** vanilla JS (ES6+, модули), HTML5, CSS (адаптив)
 **База данных:** MySQL 8 (схема, индексы, оптимизация запросов)
-**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI), HTTPS через Let's Encrypt (certbot, HTTP/2), рабочее демо на VPS
+**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI: lint, syntax check), HTTPS через Let's Encrypt (certbot, HTTP/2), рабочее демо на VPS
 **Внешние сервисы:** ЮKassa, Яндекс.Карты, DaData, Resend, Google reCAPTCHA v3
 **VPS с демо:** Linux (Ubuntu 24.04), подключение к серверу через SSH и ключ
 
@@ -57,8 +57,7 @@
 
 ### База данных
 
-- Установка базы данных происходит через единый sql-dump файл: `db/initial_schema.sql`
-- В папке `db/archive/` находится 70+ пронумерованных файлов, отражающих эволюцию схемы
+Развитие схемы (70+ миграций) сохранена в `db/archive/` для документации, но не применяется автоматически - на сервере используется единый `initial_schema.sql`, что обеспечивает воспроизводимость и быстрый деплой
 
 ### Структура проекта
 
@@ -109,7 +108,7 @@ gym-boss-website/
 
 ### Поток запроса
 
-1. Nginx принимает запрос, если статика - отдает сам, иначе проксирует на PHP-FPM → `public/index.php`
+1. Nginx принимает запрос. Статику отдаёт сам из своего контейнера (nginx-образ содержит копию public/ через отдельный Dockerfile.nginx). PHP-запросы проксирует на PHP-FPM по FastCGI → public/index.php в php-контейнере
 2. Bootstrap инициализирует автозагрузку (Composer PSR-4), конфигурацию, DI
 3. Роутер сопоставляет URL → контроллер → метод
 4. Контроллер вызывает сервис → репозиторий (БД) или интеграцию (внешний API)
@@ -148,7 +147,7 @@ gym-boss-website/
 - reCAPTCHA v3 на критичных действиях
 - Транзакции и try/catch на всех операциях с БД, структурированное логирование с контекстом
 - Корректные HTTP-статусы в ответах
-- HTTPS через Lets Encrypt, HTTP to HTTPS редирект, HTTP2
+- HTTPS через Lets Encrypt, HTTP to HTTPS редирект, HTTP/2
 - OPcache, session.cookie_secure, изоляция секретов через .dockerignore
 - Настроенный UFW на VPS, доступны минимально необходимые порты
 - На VPS-машине настроенное разграничение прав доступа
@@ -196,12 +195,12 @@ gym-boss-website/
 - Интеграции с ЮKassa, Яндекс.Картами, DaData, Resend, reCAPTCHA
 - Развёртывание в Docker, конфигурация Nginx с CSP и rate limiting
 - CI через GitHub Actions
-- Деплой на VPS: HTTPS, Nginx production-конфиг, Docker production-конфиг, автоматизация через bootstrap.sh
+- Деплой на VPS: HTTPS, Nginx production-конфиг, Docker production-конфиг и раздельные образы для PHP-FPM и Nginx, автоматизация через bootstrap.sh
 
 **В планах:**
 
-- Настройка автообновления SSL-сертификата и cron-задач
-- Аудит и улучшение уровня a11y через Lighthose в devtools
+- Настройка автообновления SSL-сертификата и cron-задач (настройка регулярных бэкапов бд, генерация sitemap, очистка устаревших данных)
+- Аудит и улучшение уровня a11y через Lighthouse в devtools
 - Настройка CD
 - Дополнительная настройка логаутов
 - Оптимизация статики
@@ -214,10 +213,12 @@ gym-boss-website/
 - Настройка Nginx + PHP-FPM, CSP, rate limiting, безопасные cookie
 - Интеграция со сторонними REST API, обработка ошибок сетевых запросов
 - Работа с Docker и Docker Compose, построение локального окружения
+- Понимание изоляции контейнеров: как организовать раздельные Docker-образы для разных сервисов (PHP-FPM, Nginx) с собственной копией статики
+- Управление правами в Docker volumes: bind-mount vs named volume.
 - Настройка CI через GitHub Actions, ведение репозитория по GitHub Flow
 - Деплой на VPS: настройка сервера, SSH, управление пользователями и правами (Linux CLI)
 - HTTPS через Let's Encrypt: certbot (webroot challenge), HTTP->HTTPS редирект, HTTP/2
 - Настройка UFW, изоляция MySQL, разграничение прав на Linux-Ubuntu сервере
-- Раздельные конфиги Docker Compose и Nginx для dev/prod, изоляция секретов через .dockerignore
+- Раздельные конфиги Docker Compose и Nginx для dev/prod, изоляция секретов: .env исключён из git и Docker build context
 
 _Учебный pet-project, разрабатывается одним человеком._
