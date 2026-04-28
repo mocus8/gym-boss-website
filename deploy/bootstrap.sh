@@ -5,6 +5,9 @@
 
 set -e  # выйти при первой ошибке
 
+# Определяем корень проекта
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
 echo "GymBoss Production Bootstrap"
 echo ""
 
@@ -14,21 +17,21 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if [ ! -f .env ]; then
+if [ ! -f "$PROJECT_ROOT/.env" ]; then
     echo ".env file not found"
     echo "Copy .env.example to .env and fill production values first"
     exit 1
 fi
 
-# Storage permissions
-echo "Setting up storage permissions..."
-mkdir -p storage/logs storage/cache
-sudo chown -R 82:82 storage
-sudo chmod -R 775 storage
-
 # Защитить .env
 echo "Securing .env file..."
-chmod 600 .env
+chmod 600 "$PROJECT_ROOT/.env"
+
+# Storage permissions
+echo "Setting up storage permissions..."
+mkdir -p "$PROJECT_ROOT/storage/logs" "$PROJECT_ROOT storage/cache"
+sudo chown -R 82:82 "$PROJECT_ROOT/storage"
+sudo chmod -R 775 "$PROJECT_ROOT/storage"
 
 # Создать папку для бэкапов
 echo "Creating backups directory..."
@@ -60,18 +63,18 @@ fi
 # Установка cron-задач
 echo "Installing cron jobs..."
 
-if [ -f "deploy/cron.production" ]; then
-    crontab deploy/cron.production
+if [ -f "$PROJECT_ROOT/deploy/cron.production" ]; then
+    crontab "$PROJECT_ROOT/deploy/cron.production"
     echo "Cron jobs installed"
     echo "Current crontab:"
     crontab -l | grep -v "^#" | grep -v "^$" | sed 's/^/    /'
 else
-    echo "deploy/cron.production not found, skipping"
+    echo ".../deploy/cron.production not found, skipping"
 fi
 
 echo ""
 echo "Bootstrap complete"
 echo ""
 echo "Next steps:"
-echo "  1. Get SSL certificate"
-echo "  2. Start services: docker compose -f docker-compose.prod.yml up -d --build"
+echo "1. Get SSL certificate"
+echo "2. Start services: docker compose -f docker-compose.prod.yml up -d --build"
