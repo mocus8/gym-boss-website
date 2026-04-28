@@ -111,9 +111,9 @@ docker compose -f docker-compose.prod.yml up -d --build
 - **bind-mount**: `./storage` (логи, кэш приложения)
 - **Сеть**: `gymboss` (изолированная Docker-network)
 - **MySQL**: bind на 127.0.0.1:3306 (недоступен из интернета, только через Docker network или SSH-туннель)
+- **Cron-задачи**: устанавливаются автоматически через `bootstrap.sh`, для ручного применения: `crontab deploy/cron.production`, для просмотра: `crontab -l`. Текущие задачи: _SSL auto-renewal_ - ежедневно в 2:00, перезагружает nginx при обновлении
 
 ## Дальнейшие задачи
 
-- Настроить cron для автообновления SSL (`certbot renew`)
 - Настроить cron для бэкапа БД
 - Настроить cron-задачи приложения (sitemap, очистка просроченных заказов)
