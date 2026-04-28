@@ -29,7 +29,7 @@ chmod 600 "$PROJECT_ROOT/.env"
 
 # Storage permissions
 echo "Setting up storage permissions..."
-mkdir -p "$PROJECT_ROOT/storage/logs" "$PROJECT_ROOT storage/cache"
+mkdir -p "$PROJECT_ROOT/storage/logs" "$PROJECT_ROOT/storage/cache"
 sudo chown -R 82:82 "$PROJECT_ROOT/storage"
 sudo chmod -R 775 "$PROJECT_ROOT/storage"
 
