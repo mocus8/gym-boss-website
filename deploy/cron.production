@@ -1,0 +1,15 @@
+# GymBoss production cron jobs
+# Применяется автоматически через deploy/bootstrap.sh
+# Для ручного применения: crontab deploy/cron.production
+# Просмотр: crontab -l
+
+# Окружение
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# SSL Auto-renewal
+# Каждый день в 2:00 проверяет сертификаты, обновляет те, до истечения которых < 30 дней
+# При успешном обновлении перезагружает nginx, чтобы он подхватил новый сертификат
+0 2 * * * sudo certbot renew --quiet --deploy-hook "docker compose -f /home/mocus8/gym-boss-website/docker-compose.prod.yml exec -T nginx nginx -s reload"
+
+# TODO: добавить другие cron-задачи
