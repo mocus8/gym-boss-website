@@ -64,10 +64,10 @@ fi
 echo "Installing cron jobs..."
 
 if [ -f "$PROJECT_ROOT/deploy/cron.production" ]; then
-    crontab "$PROJECT_ROOT/deploy/cron.production"
+    sudo -u "$SUDO_USER" crontab "$PROJECT_ROOT/deploy/cron.production"
     echo "Cron jobs installed"
     echo "Current crontab:"
-    crontab -l | grep -v "^#" | grep -v "^$" | sed 's/^/    /'
+    sudo -u "$SUDO_USER" crontab -l | grep -v "^#" | grep -v "^$" | sed 's/^/    /'
 else
     echo ".../deploy/cron.production not found, skipping"
 fi
