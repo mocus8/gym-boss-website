@@ -16,4 +16,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Каждый день в 3:00 делает бэкап бд, удаляет устарвешие бэкапы
 0 3 * * * /home/mocus8/gym-boss-website/deploy/backup-db.sh >> ~/backups/backup.log 2>&1
 
+# Generate sitemap
+# Каждый день в 4:00 заново генерируется актуальная sitemap.xml
+0 4 * * * docker compose -f /home/mocus8/gym-boss-website/docker-compose.prod.yml exec -T php php /var/www/html/scripts/generate_sitemap.php
+
 # TODO: добавить другие cron-задачи
