@@ -91,6 +91,12 @@ sudo usermod -aG docker $USER
    docker compose -f docker-compose.prod.yml up -d --build
 ```
 
+6. Сгенерировать первичный sitemap.xml через скрипт (далее автоматически через cron):
+
+```bash
+   docker compose -f /home/mocus8/gym-boss-website/docker-compose.prod.yml exec -T php php /var/www/html/scripts/generate_sitemap.php
+```
+
 ## Обновление кода
 
 ```bash
