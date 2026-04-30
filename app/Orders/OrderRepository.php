@@ -316,6 +316,48 @@ class OrderRepository {
         return $row;
     }
 
+    // Метод для получения заказов в статусе pending
+    public function findPendingOrders(): array {
+        $pendingStatusId = $this->getStatusIdByCode('pending_payment');
+
+        $sql = "
+            SELECT id
+            FROM orders
+            WHERE status = ?
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new \RuntimeException('DB prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $pendingStatusId);
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error ?: $this->db->error;
+            $stmt->close();
+            throw new \RuntimeException('DB execute failed: ' . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            $stmt->close();
+            throw new \RuntimeException('DB get_result failed: ' . $this->db->error);
+        }
+
+        $orders = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row['order_id'];
+        }
+
+        $stmt->close();
+
+        return $orders;
+    }
+
     // Метод для получения id статуса по коду статуса
     // Обращается к таблице-справочнику без отдельного репозитория
     public function findOrderStatusIdByCode(string $code): int {

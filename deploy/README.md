@@ -91,6 +91,12 @@ sudo usermod -aG docker $USER
    docker compose -f docker-compose.prod.yml up -d --build
 ```
 
+6. Сгенерировать первичный sitemap.xml через скрипт (далее автоматически через cron):
+
+```bash
+   docker compose -f /home/mocus8/gym-boss-website/docker-compose.prod.yml exec -T php php /var/www/html/scripts/generate_sitemap.php
+```
+
 ## Обновление кода
 
 ```bash
@@ -111,9 +117,4 @@ docker compose -f docker-compose.prod.yml up -d --build
 - **bind-mount**: `./storage` (логи, кэш приложения)
 - **Сеть**: `gymboss` (изолированная Docker-network)
 - **MySQL**: bind на 127.0.0.1:3306 (недоступен из интернета, только через Docker network или SSH-туннель)
-
-## Дальнейшие задачи
-
-- Настроить cron для автообновления SSL (`certbot renew`)
-- Настроить cron для бэкапа БД
-- Настроить cron-задачи приложения (sitemap, очистка просроченных заказов)
+- **Cron-задачи**: устанавливаются автоматически через `bootstrap.sh`, для ручного применения: `crontab deploy/cron.production`, для просмотра: `crontab -l`. Текущие задачи: _SSL auto-renewal_ - ежедневно в 2:00, перезагружает nginx при обновлении; _BD backups_ - каждый день в 3:00 делает бэкап бд, удаляет устарвешие бэкапы; _Sync payment statuses_ - ежедневно в 4:00 синхронизируются статусы заказов и платежей; _Generate sitemap_ - ежедневно в 4:05 заново генерируется актуальная sitemap.xml; _Clean carts_ - в 4:10 очищаются старые гостевые корзины; _Clean login attempts_ - ежедневно в 4:15 очищаются старые попытки входа.
