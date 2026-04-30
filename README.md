@@ -14,7 +14,7 @@
 **Backend:** PHP 8.2 (ООП), собственный MVC-фреймворк, роутер, front controller, DI, PSR-4, Composer
 **Frontend:** vanilla JS (ES6+, модули), HTML5, CSS (адаптив)
 **База данных:** MySQL 8 (схема, индексы, оптимизация запросов)
-**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI: lint, syntax check), HTTPS через Let's Encrypt (certbot, HTTP/2), рабочее демо на VPS
+**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI: lint, syntax check), HTTPS через Let's Encrypt (certbot, HTTP/2), автообновление сертификата и другие cron-задачи (db backups, sync payment statuses, generate sitemap, clean carts, clean login attempts), рабочее демо на VPS
 **Внешние сервисы:** ЮKassa, Яндекс.Карты, DaData, Resend, Google reCAPTCHA v3
 **VPS с демо:** Linux (Ubuntu 24.04), подключение к серверу через SSH и ключ
 
@@ -147,11 +147,11 @@ gym-boss-website/
 - reCAPTCHA v3 на критичных действиях
 - Транзакции и try/catch на всех операциях с БД, структурированное логирование с контекстом
 - Корректные HTTP-статусы в ответах
-- HTTPS через Lets Encrypt, HTTP to HTTPS редирект, HTTP/2
+- HTTPS через Lets Encrypt, HTTP to HTTPS редирект, HTTP/2, автообновление сертификата через cron-задачу
 - OPcache, session.cookie_secure, изоляция секретов через .dockerignore
 - Настроенный UFW на VPS, доступны минимально необходимые порты
 - На VPS-машине настроенное разграничение прав доступа
-- Изоляция MySQL от внешней сети (биндинг на 127.0.0.1)
+- Изоляция MySQL от внешней сети (биндинг на 127.0.0.1) и регулярные бэкапы БД черех cron-задачу
 
 ### SEO и сервисные страницы
 
@@ -195,15 +195,13 @@ gym-boss-website/
 - Интеграции с ЮKassa, Яндекс.Картами, DaData, Resend, reCAPTCHA
 - Развёртывание в Docker, конфигурация Nginx с CSP и rate limiting
 - CI через GitHub Actions
-- Деплой на VPS: HTTPS, Nginx production-конфиг, Docker production-конфиг и раздельные образы для PHP-FPM и Nginx, автоматизация через bootstrap.sh
+- Деплой на VPS: HTTPS, Nginx production-конфиг, Docker production-конфиг и раздельные образы для PHP-FPM и Nginx, автоматизация через bootstrap.sh и cron-задачи
 
 **В планах:**
 
-- Настройка автообновления SSL-сертификата и cron-задач (настройка регулярных бэкапов бд, генерация sitemap, очистка устаревших данных)
-- Аудит и улучшение уровня a11y через Lighthouse в devtools
 - Настройка CD
+- Аудит и улучшение уровня a11y через Lighthouse в devtools
 - Дополнительная настройка логаутов
-- Оптимизация статики
 
 ## Чему научился на проекте
 
@@ -218,6 +216,7 @@ gym-boss-website/
 - Настройка CI через GitHub Actions, ведение репозитория по GitHub Flow
 - Деплой на VPS: настройка сервера, SSH, управление пользователями и правами (Linux CLI)
 - HTTPS через Let's Encrypt: certbot (webroot challenge), HTTP->HTTPS редирект, HTTP/2
+- Настройка cron-задач и написание скриптов
 - Настройка UFW, изоляция MySQL, разграничение прав на Linux-Ubuntu сервере
 - Раздельные конфиги Docker Compose и Nginx для dev/prod, изоляция секретов: .env исключён из git и Docker build context
 
