@@ -99,16 +99,7 @@ sudo usermod -aG docker $USER
 
 ## Обновление кода
 
-```bash
-git pull
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-Что пересобирается:
-
-- При изменении PHP-кода — образ `php`
-- При изменении файлов в `public/` — образ `nginx`
-- При изменении `nginx.prod.conf` — достаточно `restart nginx`
+Настроен CD: при изменениии main ветки репозитория все изменения автоматически применяются к серверу.
 
 ## Структура production-окружения
 

@@ -14,7 +14,7 @@
 **Backend:** PHP 8.2 (ООП), собственный MVC-фреймворк, роутер, front controller, DI, PSR-4, Composer
 **Frontend:** vanilla JS (ES6+, модули), HTML5, CSS (адаптив)
 **База данных:** MySQL 8 (схема, индексы, оптимизация запросов)
-**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI: lint, syntax check), HTTPS через Let's Encrypt (certbot, HTTP/2), автообновление сертификата и другие cron-задачи (db backups, sync payment statuses, generate sitemap, clean carts, clean login attempts), рабочее демо на VPS
+**Инфраструктура:** Nginx + PHP-FPM, Docker / Docker Compose (раздельные конфиги dev/prod), GitHub Actions (CI: lint, syntax check, CD: автоподгрузка изменений с main-ветки на сервер), HTTPS через Let's Encrypt (certbot, HTTP/2), автообновление сертификата и другие cron-задачи (db backups, sync payment statuses, generate sitemap, clean carts, clean login attempts), рабочее демо на VPS
 **Внешние сервисы:** ЮKassa, Яндекс.Карты, DaData, Resend, Google reCAPTCHA v3
 **VPS с демо:** Linux (Ubuntu 24.04), подключение к серверу через SSH и ключ
 
@@ -71,6 +71,8 @@ gym-boss-website/
 ├── config/ # конфигурации (app, services, delivery)
 ├── deploy/
 │   ├── bootstrap.sh # скрипт для деплоя на VPS
+│   ├── backup-db.sh # скрипт для создания бэкапа бд
+│   ├── cron.production # расписание cron-задач
 │   └── README.md # инструкция по деплою на production
 ├── app/
 │ ├── Api/ # REST-контроллеры (Auth, Cart, Order, Product, ...)
@@ -96,7 +98,7 @@ gym-boss-website/
 │   └── archive/ # 70+ пронумерованных миграций, отражающих эволюцию схемы
 ├── docker/ # конфигурация Nginx / PHP-FPM
 ├── storage/ # логи и кэш
-├── .github/workflows/ # CI (GitHub Actions)
+├── .github/workflows/ # CI/CD (GitHub Actions)
 ├── Dockerfile # основной PHP-образ
 ├── Dockerfile.nginx # отдельный Nginx-образ
 ├── docker-compose.yml # конфигурация для локальной разработки
@@ -180,10 +182,9 @@ gym-boss-website/
 Воспроизведение на новом сервере занимает 5 минут с помощью `deploy/bootstrap.sh`,
 всех переменных окружения вынесенных в .env файлов и раздельных conf файлов для прода и разработки
 
-## CI
+## CI/CD
 
-При каждом push и pull request GitHub Actions запускает базовые проверки кода
-(линтер PHP, проверка синтаксиса). Конфигурация в `.github/workflows/`.
+При каждом push и pull request GitHub Actions запускает базовые проверки кода (линтер PHP, проверка синтаксиса). При изменении main-ветки все изменения автоматически деплоятся на сервер Конфигурация в `.github/workflows/`.
 
 ## Что реализовано и что в планах
 
@@ -194,14 +195,12 @@ gym-boss-website/
 - Корзина, оформление и оплата заказов, личный кабинет
 - Интеграции с ЮKassa, Яндекс.Картами, DaData, Resend, reCAPTCHA
 - Развёртывание в Docker, конфигурация Nginx с CSP и rate limiting
-- CI через GitHub Actions
+- CI/CD через GitHub Actions
 - Деплой на VPS: HTTPS, Nginx production-конфиг, Docker production-конфиг и раздельные образы для PHP-FPM и Nginx, автоматизация через bootstrap.sh и cron-задачи
 
 **В планах:**
 
-- Настройка CD
 - Аудит и улучшение уровня a11y через Lighthouse в devtools
-- Дополнительная настройка логаутов
 
 ## Чему научился на проекте
 
@@ -213,7 +212,7 @@ gym-boss-website/
 - Работа с Docker и Docker Compose, построение локального окружения
 - Понимание изоляции контейнеров: как организовать раздельные Docker-образы для разных сервисов (PHP-FPM, Nginx) с собственной копией статики
 - Управление правами в Docker volumes: bind-mount vs named volume.
-- Настройка CI через GitHub Actions, ведение репозитория по GitHub Flow
+- Настройка CI/CD через GitHub Actions, ведение репозитория по GitHub Flow
 - Деплой на VPS: настройка сервера, SSH, управление пользователями и правами (Linux CLI)
 - HTTPS через Let's Encrypt: certbot (webroot challenge), HTTP->HTTPS редирект, HTTP/2
 - Настройка cron-задач и написание скриптов
