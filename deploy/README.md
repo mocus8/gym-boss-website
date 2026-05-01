@@ -74,8 +74,7 @@ sudo usermod -aG docker $USER
 
 4. Получить SSL-сертификат (bootstrap-режим Nginx):
 
-    Создать временный конфиг `nginx.bootstrap.conf` с обработкой ACME challenge,
-    запустить минимальный nginx, выполнить:
+    Создать временный конфиг `nginx.bootstrap.conf` с обработкой ACME challenge,запустить минимальный nginx, выполнить:
 
 ```bash
    sudo certbot certonly --webroot \
