@@ -95,6 +95,7 @@ gym-boss-website/
 │ └── templates/ # шаблоны (layouts, pages, partials, email)
 ├── db/
 │   ├── initial_schema.sql # актуальная схема БД для установки
+│   ├── migrations/ # пронумерованные миграции для внесения изменений на VPS (initial_schema при этом эти изменения содержит)
 │   └── archive/ # 70+ пронумерованных миграций, отражающих эволюцию схемы
 ├── docker/ # конфигурация Nginx / PHP-FPM
 ├── storage/ # логи и кэш
