@@ -93,7 +93,7 @@ class ProductService {
 
         // Если картинок нет - дефолтная
         if ($images === []) {
-            $images[] = '/assets/images/products/default.png';
+            $images[] = '/assets/images/products/default.webp';
         }
 
         return $images;
