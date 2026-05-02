@@ -3,7 +3,7 @@
         <h1 class="page-title">Наши магазины:</h1>
 
         <div id="stores-loader" class="content-loader-overlay flex-center shape-cut-corners--diagonal" role="status">
-            <img class="content-loader-spinner" src="/assets/images/ui/spinner.png" alt="">
+            <img class="content-loader-spinner" src="/assets/images/ui/spinner.webp" alt="">
 
             <span>Список магазинов загружается...</span>
         </div>
@@ -13,7 +13,7 @@
 
     <div class="map__container stores__map shape-cut-corners--diagonal">
         <div id="stores-map-loader" class="map__overlay flex-center" role="status"> 
-            <img class="map__loader-spinner" src="/assets/images/ui/spinner.png" alt="">
+            <img class="map__loader-spinner" src="/assets/images/ui/spinner.webp" alt="">
 
             <span class="visually-hidden">Карта загружается</span>
         </div>

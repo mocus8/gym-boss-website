@@ -4,7 +4,7 @@
 
         <div id="product-container" class="cart__items-container">
             <div class="cart__items-loader flex-center" role="status">
-                <img class="cart__items-loader-spinner" src="/assets/images/ui/spinner.png" alt="">
+                <img class="cart__items-loader-spinner" src="/assets/images/ui/spinner.webp" alt="">
 
                 <span>Загрузка...</span>
             </div>

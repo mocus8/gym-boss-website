@@ -62,7 +62,7 @@
 
             <div class="map__container shape-cut-corners--diagonal">
                 <div id="courier-map-loader" class="map__overlay flex-center" role="status"> 
-                    <img class="map__loader-spinner" src="/assets/images/ui/spinner.png" alt="">
+                    <img class="map__loader-spinner" src="/assets/images/ui/spinner.webp" alt="">
 
                     <span class="visually-hidden">Карта загружается</span>
                 </div>
@@ -82,7 +82,7 @@
 
             <div class="map__container shape-cut-corners--diagonal">
                 <div id="pickup-map-loader" class="map__overlay flex-center" role="status"> 
-                    <img class="map__loader-spinner" src="/assets/images/ui/spinner.png" alt="">
+                    <img class="map__loader-spinner" src="/assets/images/ui/spinner.webp" alt="">
 
                     <span class="visually-hidden">Карта загружается</span>
                 </div>

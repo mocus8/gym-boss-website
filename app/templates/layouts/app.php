@@ -40,7 +40,7 @@ $flashMessage = $flash->get();
         </a>
 
         <div id="loader" class="loader-overlay flex-center" role="status">
-            <img class="loader-overlay__spinner" src="/assets/images/ui/spinner.png" alt="">
+            <img class="loader-overlay__spinner" src="/assets/images/ui/spinner.webp" alt="">
             <span class="visually-hidden">Страница загружается</span>
         </div>
 

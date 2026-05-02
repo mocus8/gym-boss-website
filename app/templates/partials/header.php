@@ -13,7 +13,7 @@
                         </span>
                     </div>
 
-                    <img class="site-header__brand-image" src="/assets/images/ui/billy.png" alt="">
+                    <img class="site-header__brand-image" src="/assets/images/ui/billy.webp" alt="">
                 </div>
             </a>
 
